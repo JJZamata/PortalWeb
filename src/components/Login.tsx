@@ -20,28 +20,23 @@ const Login = ({ onLogin }: LoginProps) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://backendfiscamoto.onrender.com/api/auth/signin', {
-        username,
-        password
-      });
+      const response = await axios.post(
+        'https://backendfiscamoto.onrender.com/api/auth/signin',
+        { username, password },
+        { withCredentials: true }
+      );
 
-      // Guardar el token en localStorage
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-      }
-
+      console.log('Login exitoso:', response.data);
       toast({
         title: "¡Inicio de sesión exitoso!",
         description: "Bienvenido al sistema.",
       });
 
-      // Llamar a la función onLogin proporcionada por el padre
       onLogin();
     } catch (error) {
       let errorMessage = "Error al iniciar sesión";
       
       if (axios.isAxiosError(error)) {
-        // Si es un error de Axios, intentamos obtener el mensaje del servidor
         errorMessage = error.response?.data?.message || errorMessage;
       }
 

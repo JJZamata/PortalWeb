@@ -25,6 +25,8 @@ import ControlesTecnicosPage from "./pages/ControlesTecnicosPage";
 import InfraccionesPage from "./pages/InfraccionesPage";
 import FotosPage from "./pages/FotosPage";
 import NotFound from "./pages/NotFound";
+import UsuariosPage from "./pages/UsuariosPage";
+import AuditoriaPage from "./pages/AuditoriaPage";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +57,8 @@ const App: React.FC = () => {
             <Route path="/infracciones" element={<InfraccionesPage />} />
             <Route path="/fotos" element={<FotosPage />} />
             <Route path="*" element={<NotFound />} />
+            <Route path="/usuarios" element={<UsuariosPage />} />
+            <Route path="/auditoria" element={<AuditoriaPage />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

@@ -15,7 +15,8 @@ import {
   CreditCard,
   Settings,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Archive
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -64,20 +65,16 @@ const menuItems = [
     title: "Documentación",
     icon: FileText,
     items: [
-      { title: "CITV", url: "/citv", icon: FileCheck },
-      { title: "TUC", url: "/tuc", icon: FileText },
-      { title: "Habilitaciones", url: "/habilitaciones", icon: ClipboardCheck },
-      { title: "AFOCAT", url: "/afocat", icon: CreditCard },
+      { title: "Documentos", url: "/documentos", icon: FileCheck },
+      { title: "Controles Técnicos", url: "/controles-tecnicos", icon: FileText },
     ],
   },
   {
     title: "Control",
     icon: ClipboardCheck,
     items: [
-      { title: "Actas", url: "/actas", icon: FileText },
-      { title: "Controles Técnicos", url: "/controles-tecnicos", icon: Wrench },
-      { title: "Infracciones", url: "/infracciones", icon: AlertTriangle },
-      { title: "Fotos", url: "/fotos", icon: Camera },
+      { title: "Usuarios", url: "/usuarios", icon: FileText },
+      { title: "Auditoria", url: "/auditoria", icon: Wrench },
     ],
   },
 ];

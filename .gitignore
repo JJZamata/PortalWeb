@@ -59,3 +59,14 @@ out/
 
 # Local Netlify folder
 .netlify
+
+# Important: DO NOT ignore these configuration files
+# They are necessary for the project to work correctly
+# - tailwind.config.ts
+# - tsconfig.json
+# - vite.config.ts
+# - eslint.config.js
+# - postcss.config.js
+# - package.json
+# - package-lock.json
+# - components.json

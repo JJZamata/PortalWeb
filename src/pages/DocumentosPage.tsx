@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -285,7 +284,7 @@ const DocumentosPage = () => {
                           <TableCell className="font-mono text-gray-700">{documento.numero}</TableCell>
                           <TableCell className="font-mono font-semibold text-gray-900">{documento.placa_v}</TableCell>
                           <TableCell className="text-gray-800 font-medium">
-                            {documento.entidad || documento.aseguradora || "N/A"}
+                            {documento.entidad || "N/A"}
                           </TableCell>
                           <TableCell className="text-gray-700">{documento.fecha_emision}</TableCell>
                           <TableCell className="text-gray-700">{documento.fecha_vencimiento}</TableCell>

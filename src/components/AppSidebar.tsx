@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Users,
@@ -20,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import axios from 'axios';
 import {
   Sidebar,
   SidebarContent,
@@ -66,7 +66,6 @@ const menuItems = [
     icon: FileText,
     items: [
       { title: "Documentos", url: "/documentos", icon: FileCheck },
-      { title: "Controles Técnicos", url: "/controles-tecnicos", icon: FileText },
     ],
   },
   {
@@ -121,12 +120,36 @@ export function AppSidebar() {
     }));
   };
 
-  const handleLogout = () => {
-    toast({
-      title: "Sesión cerrada",
-      description: "Has cerrado sesión exitosamente",
-    });
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      const response = await axios.post(
+        'https://backendfiscamoto.onrender.com/api/auth/signout',
+        {},
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        toast({
+          title: "Sesión cerrada",
+          description: "Has cerrado sesión exitosamente",
+        });
+        navigate('/');
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: response.data.message || "Error al cerrar sesión",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: axios.isAxiosError(error)
+          ? error.response?.data?.message || "Error al cerrar sesión"
+          : "Error al cerrar sesión",
+      });
+    }
   };
 
   return (

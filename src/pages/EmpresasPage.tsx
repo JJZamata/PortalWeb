@@ -1,5 +1,5 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,59 +20,83 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Building2, Search, Plus, Edit, Eye, FileText, Calendar, MapPin, Filter } from "lucide-react";
+import { Building2, Search, Plus, Edit, Eye, FileText, Calendar, MapPin, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 
 const EmpresasPage = () => {
+  const [empresas, setEmpresas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [paginacion, setPaginacion] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCompanies: 0,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
 
-  // Datos de ejemplo para empresas
-  const empresas = [
-    {
-      ruc: "20123456789",
-      nombre: "Transportes La Joya S.A.C.",
-      direccion: "Av. Principal 123, La Joya",
-      nro_resolucion: "RES-2024-001",
-      fecha_emision: "2024-01-15",
-      fecha_vencimiento: "2025-01-15",
-      entidad_emisora: "Municipalidad Distrital La Joya",
-      estado: "Vigente",
-      vehiculos_asociados: 45
-    },
-    {
-      ruc: "20123456790",
-      nombre: "Mototaxis del Sur E.I.R.L.",
-      direccion: "Jr. Los Andes 456, La Joya",
-      nro_resolucion: "RES-2024-002",
-      fecha_emision: "2024-02-10",
-      fecha_vencimiento: "2025-02-10",
-      entidad_emisora: "Municipalidad Distrital La Joya",
-      estado: "Vigente",
-      vehiculos_asociados: 32
-    },
-    {
-      ruc: "20123456791",
-      nombre: "Servicios Rapidos Unidos S.A.",
-      direccion: "Calle Nueva 789, La Joya",
-      nro_resolucion: "RES-2024-003",
-      fecha_emision: "2024-03-05",
-      fecha_vencimiento: "2025-03-05",
-      entidad_emisora: "Municipalidad Distrital La Joya",
-      estado: "Por Vencer",
-      vehiculos_asociados: 28
-    },
-    {
-      ruc: "20123456792",
-      nombre: "Transporte Familiar Express S.R.L.",
-      direccion: "Av. Libertad 321, La Joya",
-      nro_resolucion: "RES-2023-089",
-      fecha_emision: "2023-12-01",
-      fecha_vencimiento: "2024-12-01",
-      entidad_emisora: "Municipalidad Distrital La Joya",
-      estado: "Vencido",
-      vehiculos_asociados: 15
+  const fetchEmpresas = async (page = 1) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`https://backendfiscamoto.onrender.com/api/companies?page=${page}`, {
+        withCredentials: true
+      });
+
+      console.log('Respuesta del API:', response.data);
+
+      // Acceder correctamente a los datos de las empresas
+      const companiesData = response.data?.data?.companies || [];
+      const paginationData = response.data?.data?.pagination || {};
+
+      // Transformar los datos del API al formato requerido
+      const empresasTransformadas = companiesData.map(company => ({
+        ruc: company.ruc || '',
+        nombre: company.name || '',
+        direccion: company.address || 'Dirección no disponible',
+        nro_resolucion: "RES-2024-001", // Mantenemos datos de ejemplo
+        fecha_emision: company.expirationDate ? new Date(company.expirationDate).toISOString().split('T')[0] : '',
+        fecha_vencimiento: company.expirationDate || '',
+        entidad_emisora: "Municipalidad Distrital La Joya", // Mantenemos datos de ejemplo
+        estado: company.rucStatus || 'Sin Estado',
+        vehiculos_asociados: company.vehicleCount || 0
+      }));
+
+      setEmpresas(empresasTransformadas);
+      setPaginacion(paginationData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error completo:', error);
+      setError(axios.isAxiosError(error)
+        ? error.response?.data?.message || "Error al cargar las empresas"
+        : "Error al cargar las empresas");
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchEmpresas(1);
+  }, []);
+
+  const handleNextPage = () => {
+    if (paginacion.hasNextPage) {
+      fetchEmpresas(paginacion.currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (paginacion.hasPrevPage) {
+      fetchEmpresas(paginacion.currentPage - 1);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center p-4">Cargando empresas...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-600 p-4">{error}</div>;
+  }
 
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
@@ -274,6 +298,33 @@ const EmpresasPage = () => {
                   ))}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Controles de paginación */}
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <div className="text-sm text-gray-600">
+                Mostrando página {paginacion.currentPage} de {paginacion.totalPages} ({paginacion.totalCompanies} empresas en total)
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevPage}
+                  disabled={!paginacion.hasPrevPage}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={!paginacion.hasNextPage}
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

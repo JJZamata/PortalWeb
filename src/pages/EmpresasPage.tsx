@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Building2, Search, Plus, Edit, Eye, FileText, Calendar, MapPin, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Building2, Search, Plus, Edit, Eye, FileText, Calendar, MapPin, Filter, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 
 const EmpresasPage = () => {
@@ -43,21 +43,17 @@ const EmpresasPage = () => {
         withCredentials: true
       });
 
-      console.log('Respuesta del API:', response.data);
-
-      // Acceder correctamente a los datos de las empresas
       const companiesData = response.data?.data?.companies || [];
       const paginationData = response.data?.data?.pagination || {};
 
-      // Transformar los datos del API al formato requerido
       const empresasTransformadas = companiesData.map(company => ({
         ruc: company.ruc || '',
         nombre: company.name || '',
         direccion: company.address || 'Dirección no disponible',
-        nro_resolucion: "RES-2024-001", // Mantenemos datos de ejemplo
+        nro_resolucion: "RES-2024-001",
         fecha_emision: company.expirationDate ? new Date(company.expirationDate).toISOString().split('T')[0] : '',
         fecha_vencimiento: company.expirationDate || '',
-        entidad_emisora: "Municipalidad Distrital La Joya", // Mantenemos datos de ejemplo
+        entidad_emisora: "Municipalidad Distrital La Joya",
         estado: company.rucStatus || 'Sin Estado',
         vehiculos_asociados: company.vehicleCount || 0
       }));
@@ -89,14 +85,6 @@ const EmpresasPage = () => {
       fetchEmpresas(paginacion.currentPage - 1);
     }
   };
-
-  if (loading) {
-    return <div className="flex items-center justify-center p-4">Cargando empresas...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-600 p-4">{error}</div>;
-  }
 
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
@@ -147,7 +135,10 @@ const EmpresasPage = () => {
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900">Empresas Registradas</CardTitle>
+                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  Empresas Registradas
+                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-purple-600" />}
+                </CardTitle>
                 <CardDescription>Gestión completa de empresas de transporte</CardDescription>
               </div>
               <div className="flex gap-3">
@@ -189,113 +180,140 @@ const EmpresasPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEmpresas.map((empresa) => (
-                    <TableRow key={empresa.ruc} className="hover:bg-purple-50/50 transition-colors">
-                      <TableCell className="font-mono font-bold text-purple-800">{empresa.ruc}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-semibold text-gray-900">{empresa.nombre}</p>
-                          <p className="text-sm text-gray-500 flex items-center">
-                            <MapPin className="w-3 h-3 mr-1" />
-                            {empresa.direccion}
-                          </p>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-32">
+                        <div className="flex items-center justify-center">
+                          <RefreshCw className="w-8 h-8 animate-spin text-purple-600" />
+                          <span className="ml-2 text-gray-600">Cargando empresas...</span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-gray-900">{empresa.nro_resolucion}</p>
-                          <p className="text-sm text-gray-500">{empresa.entidad_emisora}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm font-medium">{empresa.fecha_vencimiento}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={`${getEstadoBadge(empresa.estado)} font-semibold rounded-full border`}>
-                          {empresa.estado}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-center">
-                          <span className="font-bold text-lg text-purple-700">{empresa.vehiculos_asociados}</span>
-                          <p className="text-xs text-gray-500">vehículos</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-center gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="hover:bg-purple-100 rounded-lg">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                  <Building2 className="w-5 h-5" />
-                                  Detalles de Empresa
-                                </DialogTitle>
-                                <DialogDescription>
-                                  Información completa de {empresa.nombre}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="grid grid-cols-2 gap-4 py-4">
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">RUC</label>
-                                  <p className="font-mono font-bold text-lg">{empresa.ruc}</p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Estado</label>
-                                  <div className="mt-1">
-                                    <Badge variant="secondary" className={`${getEstadoBadge(empresa.estado)} font-semibold rounded-full border`}>
-                                      {empresa.estado}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <div className="col-span-2">
-                                  <label className="text-sm font-medium text-gray-700">Razón Social</label>
-                                  <p className="font-semibold">{empresa.nombre}</p>
-                                </div>
-                                <div className="col-span-2">
-                                  <label className="text-sm font-medium text-gray-700">Dirección</label>
-                                  <p>{empresa.direccion}</p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Resolución</label>
-                                  <p className="font-medium">{empresa.nro_resolucion}</p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Vehículos Asociados</label>
-                                  <p className="font-bold text-lg text-purple-700">{empresa.vehiculos_asociados}</p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Fecha Emisión</label>
-                                  <p>{empresa.fecha_emision}</p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium text-gray-700">Fecha Vencimiento</label>
-                                  <p>{empresa.fecha_vencimiento}</p>
-                                </div>
-                                <div className="col-span-2">
-                                  <label className="text-sm font-medium text-gray-700">Entidad Emisora</label>
-                                  <p>{empresa.entidad_emisora}</p>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          <Button variant="ghost" size="sm" className="hover:bg-purple-100 rounded-lg">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="hover:bg-purple-100 rounded-lg">
-                            <FileText className="w-4 h-4" />
+                    </TableRow>
+                  ) : error ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-32">
+                        <div className="flex flex-col items-center justify-center text-red-600">
+                          <p>Error al cargar los datos</p>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => fetchEmpresas(paginacion.currentPage)}
+                            className="mt-2"
+                          >
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                            Reintentar
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredEmpresas.map((empresa) => (
+                      <TableRow key={empresa.ruc} className="hover:bg-purple-50/50 transition-colors">
+                        <TableCell className="font-mono font-bold text-purple-800">{empresa.ruc}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-semibold text-gray-900">{empresa.nombre}</p>
+                            <p className="text-sm text-gray-500 flex items-center">
+                              <MapPin className="w-3 h-3 mr-1" />
+                              {empresa.direccion}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-gray-900">{empresa.nro_resolucion}</p>
+                            <p className="text-sm text-gray-500">{empresa.entidad_emisora}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm font-medium">{empresa.fecha_vencimiento}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={`${getEstadoBadge(empresa.estado)} font-semibold rounded-full border`}>
+                            {empresa.estado}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-center">
+                            <span className="font-bold text-lg text-purple-700">{empresa.vehiculos_asociados}</span>
+                            <p className="text-xs text-gray-500">vehículos</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-center gap-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="hover:bg-purple-100 rounded-lg">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center gap-2">
+                                    <Building2 className="w-5 h-5" />
+                                    Detalles de Empresa
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Información completa de {empresa.nombre}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid grid-cols-2 gap-4 py-4">
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">RUC</label>
+                                    <p className="font-mono font-bold text-lg">{empresa.ruc}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">Estado</label>
+                                    <div className="mt-1">
+                                      <Badge variant="secondary" className={`${getEstadoBadge(empresa.estado)} font-semibold rounded-full border`}>
+                                        {empresa.estado}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <label className="text-sm font-medium text-gray-700">Razón Social</label>
+                                    <p className="font-semibold">{empresa.nombre}</p>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <label className="text-sm font-medium text-gray-700">Dirección</label>
+                                    <p>{empresa.direccion}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">Resolución</label>
+                                    <p className="font-medium">{empresa.nro_resolucion}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">Vehículos Asociados</label>
+                                    <p className="font-bold text-lg text-purple-700">{empresa.vehiculos_asociados}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">Fecha Emisión</label>
+                                    <p>{empresa.fecha_emision}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700">Fecha Vencimiento</label>
+                                    <p>{empresa.fecha_vencimiento}</p>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <label className="text-sm font-medium text-gray-700">Entidad Emisora</label>
+                                    <p>{empresa.entidad_emisora}</p>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                            <Button variant="ghost" size="sm" className="hover:bg-purple-100 rounded-lg">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="hover:bg-purple-100 rounded-lg">
+                              <FileText className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -310,7 +328,7 @@ const EmpresasPage = () => {
                   variant="outline"
                   size="sm"
                   onClick={handlePrevPage}
-                  disabled={!paginacion.hasPrevPage}
+                  disabled={!paginacion.hasPrevPage || loading}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Anterior
@@ -319,7 +337,7 @@ const EmpresasPage = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleNextPage}
-                  disabled={!paginacion.hasNextPage}
+                  disabled={!paginacion.hasNextPage || loading}
                 >
                   Siguiente
                   <ChevronRight className="h-4 w-4 ml-1" />

@@ -85,7 +85,16 @@ export function AppSidebar() {
   const { toast } = useToast();
   
   // Estado persistente para las secciones expandidas
-  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() => {
+    // Inicializar con todas las secciones expandidas
+    const initial = {};
+    menuItems.forEach(item => {
+      if (item.items) {
+        initial[item.title] = true;
+      }
+    });
+    return initial;
+  });
 
   // Función para encontrar qué sección contiene la ruta actual
   const findParentSection = (pathname: string) => {
@@ -107,10 +116,11 @@ export function AppSidebar() {
     if (parentSection) {
       setExpandedSections(prev => ({
         ...prev,
-        [parentSection]: true
+        [parentSection]: true,
       }));
     }
   }, [location.pathname]);
+  
 
   // Función para manejar el toggle de secciones
   const toggleSection = (sectionTitle: string) => {
@@ -122,33 +132,15 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post(
-        'https://backendfiscamoto.onrender.com/api/auth/signout',
-        {},
-        { withCredentials: true }
-      );
-
-      if (response.data.success) {
-        toast({
-          title: "Sesión cerrada",
-          description: "Has cerrado sesión exitosamente",
-        });
-        navigate('/');
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: response.data.message || "Error al cerrar sesión",
-        });
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: axios.isAxiosError(error)
-          ? error.response?.data?.message || "Error al cerrar sesión"
-          : "Error al cerrar sesión",
+      await axios.post('https://backendfiscamoto.onrender.com/api/auth/logout', {}, {
+        withCredentials: true
       });
+      // Limpiar el token
+      localStorage.removeItem('token');
+      // Redirigir al login
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
     }
   };
 

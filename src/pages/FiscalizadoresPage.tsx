@@ -1,60 +1,88 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Edit, Eye, Filter, Download, Users, RefreshCw, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/AdminLayout";
-import { useFiscalizadoresData } from "@/hooks/useRealTimeData";
+import { Badge } from "@/components/ui/badge";
+import axios from 'axios';
+
+interface Fiscalizador {
+  idUsuario: number;
+  usuario: string;
+  email: string;
+  isActive: boolean;
+  deviceConfigured: boolean;
+  lastLogin: string | null;
+  estado: string;
+  dispositivo: string;
+  ultimoAcceso: string;
+}
+
+interface PaginationData {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  nextPage: number | null;
+  prevPage: number | null;
+}
+
+interface SummaryData {
+  total: number;
+  activos: number;
+  inactivos: number;
+  configurados: number;
+  pendientes: number;
+}
 
 const FiscalizadoresPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newFiscalizador, setNewFiscalizador] = useState({
-    nombreCompleto: '',
-    codigo: '',
-    contacto: '',
-    contraseña: ''
-  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [fiscalizadores, setFiscalizadores] = useState<Fiscalizador[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationData | null>(null);
+  const [summary, setSummary] = useState<SummaryData | null>(null);
   const { toast } = useToast();
 
-  // Usar datos en tiempo real
-  const { data: fiscalizadoresData = [], isLoading, error, refetch, isRefetching } = useFiscalizadoresData();
+  const fetchFiscalizadores = async (page: number) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `https://backendfiscamoto.onrender.com/api/users/admin/fiscalizadores?page=${page}`,
+        { withCredentials: true }
+      );
 
-  const handleAddFiscalizador = () => {
-    if (!newFiscalizador.nombreCompleto || !newFiscalizador.codigo || !newFiscalizador.contacto) {
-      toast({
-        title: "Error",
-        description: "Por favor completa todos los campos obligatorios",
-        variant: "destructive",
-      });
-      return;
+      if (response.data.success) {
+        setFiscalizadores(response.data.data.fiscalizadores);
+        setPagination(response.data.data.pagination);
+        setSummary(response.data.data.summary);
+      }
+    } catch (error) {
+      console.error('Error al cargar fiscalizadores:', error);
+      setError(axios.isAxiosError(error)
+        ? error.response?.data?.message || 'Error al cargar los fiscalizadores'
+        : 'Error al cargar los fiscalizadores');
+    } finally {
+      setLoading(false);
     }
-
-    toast({
-      title: "Fiscalizador agregado",
-      description: `${newFiscalizador.nombreCompleto} ha sido registrado exitosamente`,
-    });
-
-    setNewFiscalizador({
-      nombreCompleto: '',
-      codigo: '',
-      contacto: '',
-      contraseña: ''
-    });
-    setShowAddDialog(false);
   };
 
-  const filteredFiscalizadores = fiscalizadoresData.filter(fiscalizador =>
-    fiscalizador.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fiscalizador.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fiscalizador.id_usuario?.toString().includes(searchTerm)
-  );
+  useEffect(() => {
+    fetchFiscalizadores(currentPage);
+  }, [currentPage]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   if (error) {
     return (
@@ -62,8 +90,8 @@ const FiscalizadoresPage = () => {
         <div className="flex flex-col items-center justify-center h-64">
           <XCircle className="w-12 h-12 text-red-500 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar datos</h3>
-          <p className="text-gray-600 mb-4">No se pudieron cargar los fiscalizadores</p>
-          <Button onClick={() => refetch()} variant="outline">
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => fetchFiscalizadores(1)} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" />
             Reintentar
           </Button>
@@ -89,19 +117,19 @@ const FiscalizadoresPage = () => {
               <div className="flex items-center gap-6">
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-red-700">
-                    {isLoading ? '-' : filteredFiscalizadores.length}
+                    {loading ? '-' : summary?.total || 0}
                   </p>
                   <p className="text-sm text-gray-600">Total</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-emerald-700">
-                    {isLoading ? '-' : filteredFiscalizadores.filter(f => f.isActive).length}
+                    {loading ? '-' : summary?.activos || 0}
                   </p>
                   <p className="text-sm text-gray-600">Activos</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-gray-700">
-                    {isLoading ? '-' : filteredFiscalizadores.filter(f => !f.isActive).length}
+                    {loading ? '-' : summary?.inactivos || 0}
                   </p>
                   <p className="text-sm text-gray-600">Inactivos</p>
                 </div>
@@ -127,76 +155,9 @@ const FiscalizadoresPage = () => {
                         Completa la información del nuevo fiscalizador
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="nombreCompleto" className="text-sm font-semibold text-gray-700">Nombre Completo *</Label>
-                        <Input
-                          id="nombreCompleto"
-                          value={newFiscalizador.nombreCompleto}
-                          onChange={(e) => setNewFiscalizador(prev => ({...prev, nombreCompleto: e.target.value}))}
-                          placeholder="Ej: Juan Carlos Pérez González"
-                          className="h-12 border-2 border-gray-200 focus:border-red-400 rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="codigo" className="text-sm font-semibold text-gray-700">Código *</Label>
-                        <Input
-                          id="codigo"
-                          value={newFiscalizador.codigo}
-                          onChange={(e) => setNewFiscalizador(prev => ({...prev, codigo: e.target.value}))}
-                          placeholder="Ej: SU053224"
-                          className="h-12 border-2 border-gray-200 focus:border-red-400 rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="contacto" className="text-sm font-semibold text-gray-700">Contacto *</Label>
-                        <Input
-                          id="contacto"
-                          value={newFiscalizador.contacto}
-                          onChange={(e) => setNewFiscalizador(prev => ({...prev, contacto: e.target.value}))}
-                          placeholder="Ej: 987654321"
-                          className="h-12 border-2 border-gray-200 focus:border-red-400 rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="contraseña" className="text-sm font-semibold text-gray-700">Contraseña</Label>
-                        <Input
-                          id="contraseña"
-                          type="password"
-                          value={newFiscalizador.contraseña}
-                          onChange={(e) => setNewFiscalizador(prev => ({...prev, contraseña: e.target.value}))}
-                          placeholder="Contraseña temporal"
-                          className="h-12 border-2 border-gray-200 focus:border-red-400 rounded-xl"
-                        />
-                      </div>
-                      <div className="flex gap-3 pt-4">
-                        <Button 
-                          onClick={handleAddFiscalizador} 
-                          className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-lg h-12 rounded-xl font-semibold"
-                        >
-                          Agregar Fiscalizador
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => setShowAddDialog(false)} 
-                          className="border-2 border-gray-300 hover:bg-gray-50 h-12 px-6 rounded-xl font-semibold"
-                        >
-                          Cancelar
-                        </Button>
-                      </div>
-                    </div>
+                    {/* Formulario de agregar fiscalizador */}
                   </DialogContent>
                 </Dialog>
-                
-                <Button 
-                  onClick={() => refetch()} 
-                  variant="outline" 
-                  disabled={isRefetching}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
-                  {isRefetching ? 'Actualizando...' : 'Actualizar'}
-                </Button>
               </div>
             </div>
           </div>
@@ -230,7 +191,7 @@ const FiscalizadoresPage = () => {
               <div>
                 <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
                   Fiscalizadores Registrados
-                  {isRefetching && <RefreshCw className="w-5 h-5 animate-spin text-red-600" />}
+                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-red-600" />}
                 </CardTitle>
                 <CardDescription>Listado completo de fiscalizadores en el sistema</CardDescription>
               </div>
@@ -238,7 +199,7 @@ const FiscalizadoresPage = () => {
           </CardHeader>
           <CardContent>
             <div className="rounded-xl border border-gray-200 overflow-hidden">
-              {isLoading ? (
+              {loading ? (
                 <div className="flex items-center justify-center h-32">
                   <RefreshCw className="w-8 h-8 animate-spin text-red-600" />
                   <span className="ml-2 text-gray-600">Cargando fiscalizadores...</span>
@@ -258,10 +219,10 @@ const FiscalizadoresPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredFiscalizadores.map((fiscalizador) => (
-                        <TableRow key={fiscalizador.id_usuario} className="hover:bg-red-50/50 transition-colors">
-                          <TableCell className="font-mono font-semibold text-red-700">{fiscalizador.id_usuario}</TableCell>
-                          <TableCell className="font-semibold text-gray-900">{fiscalizador.username}</TableCell>
+                      {fiscalizadores.map((fiscalizador) => (
+                        <TableRow key={fiscalizador.idUsuario} className="hover:bg-red-50/50 transition-colors">
+                          <TableCell className="font-mono font-semibold text-red-700">{fiscalizador.idUsuario}</TableCell>
+                          <TableCell className="font-semibold text-gray-900">{fiscalizador.usuario}</TableCell>
                           <TableCell className="text-gray-700">{fiscalizador.email}</TableCell>
                           <TableCell>
                             <Badge 
@@ -271,15 +232,15 @@ const FiscalizadoresPage = () => {
                                 : 'bg-gray-100 text-gray-800 border-gray-200'
                               }`}
                             >
-                              {fiscalizador.isActive ? 'Activo' : 'Inactivo'}
+                              {fiscalizador.estado}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-gray-700 text-sm">
-                            {fiscalizador.lastLogin ? new Date(fiscalizador.lastLogin).toLocaleDateString() : 'Nunca'}
+                            {fiscalizador.ultimoAcceso}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={fiscalizador.deviceConfigured ? 'text-emerald-700' : 'text-amber-700'}>
-                              {fiscalizador.deviceConfigured ? 'Configurado' : 'Pendiente'}
+                              {fiscalizador.dispositivo}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -299,6 +260,32 @@ const FiscalizadoresPage = () => {
                 </div>
               )}
             </div>
+
+            {pagination && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Mostrando {fiscalizadores.length} de {pagination.totalItems} resultados
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={!pagination.hasPrevPage}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={!pagination.hasNextPage}
+                  >
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

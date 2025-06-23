@@ -9,6 +9,7 @@ import { Plus, Search, Edit, Eye, Filter, Download, Users, RefreshCw, XCircle } 
 import { useToast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/AdminLayout";
 import { Badge } from "@/components/ui/badge";
+import axiosInstance from '@/lib/axios';
 import axios from 'axios';
 
 interface Fiscalizador {
@@ -60,9 +61,8 @@ const FiscalizadoresPage = () => {
   const fetchFiscalizadores = async (page: number) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `https://backendfiscamoto.onrender.com/api/users/admin/fiscalizadores?page=${page}`,
-        { withCredentials: true }
+      const response = await axiosInstance.get(
+        `/fisca/admin/fiscalizadores?page=${page}`
       );
 
       if (response.data.success) {

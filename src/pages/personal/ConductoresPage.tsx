@@ -9,6 +9,7 @@ import { Plus, Search, Edit, Eye, Filter, Download, Users, RefreshCw, XCircle } 
 import { useToast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/AdminLayout";
 import { Badge } from "@/components/ui/badge";
+import axiosInstance from '@/lib/axios';
 import axios from 'axios';
 
 interface Conductor {
@@ -55,9 +56,8 @@ const ConductoresPage = () => {
   const fetchConductores = async (page: number) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `https://backendfiscamoto.onrender.com/api/drivers/list?page=${page}`,
-        { withCredentials: true }
+      const response = await axiosInstance.get(
+        `/drivers/list?page=${page}`
       );
 
       if (response.data.success) {

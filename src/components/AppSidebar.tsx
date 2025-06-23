@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from 'axios';
+import axios from '@/lib/axios';
 import {
   Sidebar,
   SidebarContent,
@@ -132,15 +132,14 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     try {
-      await axios.post('https://backendfiscamoto.onrender.com/api/auth/logout', {}, {
-        withCredentials: true
-      });
-      // Limpiar el token
-      localStorage.removeItem('token');
-      // Redirigir al login
-      navigate('/login');
+      await axios.post('/auth/logout');
+      // El interceptor no se activa en logout exitoso,
+      // así que redirigimos manualmente.
+      navigate('/');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
+      // Si el logout falla (ej: token ya expirado), igual redirigir.
+      navigate('/');
     }
   };
 

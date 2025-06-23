@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import axiosInstance from '@/lib/axios';
 import axios from 'axios';
 import logoImage from '@/assets/images/logo.png';
+import { useNavigate } from "react-router-dom";
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-const Login = ({ onLogin }: LoginProps) => {
+const Login = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -20,24 +19,28 @@ const Login = ({ onLogin }: LoginProps) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        'https://backendfiscamoto.onrender.com/api/auth/signin',
-        { username, password },
-        { withCredentials: true }
+      const response = await axiosInstance.post(
+        '/auth/signin',
+        { username, password }
       );
 
-      console.log('Login exitoso:', response.data);
-      toast({
-        title: "¡Inicio de sesión exitoso!",
-        description: "Bienvenido al sistema.",
-      });
+      if (response.data.success) {
+        toast({
+          title: "¡Inicio de sesión exitoso!",
+          description: "Bienvenido al sistema.",
+        });
+        navigate('/admin');
+      } else {
+        throw new Error(response.data.message || "Respuesta inesperada del servidor.");
+      }
 
-      onLogin();
     } catch (error) {
       let errorMessage = "Error al iniciar sesión";
 
       if (axios.isAxiosError(error)) {
         errorMessage = error.response?.data?.message || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
 
       toast({

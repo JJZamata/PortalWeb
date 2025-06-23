@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axiosInstance from '@/lib/axios';
 import axios from 'axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,9 +40,7 @@ const EmpresasPage = () => {
   const fetchEmpresas = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://backendfiscamoto.onrender.com/api/companies?page=${page}`, {
-        withCredentials: true
-      });
+      const response = await axiosInstance.get(`/companies?page=${page}`);
 
       const companiesData = response.data?.data?.companies || [];
       const paginationData = response.data?.data?.pagination || {};

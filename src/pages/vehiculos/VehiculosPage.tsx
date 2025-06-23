@@ -9,6 +9,7 @@ import { Car, Search, Eye, CheckCircle, XCircle, AlertTriangle, RefreshCw, Plus,
 import { useSearchParams } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { useVehiculosData } from "@/hooks/useRealTimeData";
+import axiosInstance from '@/lib/axios';
 import axios from 'axios';
 
 const VehiculosPage = () => {
@@ -33,9 +34,7 @@ const VehiculosPage = () => {
   const fetchVehiculos = async (page = 1) => {
     try {
       setIsLoadingState(true);
-      const response = await axios.get(`https://backendfiscamoto.onrender.com/api/vehicles?page=${page}`, {
-        withCredentials: true
-      });
+      const response = await axiosInstance.get(`/vehicles?page=${page}`);
       setVehiculosState(response.data.data.vehicles || []);
       setPagination(response.data.data.pagination || {
         currentPage: 1,

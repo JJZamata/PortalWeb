@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axiosInstance from '@/lib/axios';
 import axios from 'axios';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,9 +34,7 @@ const DocumentosPage = () => {
   const fetchDocumentos = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://backendfiscamoto.onrender.com/api/documents?page=${page}`, {
-        withCredentials: true
-      });
+      const response = await axiosInstance.get(`/documents?page=${page}`);
 
       console.log('Respuesta completa del API:', response);
       console.log('Datos de documentos:', response.data?.data?.documents);

@@ -66,6 +66,7 @@ const menuItems = [
     icon: FileText,
     items: [
       { title: "Documentos", url: "/documentos", icon: FileCheck },
+      { title: "Infracciones", url: "/infracciones", icon: AlertTriangle },
     ],
   },
   {
@@ -132,13 +133,14 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     try {
-      await axios.post('/auth/logout');
-      // El interceptor no se activa en logout exitoso,
-      // así que redirigimos manualmente.
+      await axios.post('/auth/signout');
+      toast({
+        title: "Sesión Cerrada",
+        description: "Has cerrado sesión exitosamente.",
+      });
       navigate('/');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
-      // Si el logout falla (ej: token ya expirado), igual redirigir.
       navigate('/');
     }
   };

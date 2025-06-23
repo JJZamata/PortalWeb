@@ -15,6 +15,7 @@ import EmpresasPage from "./pages/vehiculos/EmpresasPage";
 import NotFound from "./pages/NotFound";
 import UsuariosPage from "./pages/control/UsuariosPage";
 import AuditoriaPage from "./pages/control/AuditoriaPage";
+import InfraccionesPage from "./pages/documentacion/InfraccionesPage";
 
 // Importaciones de vistas no utilizadas (accesibles por URL directa)
 import ActasPage from "./pages/unused/ActasPage";
@@ -26,7 +27,6 @@ import TucPage from "./pages/unused/TucPage";
 import HabilitacionesPage from "./pages/unused/HabilitacionesPage";
 import AfocatPage from "./pages/unused/AfocatPage";
 import ControlesTecnicosPage from "./pages/unused/ControlesTecnicosPage";
-import InfraccionesPage from "./pages/unused/InfraccionesPage";
 import FotosPage from "./pages/unused/FotosPage";
 
 const queryClient = new QueryClient();
@@ -48,6 +48,7 @@ const App: React.FC = () => {
             <Route path="/empresas" element={<EmpresasPage />} />
             <Route path="/usuarios" element={<UsuariosPage />} />
             <Route path="/auditoria" element={<AuditoriaPage />} />
+            <Route path="/infracciones" element={<InfraccionesPage />} />
             
             {/* Rutas para vistas no utilizadas (accesibles por URL directa) */}
             <Route path="/actas" element={<ActasPage />} />
@@ -59,7 +60,6 @@ const App: React.FC = () => {
             <Route path="/habilitaciones" element={<HabilitacionesPage />} />
             <Route path="/afocat" element={<AfocatPage />} />
             <Route path="/controles-tecnicos" element={<ControlesTecnicosPage />} />
-            <Route path="/infracciones" element={<InfraccionesPage />} />
             <Route path="/fotos" element={<FotosPage />} />
             
             <Route path="*" element={<NotFound />} />

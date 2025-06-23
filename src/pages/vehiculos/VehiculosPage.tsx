@@ -197,190 +197,192 @@ const VehiculosPage = () => {
               ) : errorState ? (
                 <div>Error: {errorState}</div>
               ) : (
-                <>
-                  <Table>
-                    <TableHeader className="bg-gradient-to-r from-blue-50 to-blue-100/50">
-                      <TableRow>
-                        <TableHead className="font-bold text-blue-900">Placa</TableHead>
-                        <TableHead className="font-bold text-blue-900">Propietario</TableHead>
-                        <TableHead className="font-bold text-blue-900">Empresa</TableHead>
-                        <TableHead className="font-bold text-blue-900">Tipo</TableHead>
-                        <TableHead className="font-bold text-blue-900">Estado</TableHead>
-                        <TableHead className="font-bold text-blue-900 text-center">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {vehiculosState.map((vehiculo: any) => (
-                        <TableRow key={vehiculo.placa.plateNumber} className="hover:bg-blue-50/50 transition-colors">
-                          <TableCell className="font-mono font-bold text-blue-800">{vehiculo.placa.plateNumber}</TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-semibold text-gray-900">
-                                {vehiculo.propietario.nombreCompleto}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium text-gray-900">{vehiculo.empresa.nombre}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-xs">
-                              {vehiculo.tipo.marca} {vehiculo.tipo.modelo}
+                <Table>
+                  <TableHeader className="bg-gradient-to-r from-blue-50 to-blue-100/50">
+                    <TableRow>
+                      <TableHead className="font-bold text-blue-900">Placa</TableHead>
+                      <TableHead className="font-bold text-blue-900">Propietario</TableHead>
+                      <TableHead className="font-bold text-blue-900">Empresa</TableHead>
+                      <TableHead className="font-bold text-blue-900">Tipo</TableHead>
+                      <TableHead className="font-bold text-blue-900">Estado</TableHead>
+                      <TableHead className="font-bold text-blue-900 text-center">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vehiculosState.map((vehiculo: any) => (
+                      <TableRow key={vehiculo.placa.plateNumber} className="hover:bg-blue-50/50 transition-colors">
+                        <TableCell className="font-mono font-bold text-blue-800">{vehiculo.placa.plateNumber}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {vehiculo.propietario.nombreCompleto}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium text-gray-900">{vehiculo.empresa.nombre}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
+                            {vehiculo.tipo.marca} {vehiculo.tipo.modelo}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getEstadoIcon(vehiculo.estado)}
+                            <Badge variant={getBadgeVariant(vehiculo.estado)} className="font-semibold rounded-full">
+                              {vehiculo.estado}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {getEstadoIcon(vehiculo.estado)}
-                              <Badge variant={getBadgeVariant(vehiculo.estado)} className="font-semibold rounded-full">
-                                {vehiculo.estado}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex justify-center gap-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="sm" onClick={() => setSelectedVehiculo(vehiculo)} className="hover:bg-blue-100 rounded-lg">
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-4xl">
-                                  <DialogHeader>
-                                    <DialogTitle className="flex items-center gap-2">
-                                      <Car className="w-5 h-5" />
-                                      Información Completa - {selectedVehiculo?.placa.plateNumber}
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                      Datos del vehículo, propietario y empresa
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  {selectedVehiculo && (
-                                    <div className="space-y-6">
-                                      {/* Información del Vehículo */}
-                                      <Card>
-                                        <CardHeader>
-                                          <CardTitle className="text-lg flex items-center gap-2">
-                                            <Car className="w-5 h-5" />
-                                            Información del Vehículo
-                                          </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                          <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">Placa</label>
-                                              <p className="font-mono font-bold text-lg">{selectedVehiculo.placa.plateNumber}</p>
-                                            </div>
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">Estado</label>
-                                              <div className="flex items-center gap-2 mt-1">
-                                                <Badge variant={getBadgeVariant(selectedVehiculo.estado)} className="font-semibold rounded-full">
-                                                  {selectedVehiculo.estado}
-                                                </Badge>
-                                              </div>
-                                            </div>
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">Marca</label>
-                                              <p className="font-medium">{selectedVehiculo.tipo.marca}</p>
-                                            </div>
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">Modelo</label>
-                                              <p className="font-medium">{selectedVehiculo.tipo.modelo}</p>
-                                            </div>
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">Año</label>
-                                              <p className="font-medium">{selectedVehiculo.tipo.año}</p>
-                                            </div>
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">Tipo</label>
-                                              <p className="font-medium">{selectedVehiculo.tipo.nombre}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-center gap-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm" onClick={() => setSelectedVehiculo(vehiculo)} className="hover:bg-blue-100 rounded-lg">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl">
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center gap-2">
+                                    <Car className="w-5 h-5" />
+                                    Información Completa - {selectedVehiculo?.placa.plateNumber}
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Datos del vehículo, propietario y empresa
+                                  </DialogDescription>
+                                </DialogHeader>
+                                {selectedVehiculo && (
+                                  <div className="space-y-6">
+                                    {/* Información del Vehículo */}
+                                    <Card>
+                                      <CardHeader>
+                                        <CardTitle className="text-lg flex items-center gap-2">
+                                          <Car className="w-5 h-5" />
+                                          Información del Vehículo
+                                        </CardTitle>
+                                      </CardHeader>
+                                      <CardContent>
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">Placa</label>
+                                            <p className="font-mono font-bold text-lg">{selectedVehiculo.placa.plateNumber}</p>
+                                          </div>
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">Estado</label>
+                                            <div className="flex items-center gap-2 mt-1">
+                                              <Badge variant={getBadgeVariant(selectedVehiculo.estado)} className="font-semibold rounded-full">
+                                                {selectedVehiculo.estado}
+                                              </Badge>
                                             </div>
                                           </div>
-                                        </CardContent>
-                                      </Card>
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">Marca</label>
+                                            <p className="font-medium">{selectedVehiculo.tipo.marca}</p>
+                                          </div>
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">Modelo</label>
+                                            <p className="font-medium">{selectedVehiculo.tipo.modelo}</p>
+                                          </div>
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">Año</label>
+                                            <p className="font-medium">{selectedVehiculo.tipo.año}</p>
+                                          </div>
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">Tipo</label>
+                                            <p className="font-medium">{selectedVehiculo.tipo.nombre}</p>
+                                          </div>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
 
-                                      {/* Información del Propietario */}
-                                      <Card>
-                                        <CardHeader>
-                                          <CardTitle className="text-lg">Información del Propietario</CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                          <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">Nombre Completo</label>
-                                              <p className="font-medium">
-                                                {selectedVehiculo.propietario.nombreCompleto}
-                                              </p>
-                                            </div>
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">DNI</label>
-                                              <p className="font-mono font-medium">{selectedVehiculo.dni_propietario}</p>
-                                            </div>
+                                    {/* Información del Propietario */}
+                                    <Card>
+                                      <CardHeader>
+                                        <CardTitle className="text-lg">Información del Propietario</CardTitle>
+                                      </CardHeader>
+                                      <CardContent>
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">Nombre Completo</label>
+                                            <p className="font-medium">
+                                              {selectedVehiculo.propietario.nombreCompleto}
+                                            </p>
                                           </div>
-                                        </CardContent>
-                                      </Card>
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">DNI</label>
+                                            <p className="font-mono font-medium">{selectedVehiculo.dni_propietario}</p>
+                                          </div>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
 
-                                      {/* Información de la Empresa */}
-                                      <Card>
-                                        <CardHeader>
-                                          <CardTitle className="text-lg">Empresa Operadora</CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                          <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">Nombre</label>
-                                              <p className="font-medium">{selectedVehiculo.empresa.nombre}</p>
-                                            </div>
-                                            <div>
-                                              <label className="text-sm font-medium text-gray-700">RUC</label>
-                                              <p className="font-mono font-medium">{selectedVehiculo.ruc_empresa}</p>
-                                            </div>
-                                            <div className="col-span-2">
-                                              <label className="text-sm font-medium text-gray-700">Dirección</label>
-                                              <p className="font-medium">{selectedVehiculo.empresa.direccion}</p>
-                                            </div>
+                                    {/* Información de la Empresa */}
+                                    <Card>
+                                      <CardHeader>
+                                        <CardTitle className="text-lg">Empresa Operadora</CardTitle>
+                                      </CardHeader>
+                                      <CardContent>
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">Nombre</label>
+                                            <p className="font-medium">{selectedVehiculo.empresa.nombre}</p>
                                           </div>
-                                        </CardContent>
-                                      </Card>
-                                    </div>
-                                  )}
-                                </DialogContent>
-                              </Dialog>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                    <div className="text-sm text-gray-600">
-                      Mostrando página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalItems} vehículos en total)
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handlePrevPage}
-                        disabled={!pagination.hasPrevPage || isLoadingState}
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-1" />
-                        Anterior
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleNextPage}
-                        disabled={!pagination.hasNextPage || isLoadingState}
-                      >
-                        Siguiente
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                </>
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">RUC</label>
+                                            <p className="font-mono font-medium">{selectedVehiculo.ruc_empresa}</p>
+                                          </div>
+                                          <div className="col-span-2">
+                                            <label className="text-sm font-medium text-gray-700">Dirección</label>
+                                            <p className="font-medium">{selectedVehiculo.empresa.direccion}</p>
+                                          </div>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  </div>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               )}
             </div>
+
+            {/* Controles de paginación */}
+            {!isLoadingState && !errorState && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <div className="text-sm text-gray-600">
+                  Mostrando página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalItems} vehículos en total)
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrevPage}
+                    disabled={!pagination.hasPrevPage || isLoadingState}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={!pagination.hasNextPage || isLoadingState}
+                  >
+                    Siguiente
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

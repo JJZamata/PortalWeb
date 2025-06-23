@@ -8,45 +8,47 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, Plus, Edit, Eye, Shield, RefreshCw, XCircle, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Search, Edit, Eye, Shield, RefreshCw, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/AdminLayout";
 
 const UsuariosPage = () => {
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
   const [estadisticas, setEstadisticas] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedUsuario, setSelectedUsuario] = useState<any>(null);
   const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    hasNextPage: false,
-    hasPrevPage: false
+    current_page: 1,
+    total_pages: 1,
+    total_records: 0,
+    has_next: false,
+    has_previous: false
   });
   const { toast } = useToast();
 
   const fetchUsuarios = async (page = 1) => {
     try {
       setIsLoading(true);
-      const response = await axiosInstance.get(`/?page=${page}`);
+      const response = await axiosInstance.get(`/users/?page=${page}`);
       setUsuarios(response.data.data.usuarios || []);
       setEstadisticas(response.data.data.estadisticas || {});
       setPagination(response.data.data.pagination || {
-        currentPage: 1,
-        totalPages: 1,
-        totalItems: 0,
-        hasNextPage: false,
-        hasPrevPage: false
+        current_page: 1,
+        total_pages: 1,
+        total_records: 0,
+        has_next: false,
+        has_previous: false
       });
       setError(null);
     } catch (err: any) {
       setError('Error al cargar los usuarios');
-      console.error('Error al cargar usuarios:', err);
+      if (axios.isAxiosError(err)) {
+        console.error('Error al cargar usuarios:', err.response?.data);
+      } else {
+        console.error('Error al cargar usuarios:', err);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -57,14 +59,14 @@ const UsuariosPage = () => {
   }, []);
 
   const handleNextPage = () => {
-    if (pagination.hasNextPage) {
-      fetchUsuarios(pagination.currentPage + 1);
+    if (pagination.has_next) {
+      fetchUsuarios(pagination.current_page + 1);
     }
   };
 
   const handlePrevPage = () => {
-    if (pagination.hasPrevPage) {
-      fetchUsuarios(pagination.currentPage - 1);
+    if (pagination.has_previous) {
+      fetchUsuarios(pagination.current_page - 1);
     }
   };
 
@@ -98,8 +100,8 @@ const UsuariosPage = () => {
     }
   };
 
-  const getStatusBadge = (isActive: boolean) => {
-    return isActive 
+  const getStatusBadge = (estado: string) => {
+    return estado === 'Activo'
       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
       : 'bg-red-50 text-red-700 border-red-200';
   };
@@ -110,9 +112,7 @@ const UsuariosPage = () => {
       usuario.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       usuario.id?.toString().includes(searchTerm);
     
-    const matchesRole = roleFilter === 'all' || usuario.rol === roleFilter;
-    
-    return matchesSearch && matchesRole;
+    return matchesSearch;
   });
 
   return (
@@ -176,62 +176,98 @@ const UsuariosPage = () => {
               ) : error ? (
                 <div>Error: {error}</div>
               ) : (
-                <>
-                  <Table>
-                    <TableHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50">
-                      <TableRow>
-                        <TableHead className="font-bold text-purple-900">ID</TableHead>
-                        <TableHead className="font-bold text-purple-900">Usuario</TableHead>
-                        <TableHead className="font-bold text-purple-900">Email</TableHead>
-                        <TableHead className="font-bold text-purple-900">Rol</TableHead>
-                        <TableHead className="font-bold text-purple-900">Estado</TableHead>
-                        <TableHead className="font-bold text-purple-900">Último Acceso</TableHead>
-                        <TableHead className="font-bold text-purple-900">Dispositivo</TableHead>
+                <Table>
+                  <TableHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50">
+                    <TableRow>
+                      <TableHead className="font-bold text-purple-900">ID</TableHead>
+                      <TableHead className="font-bold text-purple-900">Usuario</TableHead>
+                      <TableHead className="font-bold text-purple-900">Email</TableHead>
+                      <TableHead className="font-bold text-purple-900">Rol</TableHead>
+                      <TableHead className="font-bold text-purple-900">Estado</TableHead>
+                      <TableHead className="font-bold text-purple-900">Último Acceso</TableHead>
+                      <TableHead className="font-bold text-purple-900">Dispositivo</TableHead>
+                      <TableHead className="font-bold text-purple-900 text-center">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsuarios.map((usuario: any) => (
+                      <TableRow key={usuario.id} className="hover:bg-purple-50/50 transition-colors">
+                        <TableCell className="font-mono font-bold text-purple-800">{usuario.id}</TableCell>
+                        <TableCell className="font-semibold text-gray-900">{usuario.usuario}</TableCell>
+                        <TableCell className="text-gray-700">{usuario.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={`${getRoleBadge(usuario.rol)} font-semibold rounded-full border`}>
+                            {getRoleDisplayName(usuario.rol)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={`${getStatusBadge(usuario.estado)} font-semibold rounded-full border`}>
+                            {usuario.estado}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-gray-700">{usuario.ultimo_acceso}</TableCell>
+                        <TableCell className="text-gray-700">{usuario.dispositivo}</TableCell>
+                        <TableCell>
+                          <div className="flex justify-center gap-2">
+                            <Dialog onOpenChange={(open) => !open && setSelectedUsuario(null)}>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="hover:bg-purple-100 rounded-lg" onClick={() => setSelectedUsuario(usuario)}>
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </DialogTrigger>
+                              {selectedUsuario && (
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Detalles del Usuario: {selectedUsuario.usuario}</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="grid gap-4 py-4">
+                                    <p><strong>ID:</strong> {selectedUsuario.id}</p>
+                                    <p><strong>Email:</strong> {selectedUsuario.email}</p>
+                                    <p><strong>Rol:</strong> {getRoleDisplayName(selectedUsuario.rol)}</p>
+                                    <p><strong>Estado:</strong> {selectedUsuario.estado}</p>
+                                    <p><strong>Último Acceso:</strong> {selectedUsuario.ultimo_acceso}</p>
+                                    <p><strong>Dispositivo:</strong> {selectedUsuario.dispositivo}</p>
+                                  </div>
+                                </DialogContent>
+                              )}
+                            </Dialog>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsuarios.map((usuario: any) => (
-                        <TableRow key={usuario.id} className="hover:bg-purple-50/50 transition-colors">
-                          <TableCell className="font-mono font-bold text-purple-800">{usuario.id}</TableCell>
-                          <TableCell className="font-semibold text-gray-900">{usuario.usuario}</TableCell>
-                          <TableCell className="text-gray-700">{usuario.email}</TableCell>
-                          <TableCell className="text-gray-700">{usuario.rol}</TableCell>
-                          <TableCell className="text-gray-700">{usuario.estado}</TableCell>
-                          <TableCell className="text-gray-700">{usuario.ultimo_acceso}</TableCell>
-                          <TableCell className="text-gray-700">{usuario.dispositivo}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  {/* Controles de paginación */}
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                    <div className="text-sm text-gray-600">
-                      Mostrando página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalItems} usuarios en total)
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handlePrevPage}
-                        disabled={!pagination.hasPrevPage || isLoading}
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-1" />
-                        Anterior
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleNextPage}
-                        disabled={!pagination.hasNextPage || isLoading}
-                      >
-                        Siguiente
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                </>
+                    ))}
+                  </TableBody>
+                </Table>
               )}
             </div>
+
+            {/* Controles de paginación */}
+            {!isLoading && !error && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <div className="text-sm text-gray-600">
+                  Mostrando página {pagination.current_page} de {pagination.total_pages} ({pagination.total_records} usuarios en total)
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrevPage}
+                    disabled={!pagination.has_previous || isLoading}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={!pagination.has_next || isLoading}
+                  >
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit, Eye, Filter, Download, Users, RefreshCw, XCircle } from "lucide-react";
+import { Plus, Search, Edit, Eye, Filter, Download, Users, RefreshCw, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/AdminLayout";
 import { Badge } from "@/components/ui/badge";
@@ -268,9 +268,9 @@ const ConductoresPage = () => {
             </div>
 
             {pagination && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Mostrando {conductores.length} de {pagination.totalItems} resultados
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <div className="text-sm text-gray-600">
+                  Mostrando página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalItems} conductores en total)
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -279,6 +279,7 @@ const ConductoresPage = () => {
                     onClick={() => handlePageChange(pagination.currentPage - 1)}
                     disabled={!pagination.hasPrevPage}
                   >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
                     Anterior
                   </Button>
                   <Button
@@ -288,6 +289,7 @@ const ConductoresPage = () => {
                     disabled={!pagination.hasNextPage}
                   >
                     Siguiente
+                    <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
               </div>

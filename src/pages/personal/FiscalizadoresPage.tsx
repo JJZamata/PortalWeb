@@ -11,6 +11,9 @@ import AdminLayout from "@/components/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import axiosInstance from '@/lib/axios';
 import axios from 'axios';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { DialogFooter } from "@/components/ui/dialog";
+import { useForm } from "react-hook-form";
 
 interface Fiscalizador {
   idUsuario: number;
@@ -58,6 +61,57 @@ const FiscalizadoresPage = () => {
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const { toast } = useToast();
 
+  // Filtrar fiscalizadores basado en el término de búsqueda
+  const filteredFiscalizadores = fiscalizadores.filter(fiscalizador => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      fiscalizador.usuario.toLowerCase().includes(searchLower) ||
+      fiscalizador.email.toLowerCase().includes(searchLower) ||
+      fiscalizador.idUsuario.toString().includes(searchTerm) ||
+      (fiscalizador.nombreCompleto && fiscalizador.nombreCompleto.toLowerCase().includes(searchLower)) ||
+      (fiscalizador.dni && fiscalizador.dni.includes(searchTerm))
+    );
+  });
+
+  // Formulario para agregar fiscalizador
+  const form = useForm({
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const [submitting, setSubmitting] = useState(false);
+
+  // Validación de contraseña según requisitos del backend
+  const validatePassword = (password: string) => {
+    const minLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    if (!minLength) return "La contraseña debe tener al menos 8 caracteres";
+    if (!hasUpperCase) return "La contraseña debe contener al menos una mayúscula";
+    if (!hasLowerCase) return "La contraseña debe contener al menos una minúscula";
+    if (!hasNumber) return "La contraseña debe contener al menos un número";
+    if (!hasSpecialChar) return "La contraseña debe contener al menos un carácter especial";
+    return true;
+  };
+
+  // Validación de username según requisitos del backend
+  const validateUsername = (username: string) => {
+    if (username.length < 3 || username.length > 20) {
+      return "El nombre de usuario debe tener entre 3 y 20 caracteres";
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return "El nombre de usuario solo puede contener letras, números y guiones bajos";
+    }
+    return true;
+  };
+
   const fetchFiscalizadores = async (page: number) => {
     try {
       setLoading(true);
@@ -86,6 +140,53 @@ const FiscalizadoresPage = () => {
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
+  };
+
+  const handleAddFiscalizador = async (values: any) => {
+    // Validar que las contraseñas coincidan
+    if (values.password !== values.confirmPassword) {
+      toast({
+        title: "Error de validación",
+        description: "Las contraseñas no coinciden",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        roles: ["fiscalizador"]
+      };
+      
+      const response = await axiosInstance.post('/auth/signup', payload);
+      
+      if (response.data.success) {
+        setShowAddDialog(false);
+        form.reset();
+        toast({
+          title: "Fiscalizador agregado",
+          description: response.data.message || "El fiscalizador fue registrado correctamente.",
+          variant: "default",
+        });
+        fetchFiscalizadores(currentPage);
+      } else {
+        throw new Error(response.data.message || 'Error al registrar fiscalizador');
+      }
+    } catch (error) {
+      toast({
+        title: "Error al agregar fiscalizador",
+        description: axios.isAxiosError(error)
+          ? error.response?.data?.message || 'Error desconocido'
+          : 'Error desconocido',
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (error) {
@@ -138,50 +239,9 @@ const FiscalizadoresPage = () => {
                   <p className="text-sm text-gray-600">Inactivos</p>
                 </div>
               </div>
-              
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg">
-                      <Plus className="w-5 h-5 mr-2" />
-                      Nuevo Fiscalizador
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-md">
-                    <DialogHeader className="pb-6">
-                      <DialogTitle className="text-2xl font-bold text-gray-800">Agregar Fiscalizador</DialogTitle>
-                      <DialogDescription className="text-gray-600">
-                        Completa la información del nuevo fiscalizador
-                      </DialogDescription>
-                    </DialogHeader>
-                    {/* Formulario de agregar fiscalizador */}
-                  </DialogContent>
-                </Dialog>
-              </div>
             </div>
           </div>
         </div>
-
-        {/* Search */}
-        <Card className="shadow-lg border-0 bg-white rounded-2xl">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <Input
-                  placeholder="Buscar por nombre de usuario, email o ID..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 h-12 border-gray-300 focus:border-red-500 rounded-xl bg-white text-base"
-                />
-              </div>
-              <Button variant="outline" className="h-12 px-6 border-red-200 text-red-700 hover:bg-red-50 rounded-xl">
-                <Filter className="w-5 h-5 mr-2" />
-                Filtros
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Lista de Fiscalizadores */}
         <Card className="shadow-lg border-0 bg-white rounded-2xl">
@@ -194,9 +254,101 @@ const FiscalizadoresPage = () => {
                 </CardTitle>
                 <CardDescription>Listado completo de fiscalizadores en el sistema</CardDescription>
               </div>
+              <div className="flex gap-3">
+                <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nuevo Fiscalizador
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-md">
+                    <DialogHeader className="pb-6">
+                      <DialogTitle className="text-2xl font-bold text-gray-800">Agregar Fiscalizador</DialogTitle>
+                      <DialogDescription className="text-gray-600">
+                        Completa la información del nuevo fiscalizador
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(handleAddFiscalizador)} className="space-y-4 pt-2">
+                        <FormField name="username" control={form.control} rules={{ 
+                          required: "El nombre de usuario es obligatorio",
+                          validate: validateUsername
+                        }}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nombre de usuario</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Ej: fiscal30_test" className="bg-white" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField name="email" control={form.control} rules={{ required: "El email es obligatorio" }}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Ingrese el email" type="email" className="bg-white" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField name="password" control={form.control} rules={{ 
+                          required: "La contraseña es obligatoria",
+                          validate: validatePassword
+                        }}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Contraseña</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Ej: Fiscal123@" type="password" className="bg-white" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField name="confirmPassword" control={form.control} rules={{ required: "La confirmación de la contraseña es obligatoria" }}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Confirmar Contraseña</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Repita la contraseña" type="password" className="bg-white" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <DialogFooter className="pt-2">
+                          <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white rounded-xl w-full" disabled={submitting}>
+                            {submitting ? 'Agregando...' : 'Agregar Fiscalizador'}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+                <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 rounded-xl">
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filtros
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
+            {/* Buscador */}
+            <div className="relative mb-6">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                placeholder="Buscar por nombre de usuario, email o ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 border-gray-200 rounded-xl focus:border-red-500 focus:ring-red-500"
+              />
+            </div>
+
             <div className="rounded-xl border border-gray-200 overflow-hidden">
               {loading ? (
                 <div className="flex items-center justify-center h-32">
@@ -218,74 +370,94 @@ const FiscalizadoresPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {fiscalizadores.map((fiscalizador) => (
-                        <TableRow key={fiscalizador.idUsuario} className="hover:bg-red-50/50 transition-colors">
-                          <TableCell className="font-mono font-semibold text-red-700">{fiscalizador.idUsuario}</TableCell>
-                          <TableCell className="font-semibold text-gray-900">{fiscalizador.usuario}</TableCell>
-                          <TableCell className="text-gray-700">{fiscalizador.email}</TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant="secondary"
-                              className={`px-3 py-1 rounded-full font-semibold border ${fiscalizador.isActive 
-                                ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
-                                : 'bg-gray-100 text-gray-800 border-gray-200'
-                              }`}
-                            >
-                              {fiscalizador.estado}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-gray-700 text-sm">
-                            {fiscalizador.ultimoAcceso}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={fiscalizador.deviceConfigured ? 'text-emerald-700' : 'text-amber-700'}>
-                              {fiscalizador.dispositivo}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex justify-center gap-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                                </DialogTrigger>
-                                <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-2xl">
-                                  <DialogHeader className="pb-6">
-                                    <DialogTitle className="text-2xl font-bold text-gray-800">Detalles del Fiscalizador</DialogTitle>
-                                    <DialogDescription className="text-gray-600">
-                                      Información completa del fiscalizador
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  <div className="space-y-6">
-                                    <div className="grid grid-cols-2 gap-6">
-                                      <div>
-                                        <Label className="text-sm font-medium text-gray-700">DNI</Label>
-                                        <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.dni}</p>
-                                      </div>
-                                      <div>
-                                        <Label className="text-sm font-medium text-gray-700">Nombre Completo</Label>
-                                        <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.nombreCompleto}</p>
-                                      </div>
-                                      <div>
-                                        <Label className="text-sm font-medium text-gray-700">Teléfono</Label>
-                                        <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.telefono || 'No registrado'}</p>
-                                      </div>
-                                      <div>
-                                        <Label className="text-sm font-medium text-gray-700">Dirección</Label>
-                                        <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.direccion || 'No registrada'}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                              <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg">
-                                <Edit className="w-4 h-4" />
-                              </Button>
+                      {filteredFiscalizadores.length === 0 && !loading ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="h-32 text-center">
+                            <div className="flex flex-col items-center justify-center text-gray-500">
+                              <Search className="w-8 h-8 mb-2" />
+                              <p>No se encontraron fiscalizadores que coincidan con "{searchTerm}"</p>
+                              {searchTerm && (
+                                <Button 
+                                  variant="outline" 
+                                  onClick={() => setSearchTerm('')}
+                                  className="mt-2"
+                                >
+                                  Limpiar búsqueda
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        filteredFiscalizadores.map((fiscalizador) => (
+                          <TableRow key={fiscalizador.idUsuario} className="hover:bg-red-50/50 transition-colors">
+                            <TableCell className="font-mono font-semibold text-red-700">{fiscalizador.idUsuario}</TableCell>
+                            <TableCell className="font-semibold text-gray-900">{fiscalizador.usuario}</TableCell>
+                            <TableCell className="text-gray-700">{fiscalizador.email}</TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant="secondary"
+                                className={`px-3 py-1 rounded-full font-semibold border ${fiscalizador.isActive 
+                                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                                  : 'bg-gray-100 text-gray-800 border-gray-200'
+                                }`}
+                              >
+                                {fiscalizador.estado}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-gray-700 text-sm">
+                              {fiscalizador.ultimoAcceso}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={fiscalizador.deviceConfigured ? 'text-emerald-700' : 'text-amber-700'}>
+                                {fiscalizador.dispositivo}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex justify-center gap-2">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg">
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-2xl">
+                                    <DialogHeader className="pb-6">
+                                      <DialogTitle className="text-2xl font-bold text-gray-800">Detalles del Fiscalizador</DialogTitle>
+                                      <DialogDescription className="text-gray-600">
+                                        Información completa del fiscalizador
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-6">
+                                      <div className="grid grid-cols-2 gap-6">
+                                        <div>
+                                          <Label className="text-sm font-medium text-gray-700">DNI</Label>
+                                          <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.dni}</p>
+                                        </div>
+                                        <div>
+                                          <Label className="text-sm font-medium text-gray-700">Nombre Completo</Label>
+                                          <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.nombreCompleto}</p>
+                                        </div>
+                                        <div>
+                                          <Label className="text-sm font-medium text-gray-700">Teléfono</Label>
+                                          <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.telefono || 'No registrado'}</p>
+                                        </div>
+                                        <div>
+                                          <Label className="text-sm font-medium text-gray-700">Dirección</Label>
+                                          <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.direccion || 'No registrada'}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                                <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg">
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -295,7 +467,11 @@ const FiscalizadoresPage = () => {
             {pagination && (
               <div className="flex items-center justify-between mt-4 pt-4 border-t">
                 <div className="text-sm text-gray-600">
-                  Mostrando página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalItems} fiscalizadores en total)
+                  {searchTerm ? (
+                    `Mostrando ${filteredFiscalizadores.length} de ${pagination.totalItems} fiscalizadores (búsqueda: "${searchTerm}")`
+                  ) : (
+                    `Mostrando página ${pagination.currentPage} de ${pagination.totalPages} (${pagination.totalItems} fiscalizadores en total)`
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button

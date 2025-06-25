@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit, Eye, Filter, Download, Users, RefreshCw, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Edit, Eye, Filter, Download, Users, RefreshCw, XCircle, ChevronLeft, ChevronRight, Calendar, MapPin, Phone, User, Clock, Monitor, Shield, Activity, Smartphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/AdminLayout";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import axios from 'axios';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { DialogFooter } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Fiscalizador {
   idUsuario: number;
@@ -29,6 +30,33 @@ interface Fiscalizador {
   nombreCompleto: string;
   telefono: string | null;
   direccion: string | null;
+}
+
+interface FiscalizadorDetallado {
+  id: number;
+  username: string;
+  email: string;
+  isActive: boolean;
+  roles: Array<{
+    id: number;
+    name: string;
+  }>;
+  lastLogin: string;
+  lastLoginIp: string;
+  lastLoginDevice: string;
+  deviceConfigured: boolean;
+  deviceInfo: {
+    configurado: boolean;
+    detalles: {
+      deviceId: string;
+      deviceName: string;
+      platform: string;
+      version: string;
+      appVersion: string;
+    };
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface PaginationData {
@@ -59,6 +87,13 @@ const FiscalizadoresPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
   const [summary, setSummary] = useState<SummaryData | null>(null);
+  
+  // Estados para vista detallada
+  const [fiscalizadorDetallado, setFiscalizadorDetallado] = useState<FiscalizadorDetallado | null>(null);
+  const [loadingDetalle, setLoadingDetalle] = useState(false);
+  const [errorDetalle, setErrorDetalle] = useState<string | null>(null);
+  const [showDetalleDialog, setShowDetalleDialog] = useState(false);
+  
   const { toast } = useToast();
 
   // Filtrar fiscalizadores basado en el término de búsqueda
@@ -84,6 +119,35 @@ const FiscalizadoresPage = () => {
   });
 
   const [submitting, setSubmitting] = useState(false);
+
+  // Función para obtener detalles del fiscalizador
+  const fetchFiscalizadorDetalle = async (id: number) => {
+    try {
+      setLoadingDetalle(true);
+      setErrorDetalle(null);
+      const response = await axiosInstance.get(`/users/${id}`);
+      
+      if (response.data.success) {
+        setFiscalizadorDetallado(response.data.data);
+        setShowDetalleDialog(true);
+      }
+    } catch (error) {
+      console.error('Error al obtener detalles del fiscalizador:', error);
+      setErrorDetalle(axios.isAxiosError(error)
+        ? error.response?.data?.message || 'Error al obtener los detalles del fiscalizador'
+        : 'Error al obtener los detalles del fiscalizador');
+      
+      toast({
+        title: "Error al cargar detalles",
+        description: axios.isAxiosError(error)
+          ? error.response?.data?.message || 'Error al obtener los detalles del fiscalizador'
+          : 'Error al obtener los detalles del fiscalizador',
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingDetalle(false);
+    }
+  };
 
   // Validación de contraseña según requisitos del backend
   const validatePassword = (password: string) => {
@@ -415,41 +479,19 @@ const FiscalizadoresPage = () => {
                             </TableCell>
                             <TableCell>
                               <div className="flex justify-center gap-2">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg">
-                                      <Eye className="w-4 h-4" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-2xl">
-                                    <DialogHeader className="pb-6">
-                                      <DialogTitle className="text-2xl font-bold text-gray-800">Detalles del Fiscalizador</DialogTitle>
-                                      <DialogDescription className="text-gray-600">
-                                        Información completa del fiscalizador
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="space-y-6">
-                                      <div className="grid grid-cols-2 gap-6">
-                                        <div>
-                                          <Label className="text-sm font-medium text-gray-700">DNI</Label>
-                                          <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.dni}</p>
-                                        </div>
-                                        <div>
-                                          <Label className="text-sm font-medium text-gray-700">Nombre Completo</Label>
-                                          <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.nombreCompleto}</p>
-                                        </div>
-                                        <div>
-                                          <Label className="text-sm font-medium text-gray-700">Teléfono</Label>
-                                          <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.telefono || 'No registrado'}</p>
-                                        </div>
-                                        <div>
-                                          <Label className="text-sm font-medium text-gray-700">Dirección</Label>
-                                          <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizador.direccion || 'No registrada'}</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="hover:bg-red-100 rounded-lg"
+                                  onClick={() => fetchFiscalizadorDetalle(fiscalizador.idUsuario)}
+                                  disabled={loadingDetalle}
+                                >
+                                  {loadingDetalle ? (
+                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
+                                </Button>
                                 <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg">
                                   <Edit className="w-4 h-4" />
                                 </Button>
@@ -497,6 +539,248 @@ const FiscalizadoresPage = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Diálogo de Detalles del Fiscalizador */}
+        <Dialog open={showDetalleDialog} onOpenChange={setShowDetalleDialog}>
+          <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-6">
+              <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <Shield className="w-6 h-6 text-red-600" />
+                Detalles del Fiscalizador
+              </DialogTitle>
+              <DialogDescription className="text-gray-600">
+                Información completa y detallada del fiscalizador
+              </DialogDescription>
+            </DialogHeader>
+            
+            {errorDetalle ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <XCircle className="w-12 h-12 text-red-500 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar detalles</h3>
+                <p className="text-gray-600 mb-4 text-center">{errorDetalle}</p>
+                <Button 
+                  onClick={() => fiscalizadorDetallado && fetchFiscalizadorDetalle(fiscalizadorDetallado.id)} 
+                  variant="outline"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reintentar
+                </Button>
+              </div>
+            ) : fiscalizadorDetallado ? (
+              <div className="space-y-8">
+                {/* Header con información principal */}
+                <div className="flex flex-col md:flex-row gap-6 items-start md:items-center p-6 bg-gradient-to-br from-red-50 to-red-100/30 rounded-xl">
+                  <Avatar className="w-24 h-24 border-4 border-white shadow-lg bg-red-600">
+                    <AvatarFallback className="text-2xl font-bold text-white">
+                      {fiscalizadorDetallado.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{fiscalizadorDetallado.username}</h2>
+                    <div className="flex items-center gap-4 text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <User className="w-4 h-4" />
+                        <span className="font-mono font-semibold text-red-700">ID: {fiscalizadorDetallado.id}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Activity className="w-4 h-4" />
+                        <Badge 
+                          variant="secondary"
+                          className={`px-2 py-1 rounded-full text-xs font-semibold border ${
+                            fiscalizadorDetallado.isActive 
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                              : 'bg-gray-100 text-gray-800 border-gray-200'
+                          }`}
+                        >
+                          {fiscalizadorDetallado.isActive ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Información detallada */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Información de Usuario */}
+                  <Card className="shadow-sm border border-gray-200">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <User className="w-5 h-5 text-red-600" />
+                        Información de Usuario
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">ID de Usuario</Label>
+                        <p className="mt-1 text-lg font-mono font-semibold text-red-700">{fiscalizadorDetallado.id}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Nombre de Usuario</Label>
+                        <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizadorDetallado.username}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Email</Label>
+                        <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizadorDetallado.email}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Roles</Label>
+                        <div className="mt-1 flex gap-2">
+                          {fiscalizadorDetallado.roles.map((role) => (
+                            <Badge key={role.id} variant="outline" className="text-red-700 border-red-200">
+                              {role.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Información de Sesión */}
+                  <Card className="shadow-sm border border-gray-200">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-red-600" />
+                        Información de Sesión
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Último Acceso</Label>
+                        <p className="mt-1 text-lg font-semibold text-gray-900">
+                          {fiscalizadorDetallado.lastLogin ? (
+                            new Date(fiscalizadorDetallado.lastLogin).toLocaleDateString('es-ES', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
+                          ) : (
+                            <span className="text-gray-500 italic">Nunca ha accedido</span>
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">IP del Último Acceso</Label>
+                        <p className="mt-1 text-lg font-semibold text-gray-900">
+                          {fiscalizadorDetallado.lastLoginIp || (
+                            <span className="text-gray-500 italic">No disponible</span>
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Dispositivo del Último Acceso</Label>
+                        <p className="mt-1 text-lg font-semibold text-gray-900">
+                          {fiscalizadorDetallado.lastLoginDevice || (
+                            <span className="text-gray-500 italic">No disponible</span>
+                          )}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Información del Dispositivo */}
+                  <Card className="shadow-sm border border-gray-200">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Smartphone className="w-5 h-5 text-red-600" />
+                        Configuración del Dispositivo
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700">Estado de Configuración</Label>
+                        <div className="mt-1">
+                          <Badge 
+                            variant="secondary"
+                            className={`px-3 py-1 rounded-full font-semibold border ${
+                              fiscalizadorDetallado.deviceConfigured 
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+                                : 'bg-amber-100 text-amber-800 border-amber-200'
+                            }`}
+                          >
+                            {fiscalizadorDetallado.deviceConfigured ? 'Configurado' : 'Pendiente de Configuración'}
+                          </Badge>
+                        </div>
+                      </div>
+                      {fiscalizadorDetallado.deviceInfo?.detalles && (
+                        <>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">ID del Dispositivo</Label>
+                            <p className="mt-1 text-sm font-mono text-gray-900">{fiscalizadorDetallado.deviceInfo.detalles.deviceId}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">Nombre del Dispositivo</Label>
+                            <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizadorDetallado.deviceInfo.detalles.deviceName}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">Plataforma</Label>
+                            <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizadorDetallado.deviceInfo.detalles.platform}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">Versión del Sistema</Label>
+                            <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizadorDetallado.deviceInfo.detalles.version}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700">Versión de la App</Label>
+                            <p className="mt-1 text-lg font-semibold text-gray-900">{fiscalizadorDetallado.deviceInfo.detalles.appVersion}</p>
+                          </div>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Información de Registro */}
+                  <Card className="shadow-sm border border-gray-200">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-red-600" />
+                        Información de Registro
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          Fecha de Creación
+                        </Label>
+                        <p className="mt-1 text-lg font-semibold text-gray-900">
+                          {new Date(fiscalizadorDetallado.createdAt).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          Última Actualización
+                        </Label>
+                        <p className="mt-1 text-lg font-semibold text-gray-900">
+                          {new Date(fiscalizadorDetallado.updatedAt).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw className="w-8 h-8 animate-spin text-red-600" />
+                <span className="ml-2 text-gray-600">Cargando detalles del fiscalizador...</span>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

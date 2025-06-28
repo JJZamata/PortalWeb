@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Edit, Eye, Filter, Download, Users, RefreshCw, XCircle, ChevronLeft, ChevronRight, Calendar, MapPin, Phone, User, Clock } from "lucide-react";
+import { Plus, Search, Edit, Eye, Filter, Download, Users, RefreshCw, XCircle, ChevronLeft, ChevronRight, Calendar, MapPin, Phone, User, Clock, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/AdminLayout";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ interface Conductor {
   lastName: string;
   phoneNumber: string;
   address: string;
+  photoUrl?: string;
 }
 
 interface Licencia {
@@ -99,6 +100,17 @@ const ConductoresPage = () => {
   const [licencias, setLicencias] = useState<Licencia[]>([]);
   const [licenciasSummary, setLicenciasSummary] = useState<LicenciasSummary | null>(null);
   
+  // Estado para edición
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editConductor, setEditConductor] = useState<ConductorDetalladoNuevo | null>(null);
+  const editForm = useForm({
+    defaultValues: {
+      phoneNumber: '',
+      address: '',
+      photoUrl: '',
+    },
+  });
+  
   const { toast } = useToast();
 
   // Formulario para agregar conductor
@@ -109,10 +121,28 @@ const ConductoresPage = () => {
       lastName: "",
       phoneNumber: "",
       address: "",
+      photoUrl: "",
     },
   });
 
   const [submitting, setSubmitting] = useState(false);
+
+  // Estado para eliminar
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteDni, setDeleteDni] = useState<string | null>(null);
+
+  // Estado para agregar licencia
+  const [showAddLicenseDialog, setShowAddLicenseDialog] = useState(false);
+  const addLicenseForm = useForm({
+    defaultValues: {
+      licenseNumber: '',
+      category: '',
+      issueDate: '',
+      expirationDate: '',
+      issuingEntity: '',
+      restrictions: '',
+    },
+  });
 
   // Función para obtener detalles del conductor
   const fetchConductorDetalle = async (dni: string) => {
@@ -170,14 +200,21 @@ const ConductoresPage = () => {
   const handleAddConductor = async (values: any) => {
     setSubmitting(true);
     try {
-      // Aquí solo falta poner el link del API
-      // await axiosInstance.post('/ruta/del/api', values);
+      // Usar el endpoint real para crear conductor
+      await axiosInstance.post('/drivers/', {
+        dni: values.dni,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phoneNumber: values.phoneNumber,
+        address: values.address,
+        photoUrl: values.photoUrl || '', // Si no hay foto, enviar string vacío
+      });
       setShowAddDialog(false);
       form.reset();
       toast({
         title: "Conductor agregado",
         description: "El conductor fue registrado correctamente.",
-        variant: "default",
+        variant: "success",
       });
       fetchConductores(currentPage);
     } catch (error) {
@@ -273,6 +310,115 @@ const ConductoresPage = () => {
       searchConductores(searchTerm, newPage);
     } else {
       fetchConductores(newPage);
+    }
+  };
+
+  // Función para abrir el diálogo de edición
+  const openEditDialog = (conductor: ConductorDetalladoNuevo) => {
+    setEditConductor(conductor);
+    editForm.reset({
+      phoneNumber: conductor.phoneNumber || '',
+      address: conductor.address || '',
+      photoUrl: conductor.photoUrl || '',
+    });
+    setShowEditDialog(true);
+  };
+
+  // Función para actualizar conductor
+  const handleEditConductor = async (values: any) => {
+    if (!editConductor) return;
+    setSubmitting(true);
+    try {
+      await axiosInstance.put(`/drivers/${editConductor.dni}`, {
+        phoneNumber: values.phoneNumber,
+        address: values.address,
+        photoUrl: values.photoUrl,
+      });
+      setShowEditDialog(false);
+      toast({
+        title: "Conductor actualizado",
+        description: "Los datos del conductor fueron actualizados correctamente.",
+        variant: "success",
+      });
+      fetchConductores(currentPage);
+    } catch (error) {
+      toast({
+        title: "Error al actualizar conductor",
+        description: axios.isAxiosError(error)
+          ? error.response?.data?.message || 'Error desconocido'
+          : 'Error desconocido',
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Función para abrir el diálogo de eliminar
+  const openDeleteDialog = (dni: string) => {
+    setDeleteDni(dni);
+    setShowDeleteDialog(true);
+  };
+
+  // Función para eliminar conductor
+  const handleDeleteConductor = async () => {
+    if (!deleteDni) return;
+    setSubmitting(true);
+    try {
+      await axiosInstance.delete(`/drivers/${deleteDni}`);
+      setShowDeleteDialog(false);
+      toast({
+        title: "Conductor eliminado",
+        description: "El conductor fue eliminado exitosamente.",
+        variant: "success",
+      });
+      fetchConductores(currentPage);
+    } catch (error) {
+      toast({
+        title: "Error al eliminar conductor",
+        description: axios.isAxiosError(error)
+          ? error.response?.data?.message || 'Error desconocido'
+          : 'Error desconocido',
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Función para agregar licencia
+  const handleAddLicense = async (values: any) => {
+    if (!conductorDetallado) return;
+    setSubmitting(true);
+    try {
+      await axiosInstance.post('/licenses', {
+        driverDni: conductorDetallado.dni,
+        licenseNumber: values.licenseNumber,
+        category: values.category,
+        issueDate: values.issueDate,
+        expirationDate: values.expirationDate,
+        issuingEntity: values.issuingEntity,
+        restrictions: values.restrictions,
+      });
+      setShowAddLicenseDialog(false);
+      addLicenseForm.reset();
+      toast({
+        title: "Licencia agregada",
+        description: "La licencia fue registrada correctamente.",
+        variant: "success",
+      });
+      // Refrescar detalles del conductor
+      fetchConductorDetalle(conductorDetallado.dni);
+    } catch (error) {
+      toast({
+        title: "Error al agregar licencia",
+        description: axios.isAxiosError(error)
+          ? error.response?.data?.message || 'Error desconocido'
+          : 'Error desconocido',
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -405,6 +551,17 @@ const ConductoresPage = () => {
                             </FormItem>
                           )}
                         />
+                        <FormField name="photoUrl" control={form.control} rules={{}}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Foto de Perfil (URL)</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="https://..." className="bg-white" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <DialogFooter className="pt-2">
                           <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white rounded-xl w-full" disabled={submitting}>
                             {submitting ? 'Agregando...' : 'Agregar Conductor'}
@@ -506,8 +663,21 @@ const ConductoresPage = () => {
                                     <Eye className="w-4 h-4" />
                                   )}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="hover:bg-green-100 rounded-lg">
+                                <Button variant="ghost" size="sm" className="hover:bg-green-100 rounded-lg" onClick={() => openEditDialog({
+                                  dni: conductor.dni,
+                                  nombreCompleto: conductor.nombreCompleto,
+                                  firstName: conductor.firstName,
+                                  lastName: conductor.lastName,
+                                  phoneNumber: conductor.phoneNumber,
+                                  address: conductor.address,
+                                  photoUrl: conductor.photoUrl || '',
+                                  fechaRegistro: '',
+                                  ultimaActualizacion: '',
+                                })}>
                                   <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg" onClick={() => openDeleteDialog(conductor.dni)}>
+                                  <Trash2 className="w-4 h-4" />
                                 </Button>
                               </div>
                             </TableCell>
@@ -768,6 +938,13 @@ const ConductoresPage = () => {
                     </CardContent>
                   </Card>
                 </div>
+                {conductorDetallado && (
+                  <div className="flex justify-end mb-2">
+                    <Button className="bg-green-600 hover:bg-green-700 text-white rounded-xl" onClick={() => setShowAddLicenseDialog(true)}>
+                      + Agregar Licencia
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center justify-center py-8">
@@ -775,6 +952,165 @@ const ConductoresPage = () => {
                 <span className="ml-2 text-gray-600">Cargando detalles del conductor...</span>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo de Edición del Conductor */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-md">
+            <DialogHeader className="pb-6">
+              <DialogTitle className="text-2xl font-bold text-gray-800">Editar Conductor</DialogTitle>
+              <DialogDescription className="text-gray-600">
+                Modifica los datos del conductor
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(handleEditConductor)} className="space-y-4 pt-2">
+                <FormField name="phoneNumber" control={editForm.control} rules={{ required: "El teléfono es obligatorio" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Teléfono</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: 987654321" maxLength={9} className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField name="address" control={editForm.control} rules={{ required: "La dirección es obligatoria" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dirección</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: Av. Principal 123, La Joya" className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField name="photoUrl" control={editForm.control} rules={{}}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Foto de Perfil (URL)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="https://..." className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter className="pt-2">
+                  <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white rounded-xl w-full" disabled={submitting}>
+                    {submitting ? 'Actualizando...' : 'Actualizar Conductor'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo de Confirmación de Eliminación */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-md">
+            <DialogHeader className="pb-6">
+              <DialogTitle className="text-2xl font-bold text-gray-800">Eliminar Conductor</DialogTitle>
+              <DialogDescription className="text-gray-600">
+                ¿Estás seguro de que deseas eliminar este conductor? Esta acción no se puede deshacer.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={submitting}>Cancelar</Button>
+              <Button variant="destructive" onClick={handleDeleteConductor} disabled={submitting}>
+                {submitting ? 'Eliminando...' : 'Eliminar'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Diálogo de Agregar Licencia */}
+        <Dialog open={showAddLicenseDialog} onOpenChange={setShowAddLicenseDialog}>
+          <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-md">
+            <DialogHeader className="pb-6">
+              <DialogTitle className="text-2xl font-bold text-gray-800">Agregar Licencia</DialogTitle>
+              <DialogDescription className="text-gray-600">
+                Ingresa los datos de la nueva licencia para este conductor
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...addLicenseForm}>
+              <form onSubmit={addLicenseForm.handleSubmit(handleAddLicense)} className="space-y-4 pt-2">
+                <FormField name="licenseNumber" control={addLicenseForm.control} rules={{ required: "El número de licencia es obligatorio" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número de Licencia</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: K87654321" className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField name="category" control={addLicenseForm.control} rules={{ required: "La categoría es obligatoria" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoría</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: B-IIa" className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField name="issueDate" control={addLicenseForm.control} rules={{ required: "La fecha de emisión es obligatoria" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fecha de Emisión</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField name="expirationDate" control={addLicenseForm.control} rules={{ required: "La fecha de vencimiento es obligatoria" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fecha de Vencimiento</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField name="issuingEntity" control={addLicenseForm.control} rules={{ required: "La entidad emisora es obligatoria" }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Entidad Emisora</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: SUTRAN" className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField name="restrictions" control={addLicenseForm.control} rules={{}}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Restricciones</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: LENTES CORRECTIVOS" className="bg-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter className="pt-2">
+                  <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white rounded-xl w-full" disabled={submitting}>
+                    {submitting ? 'Agregando...' : 'Agregar Licencia'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>

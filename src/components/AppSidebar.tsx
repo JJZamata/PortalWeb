@@ -15,29 +15,16 @@ import {
   Settings,
   LogOut,
   ChevronRight,
-  Archive
+  Archive,
+  Menu,
+  X
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from '@/lib/axios';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   {
@@ -79,23 +66,46 @@ const menuItems = [
   },
 ];
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+const EXPANDED_SECTIONS_KEY = 'sidebar:expandedSections';
+
+export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { state } = useSidebar();
   const { toast } = useToast();
   
-  // Estado persistente para las secciones expandidas
+  // Estado para las secciones expandidas, persistente en localStorage
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() => {
-    // Inicializar con todas las secciones expandidas
-    const initial = {};
-    menuItems.forEach(item => {
-      if (item.items) {
-        initial[item.title] = true;
+    // Intentar leer de localStorage
+    const stored = localStorage.getItem(EXPANDED_SECTIONS_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        // Si hay error, usar todas abiertas por defecto
+        const initial: { [key: string]: boolean } = {};
+        menuItems.forEach(item => {
+          if (item.items) initial[item.title] = true;
+        });
+        return initial;
       }
+    }
+    // Si no hay nada guardado, abrir todas por defecto
+    const initial: { [key: string]: boolean } = {};
+    menuItems.forEach(item => {
+      if (item.items) initial[item.title] = true;
     });
     return initial;
   });
+
+  // Guardar en localStorage cada vez que cambie
+  useEffect(() => {
+    localStorage.setItem(EXPANDED_SECTIONS_KEY, JSON.stringify(expandedSections));
+  }, [expandedSections]);
 
   // Función para encontrar qué sección contiene la ruta actual
   const findParentSection = (pathname: string) => {
@@ -121,7 +131,6 @@ export function AppSidebar() {
       }));
     }
   }, [location.pathname]);
-  
 
   // Función para manejar el toggle de secciones
   const toggleSection = (sectionTitle: string) => {
@@ -145,102 +154,141 @@ export function AppSidebar() {
     }
   };
 
+  // Función para navegar y cerrar sidebar en móvil
+  const handleNavigation = (url: string) => {
+    navigate(url);
+    // Cerrar sidebar en dispositivos móviles después de navegar
+    if (window.innerWidth < 1024) {
+      onToggle();
+    }
+  };
+
   return (
-    <Sidebar variant="inset" className="border-r border-gray-200/60 bg-white/95 backdrop-blur-sm">
-      <SidebarHeader className="border-b border-gray-200/60 p-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
-            <Shield className="w-7 h-7 text-white" />
-          </div>
-          {state === "expanded" && (
-            <div>
-              <h2 className="font-bold text-gray-900 text-xl tracking-tight">FISCAMOTO</h2>
-              <p className="text-sm text-gray-600 font-medium">Sistema de Control</p>
-            </div>
-          )}
-        </div>
-      </SidebarHeader>
+    <>
+      {/* Overlay para móvil y tablet */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onToggle}
+        />
+      )}
       
-      <SidebarContent className="px-3 py-4">
-        <SidebarGroup>
-          <SidebarMenu>
+      {/* Sidebar */}
+      <div className={cn(
+        "fixed left-0 top-0 z-50 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out",
+        // Responsive widths
+        "w-80 sm:w-80 md:w-80 lg:relative lg:translate-x-0 lg:w-64 xl:w-72",
+        // Mobile/tablet behavior
+        "lg:static",
+        // Altura completa siempre
+        "h-screen min-h-screen lg:h-screen lg:min-h-screen",
+        isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <Shield className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-bold text-gray-900 text-lg sm:text-xl tracking-tight truncate">FISCAMOTO</h2>
+              <p className="text-xs sm:text-sm text-gray-600 font-medium truncate">Sistema de Control</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggle}
+            className="lg:hidden p-2"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+        
+        {/* Contenido del menú */}
+        <div className="flex-1 overflow-y-auto py-4">
+          <nav className="px-3 sm:px-4 space-y-1">
             {menuItems.map((item) => {
               if (!item.items) {
                 const isActive = location.pathname === item.url;
                 return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      className="h-12 px-4 rounded-xl font-medium transition-all duration-200 hover:bg-red-50 hover:text-red-700 data-[active=true]:bg-red-100 data-[active=true]:text-red-800 data-[active=true]:shadow-sm"
-                    >
-                      <button onClick={() => navigate(item.url!)}>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.title}</span>
-                      </button>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <Button
+                    key={item.title}
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start h-12 px-3 sm:px-4 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base",
+                      isActive 
+                        ? "bg-red-100 text-red-800 hover:bg-red-200" 
+                        : "hover:bg-gray-100 text-gray-700"
+                    )}
+                    onClick={() => handleNavigation(item.url!)}
+                  >
+                    <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                    <span className="truncate">{item.title}</span>
+                  </Button>
                 );
               }
 
               const isExpanded = expandedSections[item.title];
               return (
-                <Collapsible 
-                  key={item.title} 
-                  open={isExpanded}
-                  onOpenChange={() => toggleSection(item.title)}
-                  className="group/collapsible"
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton className="h-12 px-4 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 group-data-[state=open]/collapsible:bg-gray-50">
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.title}</span>
-                        <ChevronRight className={`ml-auto w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub className="ml-4 mt-2 space-y-1">
-                        {item.items.map((subItem) => {
-                          const isActive = location.pathname === subItem.url;
-                          return (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={isActive}
-                                className="h-10 px-4 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-red-50 hover:text-red-700 data-[active=true]:bg-red-100 data-[active=true]:text-red-800"
-                              >
-                                <button onClick={() => navigate(subItem.url)}>
-                                  <subItem.icon className="w-4 h-4" />
-                                  <span>{subItem.title}</span>
-                                </button>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          );
-                        })}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
+                <div key={item.title} className="space-y-1">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-between h-12 px-3 sm:px-4 rounded-xl font-medium transition-all duration-200 hover:bg-gray-100 text-gray-700 text-sm sm:text-base"
+                    onClick={() => toggleSection(item.title)}
+                  >
+                    <div className="flex items-center min-w-0">
+                      <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                      <span className="truncate">{item.title}</span>
+                    </div>
+                    <ChevronRight className={cn(
+                      "w-4 h-4 transition-transform duration-200 flex-shrink-0",
+                      isExpanded ? "rotate-90" : ""
+                    )} />
+                  </Button>
+                  
+                  {isExpanded && (
+                    <div className="ml-4 sm:ml-6 space-y-1">
+                      {item.items.map((subItem) => {
+                        const isActive = location.pathname === subItem.url;
+                        return (
+                          <Button
+                            key={subItem.title}
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "w-full justify-start h-10 px-3 sm:px-4 rounded-lg text-sm font-medium transition-all duration-200",
+                              isActive 
+                                ? "bg-red-100 text-red-800 hover:bg-red-200" 
+                                : "hover:bg-gray-100 text-gray-700"
+                            )}
+                            onClick={() => handleNavigation(subItem.url)}
+                          >
+                            <subItem.icon className="w-4 h-4 mr-3 flex-shrink-0" />
+                            <span className="truncate">{subItem.title}</span>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
+          </nav>
+        </div>
 
-      <SidebarFooter className="border-t border-gray-200/60 p-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={handleLogout}
-              className="h-12 px-4 rounded-xl font-medium text-gray-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
-            >
-              <LogOut className="w-5 h-5" />
-              <span>Cerrar Sesión</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+        {/* Footer */}
+        <div className="p-3 sm:p-4 border-t border-gray-200">
+          <Button
+            variant="ghost"
+            className="w-full justify-start h-12 px-3 sm:px-4 rounded-xl font-medium text-gray-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 text-sm sm:text-base"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
+            <span className="truncate">Cerrar Sesión</span>
+          </Button>
+        </div>
+      </div>
+    </>
   );
 }

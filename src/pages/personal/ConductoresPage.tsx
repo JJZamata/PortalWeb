@@ -27,13 +27,34 @@ interface Conductor {
   address: string;
 }
 
-interface ConductorDetallado {
+interface Licencia {
+  licenseId: string;
+  licenseNumber: string;
+  category: string;
+  issueDate: string;
+  expirationDate: string;
+  issuingEntity: string;
+  restrictions: string;
+  estado: string;
+  diasParaVencimiento: number;
+  fechaCreacion: string;
+  ultimaActualizacion: string;
+}
+
+interface LicenciasSummary {
+  total: number;
+  vigentes: number;
+  porVencer: number;
+  vencidas: number;
+}
+
+interface ConductorDetalladoNuevo {
   dni: string;
   nombreCompleto: string;
   firstName: string;
   lastName: string;
-  telefono: string;
-  direccion: string;
+  phoneNumber: string;
+  address: string;
   photoUrl: string;
   fechaRegistro: string;
   ultimaActualizacion: string;
@@ -71,10 +92,12 @@ const ConductoresPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   
   // Estados para vista detallada
-  const [conductorDetallado, setConductorDetallado] = useState<ConductorDetallado | null>(null);
+  const [conductorDetallado, setConductorDetallado] = useState<ConductorDetalladoNuevo | null>(null);
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [errorDetalle, setErrorDetalle] = useState<string | null>(null);
   const [showDetalleDialog, setShowDetalleDialog] = useState(false);
+  const [licencias, setLicencias] = useState<Licencia[]>([]);
+  const [licenciasSummary, setLicenciasSummary] = useState<LicenciasSummary | null>(null);
   
   const { toast } = useToast();
 
@@ -99,7 +122,9 @@ const ConductoresPage = () => {
       const response = await axiosInstance.get(`/drivers/${dni}`);
       
       if (response.data.success) {
-        setConductorDetallado(response.data.data);
+        setConductorDetallado(response.data.data.conductor);
+        setLicencias(response.data.data.licencias || []);
+        setLicenciasSummary(response.data.data.summary || null);
         setShowDetalleDialog(true);
       }
     } catch (error) {
@@ -557,7 +582,7 @@ const ConductoresPage = () => {
               </div>
             ) : conductorDetallado ? (
               <div className="space-y-8">
-                {/* Header con foto y información principal */}
+                {/* Header con foto y datos principales */}
                 <div className="flex flex-col md:flex-row gap-6 items-start md:items-center p-6 bg-gradient-to-br from-green-50 to-green-100/30 rounded-xl">
                   <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
                     <AvatarImage src={conductorDetallado.photoUrl} alt={conductorDetallado.nombreCompleto} />
@@ -572,10 +597,10 @@ const ConductoresPage = () => {
                         <User className="w-4 h-4" />
                         <span className="font-mono font-semibold text-green-700">{conductorDetallado.dni}</span>
                       </div>
-                      {conductorDetallado.telefono && (
+                      {conductorDetallado.phoneNumber && (
                         <div className="flex items-center gap-1">
                           <Phone className="w-4 h-4" />
-                          <span>{conductorDetallado.telefono}</span>
+                          <span>{conductorDetallado.phoneNumber}</span>
                         </div>
                       )}
                     </div>
@@ -624,7 +649,7 @@ const ConductoresPage = () => {
                       <div>
                         <Label className="text-sm font-medium text-gray-700">Teléfono</Label>
                         <p className="mt-1 text-lg font-semibold text-gray-900">
-                          {conductorDetallado.telefono || (
+                          {conductorDetallado.phoneNumber || (
                             <span className="text-gray-500 italic">No registrado</span>
                           )}
                         </p>
@@ -632,7 +657,7 @@ const ConductoresPage = () => {
                       <div>
                         <Label className="text-sm font-medium text-gray-700">Dirección</Label>
                         <p className="mt-1 text-lg font-semibold text-gray-900">
-                          {conductorDetallado.direccion || (
+                          {conductorDetallado.address || (
                             <span className="text-gray-500 italic">No registrada</span>
                           )}
                         </p>
@@ -640,6 +665,65 @@ const ConductoresPage = () => {
                     </CardContent>
                   </Card>
 
+                  {/* Información de Licencias */}
+                  <Card className="shadow-sm border border-gray-200 md:col-span-2">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-green-600" />
+                        Licencias de Conducir
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {licenciasSummary && (
+                        <div className="flex flex-wrap gap-4 mb-4">
+                          <Badge className="bg-green-100 text-green-800">Total: {licenciasSummary.total}</Badge>
+                          <Badge className="bg-green-100 text-green-800">Vigentes: {licenciasSummary.vigentes}</Badge>
+                          <Badge className="bg-yellow-100 text-yellow-800">Por vencer: {licenciasSummary.porVencer}</Badge>
+                          <Badge className="bg-red-100 text-red-800">Vencidas: {licenciasSummary.vencidas}</Badge>
+                        </div>
+                      )}
+                      {licencias.length === 0 ? (
+                        <div className="text-gray-500 italic">No se encontraron licencias para este conductor.</div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="font-bold text-green-900">ID</TableHead>
+                                <TableHead className="font-bold text-green-900">Número</TableHead>
+                                <TableHead className="font-bold text-green-900">Categoría</TableHead>
+                                <TableHead className="font-bold text-green-900">Entidad</TableHead>
+                                <TableHead className="font-bold text-green-900">Estado</TableHead>
+                                <TableHead className="font-bold text-green-900">Vencimiento</TableHead>
+                                <TableHead className="font-bold text-green-900">Restricciones</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {licencias.map((lic) => (
+                                <TableRow key={lic.licenseId}>
+                                  <TableCell className="font-mono text-green-700">{lic.licenseId}</TableCell>
+                                  <TableCell>{lic.licenseNumber}</TableCell>
+                                  <TableCell>{lic.category}</TableCell>
+                                  <TableCell>{lic.issuingEntity}</TableCell>
+                                  <TableCell>
+                                    <Badge className={
+                                      lic.estado === 'vigente' ? 'bg-green-200 text-green-800' :
+                                      lic.estado === 'por vencer' ? 'bg-yellow-200 text-yellow-800' :
+                                      'bg-red-200 text-red-800'
+                                    }>
+                                      {lic.estado}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>{new Date(lic.expirationDate).toLocaleDateString('es-ES')}</TableCell>
+                                  <TableCell>{lic.restrictions}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                   {/* Información de Registro */}
                   <Card className="shadow-sm border border-gray-200 md:col-span-2">
                     <CardHeader className="pb-4">

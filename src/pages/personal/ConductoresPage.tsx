@@ -571,10 +571,6 @@ const ConductoresPage = () => {
                     </Form>
                   </DialogContent>
                 </Dialog>
-                <Button variant="outline" className="border-green-200 text-green-700 hover:bg-green-50 rounded-xl">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filtros
-                </Button>
               </div>
             </div>
           </CardHeader>
@@ -677,7 +673,7 @@ const ConductoresPage = () => {
                                   <Edit className="w-4 h-4" />
                                 </Button>
                                 <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg" onClick={() => openDeleteDialog(conductor.dni)}>
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-4 h-4 text-red-600" />
                                 </Button>
                               </div>
                             </TableCell>

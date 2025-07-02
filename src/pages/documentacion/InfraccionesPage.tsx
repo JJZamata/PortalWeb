@@ -18,10 +18,19 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { AlertTriangle, ListTodo, Loader2, RotateCw, ServerCrash } from "lucide-react";
+import { AlertTriangle, ListTodo, Loader2, RotateCw, ServerCrash, Eye, Filter, XCircle, RefreshCw, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 import axios from '@/lib/axios';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Types based on API response
 interface Violation {
@@ -43,18 +52,51 @@ interface PaginationData {
   hasPrevPage: boolean;
 }
 
+const severities = [
+  { value: "ALL", label: "Todas" },
+  { value: "mild", label: "Leve" },
+  { value: "serious", label: "Grave" },
+  { value: "very_serious", label: "Muy Grave" },
+];
+
 const InfraccionesPage = () => {
   const [violations, setViolations] = useState<Violation[]>([]);
   const [paginationData, setPaginationData] = useState<PaginationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [severityFilter, setSeverityFilter] = useState<string>("ALL");
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [filterLoading, setFilterLoading] = useState(false);
+  const [selectedViolation, setSelectedViolation] = useState<Violation | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [stats, setStats] = useState({
+    totalViolations: 0,
+    verySerious: 0,
+    serious: 0,
+    minor: 0,
+    driverTargeted: 0,
+    companyTargeted: 0,
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  const fetchViolations = async (page: number) => {
+  const fetchViolations = async (page: number, severity: string = "ALL", query: string = "") => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`/violations/?page=${page}`);
+      let url = "";
+      if (query && query.length >= 2) {
+        url = `/violations/search?query=${encodeURIComponent(query)}&page=${page}`;
+      } else if (severity !== "ALL") {
+        url = `/violations/filter/severity?severity=${severity}&page=${page}`;
+      } else {
+        url = `/violations/?page=${page}`;
+      }
+      const response = await axios.get(url);
       const { data } = response.data;
       setViolations(data.violations);
       setPaginationData(data.pagination);
@@ -66,9 +108,57 @@ const InfraccionesPage = () => {
     }
   };
 
+  const fetchViolationDetail = async (id: number) => {
+    setLoadingDetail(true);
+    setErrorDetail(null);
+    try {
+      const response = await axios.get(`/violations/${id}`);
+      setSelectedViolation(response.data.data);
+    } catch (err) {
+      setErrorDetail("No se pudo cargar el detalle de la infracción.");
+      setSelectedViolation(null);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      setLoadingStats(true);
+      const response = await axios.get('/violations/admin/stats');
+      if (response.data.success) {
+        setStats(response.data.data);
+      }
+    } catch (error) {
+      // Opcional: mostrar toast de error
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
   useEffect(() => {
-    fetchViolations(currentPage);
-  }, [currentPage]);
+    fetchViolations(currentPage, severityFilter, searchTerm);
+    fetchStats();
+    // eslint-disable-next-line
+  }, [currentPage, severityFilter]);
+
+  // Debounce para búsqueda
+  useEffect(() => {
+    if (searchTerm.length < 2) {
+      setIsSearching(false);
+      fetchViolations(1, severityFilter, "");
+      return;
+    }
+    setSearchLoading(true);
+    setIsSearching(true);
+    const timeoutId = setTimeout(() => {
+      fetchViolations(1, severityFilter, searchTerm);
+      setCurrentPage(1);
+      setSearchLoading(false);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line
+  }, [searchTerm]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= (paginationData?.totalPages || 1)) {
@@ -123,126 +213,264 @@ const InfraccionesPage = () => {
     ))
   );
 
+  const clearFilters = () => {
+    setSeverityFilter("ALL");
+    setSearchTerm("");
+    setIsSearching(false);
+    setFilterLoading(false);
+  };
+
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-              Catálogo de Infracciones
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Consulta el catálogo de infracciones de tránsito, sanciones y medidas administrativas.
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-2">
-                <ListTodo className="w-6 h-6 text-red-600" />
-                <div>
-                    <p className="text-sm text-gray-500">Total de Infracciones</p>
-                    {loading ? <Skeleton className="h-5 w-16 mt-1" /> : <p className="font-bold text-xl text-gray-900">{paginationData?.totalViolations || 0}</p>}
-                </div>
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="bg-gradient-to-br from-white to-[#812020]/10 p-8 rounded-2xl shadow-lg border border-[#812020]/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#812020] to-[#a94442] bg-clip-text text-transparent mb-2">
+                Catálogo de Infracciones
+              </h1>
+              <p className="text-gray-700 text-lg">Administración y consulta de infracciones de tránsito</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-[#812020]">{loadingStats ? '...' : stats.totalViolations}</p>
+                <p className="text-sm text-gray-600">Total Infracciones</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-red-700">{loadingStats ? '...' : stats.verySerious}</p>
+                <p className="text-sm text-gray-600">Muy Graves</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-orange-700">{loadingStats ? '...' : stats.serious}</p>
+                <p className="text-sm text-gray-600">Graves</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-yellow-600">{loadingStats ? '...' : stats.minor}</p>
+                <p className="text-sm text-gray-600">Leves</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <Card className="overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between bg-gray-50/50 border-b px-6 py-4">
-            <div>
-              <CardTitle className="text-lg font-semibold">
-                Lista de Infracciones
-              </CardTitle>
-              <CardDescription className="mt-1">
-                Mostrando {violations.length} de {paginationData?.totalViolations} infracciones
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchViolations(currentPage)}
-              disabled={loading}
-              className="gap-2"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCw className="w-4 h-4" />}
-              Recargar
-            </Button>
-          </CardHeader>
-          <CardContent className="p-0">
-            {error && (
-              <div className="text-center py-12">
-                <ServerCrash className="mx-auto h-12 w-12 text-red-400" />
-                <h3 className="mt-4 text-lg font-medium text-gray-800">Error al Cargar Datos</h3>
-                <p className="mt-1 text-sm text-gray-500">{error}</p>
-                <Button className="mt-4" onClick={() => fetchViolations(currentPage)}>
-                  Reintentar
-                </Button>
+        {/* Controles */}
+        <Card className="shadow-lg border-0 bg-white rounded-2xl">
+          <CardHeader className="pb-4">
+            <div className="flex flex-col gap-4">
+              <div>
+                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  Infracciones Registradas
+                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-[#812020]" />}
+                </CardTitle>
+                <CardDescription>Catálogo completo de infracciones de tránsito</CardDescription>
               </div>
-            )}
-            
-            {!error && (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 hover:bg-gray-50">
-                      <TableHead className="font-semibold">Código</TableHead>
-                      <TableHead className="font-semibold">Descripción</TableHead>
-                      <TableHead className="font-semibold">Gravedad</TableHead>
-                      <TableHead className="font-semibold">Medida Adm.</TableHead>
-                      <TableHead className="font-semibold">Objetivo</TableHead>
-                      <TableHead className="font-semibold text-right">UIT %</TableHead>
+              {/* Controles de búsqueda y filtro, igual que Empresas */}
+              <div className="flex flex-col lg:flex-row gap-4 w-full">
+                {/* Buscador */}
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Buscar por código o descripción..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="pl-10 h-12 border border-gray-200 rounded-xl focus:border-[#812020] focus:ring-[#812020] pr-10 w-full bg-white"
+                    disabled={searchLoading}
+                  />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  {searchLoading && (
+                    <RefreshCw className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#812020] w-5 h-5 animate-spin" />
+                  )}
+                  {searchTerm.length > 0 && searchTerm.length < 2 && (
+                    <div className="absolute -bottom-6 left-0 text-xs text-amber-600">
+                      Ingresa al menos 2 caracteres para buscar
+                    </div>
+                  )}
+                </div>
+                {/* Filtro por severidad */}
+                <div className="flex gap-2 min-w-[200px] w-full lg:w-[220px]">
+                  <select
+                    value={severityFilter}
+                    onChange={e => setSeverityFilter(e.target.value)}
+                    className="h-12 w-full border border-gray-200 rounded-xl focus:border-[#812020] focus:ring-[#812020] px-4 text-gray-700 bg-white"
+                    disabled={filterLoading}
+                  >
+                    {severities.map(s => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                  {(isFiltering || (severityFilter && severityFilter !== "ALL") || searchTerm) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="h-12 px-3 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
+                      disabled={filterLoading || loading}
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Tabla */}
+            <div className="rounded-xl border border-gray-200 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-gradient-to-r from-[#812020]/10 to-[#a94442]/10">
+                  <TableRow>
+                    <TableHead className="font-bold text-[#812020]">Código</TableHead>
+                    <TableHead className="font-bold text-[#812020]">Descripción</TableHead>
+                    <TableHead className="font-bold text-[#812020]">Gravedad</TableHead>
+                    <TableHead className="font-bold text-[#812020]">Medida Adm.</TableHead>
+                    <TableHead className="font-bold text-[#812020]">Objetivo</TableHead>
+                    <TableHead className="font-bold text-[#812020] text-right">UIT %</TableHead>
+                    <TableHead className="font-bold text-[#812020] text-center">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? renderSkeletons() : violations.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-32 text-center">
+                        <div className="flex flex-col items-center justify-center text-gray-500">
+                          <Filter className="w-8 h-8 mb-2" />
+                          <p>No hay infracciones registradas o que coincidan con el filtro.</p>
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? renderSkeletons() : violations.map((v) => (
-                      <TableRow key={v.id}>
-                        <TableCell className="font-mono font-medium text-gray-700">{v.code}</TableCell>
+                  ) : (
+                    violations.map((v) => (
+                      <TableRow key={v.id} className="hover:bg-[#812020]/5 transition-colors">
+                        <TableCell className="font-mono font-bold text-[#812020]">{v.code}</TableCell>
                         <TableCell className="max-w-md">{v.description}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={`border font-semibold ${getSeverityBadge(v.severity)}`}>
-                            <AlertTriangle className="w-3 h-3 mr-1.5" />
+                          <Badge variant="secondary" className={`border font-semibold rounded-full ${getSeverityBadge(v.severity)}`}>
                             {translateSeverity(v.severity)}
                           </Badge>
                         </TableCell>
                         <TableCell>{v.administrativeMeasure}</TableCell>
                         <TableCell>
-                           <Badge variant="outline" className={`border font-semibold ${getTargetBadge(v.target)}`}>
+                          <Badge variant="secondary" className={`border font-semibold rounded-full ${getTargetBadge(v.target)}`}>
                             {translateTarget(v.target)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right font-semibold text-gray-800">{v.uitPercentage}</TableCell>
+                        <TableCell className="text-right font-semibold text-[#812020]">{v.uitPercentage}</TableCell>
+                        <TableCell className="text-center">
+                          <Dialog onOpenChange={open => { if (open) fetchViolationDetail(v.id); }}>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="hover:bg-[#812020]/10 rounded-lg">
+                                <Eye className="w-4 h-4 text-[#812020]" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-lg">
+                              <DialogHeader className="pb-4">
+                                <DialogTitle className="text-2xl font-bold text-[#812020] flex items-center gap-2">
+                                  <AlertTriangle className="w-6 h-6 text-[#812020]" />
+                                  Detalle de Infracción
+                                </DialogTitle>
+                                <DialogDescription className="text-gray-700">
+                                  Información detallada de la infracción seleccionada
+                                </DialogDescription>
+                              </DialogHeader>
+                              {loadingDetail ? (
+                                <div className="flex items-center justify-center py-8">
+                                  <RefreshCw className="w-8 h-8 animate-spin text-[#812020]" />
+                                  <span className="ml-2 text-gray-600">Cargando detalles...</span>
+                                </div>
+                              ) : errorDetail ? (
+                                <div className="flex flex-col items-center justify-center py-8">
+                                  <XCircle className="w-12 h-12 text-red-500 mb-4" />
+                                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar detalles</h3>
+                                  <p className="text-gray-600 mb-4 text-center">{errorDetail}</p>
+                                </div>
+                              ) : selectedViolation ? (
+                                <div className="space-y-6">
+                                  {/* Header principal */}
+                                  <div className="flex items-center gap-4 p-4 bg-gradient-to-br from-[#812020]/10 to-[#a94442]/10 rounded-xl">
+                                    <div className="w-16 h-16 flex items-center justify-center bg-[#812020]/10 rounded-2xl shadow-lg">
+                                      <AlertTriangle className="w-10 h-10 text-[#812020]" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <h2 className="text-xl font-bold text-[#812020] mb-1">{selectedViolation.code}</h2>
+                                      <p className="text-gray-700 font-medium">{selectedViolation.description}</p>
+                                    </div>
+                                  </div>
+                                  {/* Información detallada en grid */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Gravedad */}
+                                    <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
+                                      <span className="text-xs font-semibold text-gray-500 flex items-center gap-1">
+                                        <AlertTriangle className="w-4 h-4 text-[#812020]" /> Gravedad
+                                      </span>
+                                      <Badge variant="secondary" className={`border font-semibold rounded-full text-base ${getSeverityBadge(selectedViolation.severity)}`}>{translateSeverity(selectedViolation.severity)}</Badge>
+                                    </div>
+                                    {/* Medida Administrativa */}
+                                    <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
+                                      <span className="text-xs font-semibold text-gray-500">Medida Administrativa</span>
+                                      <span className="text-base font-semibold text-gray-900">{selectedViolation.administrativeMeasure}</span>
+                                    </div>
+                                    {/* Objetivo */}
+                                    <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
+                                      <span className="text-xs font-semibold text-gray-500">Objetivo</span>
+                                      <Badge variant="secondary" className={`border font-semibold rounded-full text-base ${getTargetBadge(selectedViolation.target)}`}>{translateTarget(selectedViolation.target)}</Badge>
+                                    </div>
+                                    {/* Porcentaje UIT */}
+                                    <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
+                                      <span className="text-xs font-semibold text-gray-500">Porcentaje UIT</span>
+                                      <span className="text-lg font-bold text-[#812020]">{selectedViolation.uitPercentage}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </DialogContent>
+                          </Dialog>
+                        </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Paginación */}
+            {paginationData && paginationData.totalPages > 1 && !error && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <div className="text-sm text-gray-600">
+                  {severityFilter && severityFilter !== "ALL"
+                    ? `Mostrando ${paginationData.totalViolations} infracciones de gravedad "${severities.find(s => s.value === severityFilter)?.label}" (página ${paginationData.currentPage} de ${paginationData.totalPages})`
+                    : `Mostrando página ${paginationData.currentPage} de ${paginationData.totalPages} (${paginationData.totalViolations} infracciones en total)`}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (paginationData.hasPrevPage) {
+                        setCurrentPage(paginationData.currentPage - 1);
+                      }
+                    }}
+                    disabled={!paginationData.hasPrevPage || loading || filterLoading}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (paginationData.hasNextPage) {
+                        setCurrentPage(paginationData.currentPage + 1);
+                      }
+                    }}
+                    disabled={!paginationData.hasNextPage || loading || filterLoading}
+                  >
+                    Siguiente
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
-
-          {paginationData && paginationData.totalPages > 1 && !error && (
-            <CardHeader className="flex flex-row items-center justify-between border-t bg-gray-50/50 px-6 py-3">
-               <div className="text-sm text-muted-foreground">
-                Página {paginationData.currentPage} de {paginationData.totalPages}
-              </div>
-              <Pagination className="m-0">
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
-                      className={!paginationData.hasPrevPage ? "pointer-events-none opacity-50" : undefined}
-                    />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
-                      className={!paginationData.hasNextPage ? "pointer-events-none opacity-50" : undefined}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </CardHeader>
-          )}
         </Card>
       </div>
     </AdminLayout>

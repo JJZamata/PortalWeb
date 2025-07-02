@@ -30,20 +30,54 @@ const DocumentosPage = () => {
     has_next: false,
     has_previous: false
   });
+  const [tipoFiltro, setTipoFiltro] = useState('ALL');
+  const [isSearching, setIsSearching] = useState(false);
 
-  const fetchDocumentos = async (page = 1) => {
+  const fetchDocumentos = async (page = 1, tipo = tipoFiltro, query = searchTerm) => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/documents?page=${page}`);
-
-      console.log('Respuesta completa del API:', response);
-      console.log('Datos de documentos:', response.data?.data?.documents);
-      console.log('Datos de paginación:', response.data?.data?.pagination);
-
-      // Ajustando el acceso a los datos según la estructura correcta
+      let response;
+      const token = localStorage.getItem('token');
+      if (query && query.trim().length >= 2) {
+        if (tipo && tipo !== 'ALL') {
+          response = await axiosInstance.get(`/documents/type/${tipo.toLowerCase()}?page=${page}`, {
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            }
+          });
+        } else {
+          response = await axiosInstance.get(`/documents?page=${page}`, {
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            }
+          });
+        }
+        const documentsData = response.data?.data?.documents || [];
+        const paginationData = response.data?.data?.pagination || {};
+        const filtered = documentsData.filter(doc =>
+          (doc.placa || '').toLowerCase().includes(query.toLowerCase()) ||
+          (doc.numero || '').toLowerCase().includes(query.toLowerCase()) ||
+          (doc.tipo || '').toLowerCase().includes(query.toLowerCase())
+        );
+        setDocumentos(filtered);
+        setPaginacion(paginationData);
+        setLoading(false);
+        return;
+      } else if (tipo && tipo !== 'ALL') {
+        response = await axiosInstance.get(`/documents/type/${tipo.toLowerCase()}?page=${page}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        });
+      } else {
+        response = await axiosInstance.get(`/documents?page=${page}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        });
+      }
       const documentsData = response.data?.data?.documents || [];
       const paginationData = response.data?.data?.pagination || {};
-
       setDocumentos(documentsData);
       setPaginacion(paginationData);
       setLoading(false);
@@ -57,18 +91,20 @@ const DocumentosPage = () => {
   };
 
   useEffect(() => {
-    fetchDocumentos(1);
-  }, []);
+    if (searchTerm.length === 0 || searchTerm.length >= 2) {
+      fetchDocumentos(1, tipoFiltro, searchTerm);
+    }
+  }, [tipoFiltro, searchTerm]);
 
   const handleNextPage = () => {
     if (paginacion.has_next) {
-      fetchDocumentos(paginacion.current_page + 1);
+      fetchDocumentos(paginacion.current_page + 1, tipoFiltro, searchTerm);
     }
   };
 
   const handlePrevPage = () => {
     if (paginacion.has_previous) {
-      fetchDocumentos(paginacion.current_page - 1);
+      fetchDocumentos(paginacion.current_page - 1, tipoFiltro, searchTerm);
     }
   };
 
@@ -85,13 +121,6 @@ const DocumentosPage = () => {
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
-
-  // Ajustando el filtrado para manejar valores undefined
-  const filteredDocumentos = documentos.filter(doc =>
-    (doc.placa || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (doc.numero || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (doc.tipo || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const handleAddDocumento = () => {
     toast({
@@ -151,21 +180,6 @@ const DocumentosPage = () => {
 
         {/* Búsqueda */}
         <Card className="shadow-lg border-0 bg-white rounded-2xl">
-          <CardContent className="p-6">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                placeholder="Buscar por placa, número de documento o tipo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 border-gray-300 focus:border-cyan-500 rounded-xl bg-white text-base"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Lista de Documentos */}
-        <Card className="shadow-lg border-0 bg-white rounded-2xl">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
@@ -178,7 +192,7 @@ const DocumentosPage = () => {
                   {loading && ' (Cargando...)'}
                 </CardDescription>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 items-center">
                 <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                   <DialogTrigger asChild>
                     <Button className="bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl shadow-lg">
@@ -265,20 +279,36 @@ const DocumentosPage = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-                
-                <Button variant="outline" className="border-cyan-200 text-cyan-700 hover:bg-cyan-50 rounded-xl">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filtros
-                </Button>
-                
-                <Button variant="outline" className="border-cyan-200 text-cyan-700 hover:bg-cyan-50 rounded-xl">
-                  <Download className="w-4 h-4 mr-2" />
-                  Exportar
-                </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
+            <div className="flex flex-col lg:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  placeholder="Buscar por placa, número de documento o tipo..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 h-12 border-gray-300 focus:border-cyan-500 rounded-xl bg-white text-base"
+                />
+              </div>
+              <div className="flex gap-2 min-w-[200px]">
+                <Select
+                  value={tipoFiltro}
+                  onValueChange={value => setTipoFiltro(value)}
+                >
+                  <SelectTrigger className="h-12 border-gray-200 rounded-xl focus:border-cyan-500 focus:ring-cyan-500">
+                    <SelectValue placeholder="Filtrar por tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todos</SelectItem>
+                    <SelectItem value="REVISION">Revisión</SelectItem>
+                    <SelectItem value="AFOCAT">Afocat</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="rounded-xl border border-gray-200 overflow-hidden">
               {loading ? (
                 <div className="flex items-center justify-center h-32">
@@ -305,7 +335,7 @@ const DocumentosPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredDocumentos.map((documento, index) => (
+                      {documentos.map((documento, index) => (
                         <TableRow key={index} className="hover:bg-cyan-50/50 transition-colors">
                           <TableCell className="font-semibold text-gray-900">{documento.tipo}</TableCell>
                           <TableCell className="font-mono text-gray-700">{documento.numero}</TableCell>

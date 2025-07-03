@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
+import DocumentacionImg from '@/assets/images/documentacion.png';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -170,7 +171,7 @@ const AdminPanel = () => {
   return (
     <AdminLayout>
       <div className="space-y-8">
-        {/* Hero Section con color azul en lugar de rojo */}
+        {/* Hero Section con color azul */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-8 text-white shadow-2xl">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
@@ -209,6 +210,93 @@ const AdminPanel = () => {
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 -mt-4 -mr-4 h-72 w-72 rounded-full bg-white/5"></div>
           <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-48 w-48 rounded-full bg-white/5"></div>
+        </div>
+
+        {/* Hero Section de Documentación */}
+        <div 
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-600 via-red-700 to-red-800 p-8 text-white shadow-2xl cursor-pointer group hover:scale-[1.02] transition-all duration-500"
+          onClick={() => window.open('https://documenter.getpostman.com/view/39175030/2sB2x9jqSU', '_blank')}
+        >
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between">
+              <div className="space-y-4 flex-1">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold tracking-tight">DOCUMENTACIÓN API</h1>
+                    <p className="text-red-100 text-lg">Guía Completa de Endpoints FISCAMOTO</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-red-200 max-w-2xl text-lg leading-relaxed">
+                    Documentación completa desarrollada en <span className="font-semibold text-white">Postman</span> con todos los endpoints, 
+                    ejemplos de uso, códigos de respuesta y modelos de datos del sistema FISCAMOTO.
+                  </p>
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm">
+                      <Database className="w-4 h-4" />
+                      <span className="text-sm font-medium">+50 Endpoints</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm">
+                      <Shield className="w-4 h-4" />
+                      <span className="text-sm font-medium">Autenticación JWT</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm">
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="text-sm font-medium">Ejemplos Completos</span>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <Button 
+                      className="bg-white text-red-600 hover:bg-red-50 font-bold py-3 px-6 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open('https://documenter.getpostman.com/view/39175030/2sB2x9jqSU', '_blank');
+                      }}
+                    >
+                      <Globe className="w-5 h-5 mr-2" />
+                      Ver Documentación Completa
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Contenedor de la imagen - Efecto asomándose desde abajo */}
+              <div className="hidden lg:block flex-shrink-0 ml-8">
+                <div className="relative h-64 w-80">
+                  {/* Contenedor con overflow hidden para crear el efecto de corte */}
+                  <div className="absolute bottom-0 left-0 right-0 h-48 overflow-hidden">
+                    {/* Imagen posicionada para que se vea parcialmente */}
+                    <div className="relative transform translate-y-16 group-hover:translate-y-0 transition-transform duration-700 ease-out">
+                      <div className="w-80 h-64 rounded-t-2xl overflow-hidden shadow-2xl border-t border-l border-r border-white/20">
+                        <img 
+                          src={DocumentacionImg} 
+                          alt="Documentación API FISCAMOTO" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      {/* Efecto de sombra para dar profundidad */}
+                      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
+                    </div>
+                  </div>
+                  
+                  {/* Efecto de brillo opcional */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-72 w-72 rounded-full bg-white/5"></div>
+          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-48 w-48 rounded-full bg-white/5"></div>
+          
+          {/* Efecto de hover adicional */}
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-400/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         </div>
 
         {/* Stats Grid - Solo 3 tarjetas más relevantes */}

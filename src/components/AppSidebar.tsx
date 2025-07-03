@@ -17,7 +17,10 @@ import {
   ChevronRight,
   Archive,
   Menu,
-  X
+  X,
+  FileBarChart, // Nuevo icono para Actas
+  CheckCircle,  // Para Actas Conformes
+  XCircle      // Para Actas No Conformes
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -46,6 +49,13 @@ const menuItems = [
     items: [
       { title: "Mototaxis", url: "/vehiculos", icon: Car },
       { title: "Empresas", url: "/empresas", icon: Building2 },
+    ],
+  },
+  {
+    title: "Actas",
+    icon: FileBarChart,
+    items: [
+      { title: "Todas las Actas", url: "/actas", icon: FileText },
     ],
   },
   {

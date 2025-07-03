@@ -18,7 +18,7 @@ import AuditoriaPage from "./pages/control/AuditoriaPage";
 import InfraccionesPage from "./pages/documentacion/InfraccionesPage";
 
 // Importaciones de vistas no utilizadas (accesibles por URL directa)
-import ActasPage from "./pages/unused/ActasPage";
+import ActasPage from "./pages/actas/ActasPage";
 import ActasConformesPage from "./pages/unused/ActasConformesPage";
 import ActasNoConformesPage from "./pages/unused/ActasNoConformesPage";
 import ConsultaPlacaPage from "./pages/unused/ConsultaPlacaPage";
@@ -51,9 +51,9 @@ const App: React.FC = () => {
             <Route path="/infracciones" element={<InfraccionesPage />} />
             
             {/* Rutas para vistas no utilizadas (accesibles por URL directa) */}
-            <Route path="/actas" element={<ActasPage />} />
-            <Route path="/actas-conformes" element={<ActasConformesPage />} />
-            <Route path="/actas-no-conformes" element={<ActasNoConformesPage />} />
+            {/*<Route path="/actas" element={<ActasPage />} />*/}
+            {/*<Route path="/actas-conformes" element={<ActasConformesPage />} />*/}
+            {/*<Route path="/actas-no-conformes" element={<ActasNoConformesPage />} />*/}
             <Route path="/consulta-placa" element={<ConsultaPlacaPage />} />
             <Route path="/citv" element={<CitvPage />} />
             <Route path="/tuc" element={<TucPage />} />
@@ -61,6 +61,9 @@ const App: React.FC = () => {
             <Route path="/afocat" element={<AfocatPage />} />
             <Route path="/controles-tecnicos" element={<ControlesTecnicosPage />} />
             <Route path="/fotos" element={<FotosPage />} />
+            <Route path="/actas" element={<ActasPage />} />
+            <Route path="/actas/conformes" element={<ActasPage />} />
+            <Route path="/actas/no-conformes" element={<ActasPage />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

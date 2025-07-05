@@ -354,7 +354,7 @@ const VehiculosPage = () => {
     setLoadingDetalleVehiculo(true);
     setErrorDetalleVehiculo(null);
     try {
-      const response = await axios.get(`https://backendfiscamoto.onrender.com/api/vehicles/${cleanPlate}`);
+      const response = await axios.get(`/api/vehicles/${cleanPlate}`);
       if (response.data.success) {
         setDetalleVehiculo(response.data.data);
       } else {

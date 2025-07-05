@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { SignupData, SignupResponse } from './types';
 
-const API_URL = 'https://backendfiscamoto.onrender.com/api/auth';
+const API_URL = '/api/auth';
 
 const authService = {
   login: async (data: SignupData): Promise<SignupResponse> => {

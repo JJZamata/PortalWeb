@@ -32,6 +32,21 @@ const DocumentosPage = () => {
   });
   const [tipoFiltro, setTipoFiltro] = useState('ALL');
   const [isSearching, setIsSearching] = useState(false);
+  const [nuevoDocumento, setNuevoDocumento] = useState({
+    tipo: '',
+    numero: '',
+    placa: '',
+    entidad_empresa: '',
+    fecha_emision: '',
+    fecha_vencimiento: '',
+    observaciones: '',
+    archivo: null as File | null,
+    inspection_result: '',
+    certifying_company: '',
+    cobertura: '',
+    numero_poliza: '',
+  });
+  const [registrando, setRegistrando] = useState(false);
 
   const fetchDocumentos = async (page = 1, tipo = tipoFiltro, query = searchTerm) => {
     try {
@@ -130,6 +145,84 @@ const DocumentosPage = () => {
     setShowAddDialog(false);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setNuevoDocumento(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectChange = (value: string) => {
+    setNuevoDocumento(prev => ({ ...prev, tipo: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setNuevoDocumento(prev => ({ ...prev, archivo: e.target.files![0] }));
+    }
+  };
+
+  const registrarDocumento = async () => {
+    setRegistrando(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (nuevoDocumento.tipo === 'REVISION') {
+        const payload = {
+          vehicle_plate: nuevoDocumento.placa,
+          issue_date: nuevoDocumento.fecha_emision,
+          expiration_date: nuevoDocumento.fecha_vencimiento,
+          inspection_result: nuevoDocumento.inspection_result,
+          certifying_company: nuevoDocumento.certifying_company,
+        };
+        await axiosInstance.post('/documents/technical-review', payload, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        });
+      } else {
+        const formData = new FormData();
+        formData.append('tipo', nuevoDocumento.tipo);
+        formData.append('numero', nuevoDocumento.numero);
+        formData.append('placa', nuevoDocumento.placa);
+        formData.append('entidad_empresa', nuevoDocumento.entidad_empresa);
+        formData.append('fecha_emision', nuevoDocumento.fecha_emision);
+        formData.append('fecha_vencimiento', nuevoDocumento.fecha_vencimiento);
+        formData.append('observaciones', nuevoDocumento.observaciones);
+        if (nuevoDocumento.archivo) {
+          formData.append('archivo', nuevoDocumento.archivo);
+        }
+        if (nuevoDocumento.tipo === 'AFOCAT') {
+          formData.append('cobertura', nuevoDocumento.cobertura || '');
+          formData.append('numero_poliza', nuevoDocumento.numero_poliza || '');
+        }
+        await axiosInstance.post('/documents', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        });
+      }
+      toast({
+        title: 'Documento registrado',
+        description: 'El documento ha sido agregado exitosamente',
+      });
+      setShowAddDialog(false);
+      setNuevoDocumento({
+        tipo: '', numero: '', placa: '', entidad_empresa: '', fecha_emision: '', fecha_vencimiento: '', observaciones: '', archivo: null,
+        inspection_result: '', certifying_company: '', cobertura: '', numero_poliza: '',
+      });
+      fetchDocumentos(1, tipoFiltro, searchTerm);
+    } catch (error) {
+      toast({
+        title: 'Error al registrar',
+        description: axios.isAxiosError(error)
+          ? error.response?.data?.message || 'Error al registrar el documento'
+          : 'Error al registrar el documento',
+        variant: 'destructive',
+      });
+    } finally {
+      setRegistrando(false);
+    }
+  };
+
   if (error) {
     return (
       <AdminLayout>
@@ -211,66 +304,91 @@ const DocumentosPage = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="tipoDoc">Tipo de Documento *</Label>
-                          <Select value={tipoDocumento} onValueChange={setTipoDocumento}>
+                          <Select value={nuevoDocumento.tipo} onValueChange={handleSelectChange}>
                             <SelectTrigger>
                               <SelectValue placeholder="Seleccionar tipo" />
                             </SelectTrigger>
                             <SelectContent>
-                              {/* Add your document types here */}
+                              <SelectItem value="REVISION">Revisión</SelectItem>
+                              <SelectItem value="AFOCAT">Afocat</SelectItem>
+                              {/* Agrega más tipos si es necesario */}
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
                           <Label htmlFor="numero">Número de Documento *</Label>
-                          <Input id="numero" placeholder="Ej: CITV-2024-001234" />
+                          <Input id="numero" value={nuevoDocumento.numero} onChange={handleInputChange} placeholder="Ej: CITV-2024-001234" />
                         </div>
                       </div>
-
+                      {/* Campos condicionales según el tipo de documento */}
+                      {nuevoDocumento.tipo === 'REVISION' && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="inspection_result">Resultado Inspección *</Label>
+                            <Input id="inspection_result" value={nuevoDocumento.inspection_result || ''} onChange={handleInputChange} placeholder="APROBADO / DESAPROBADO" />
+                          </div>
+                          <div>
+                            <Label htmlFor="certifying_company">Empresa Certificadora *</Label>
+                            <Input id="certifying_company" value={nuevoDocumento.certifying_company || ''} onChange={handleInputChange} placeholder="Ej: TECSUP S.A." />
+                          </div>
+                        </div>
+                      )}
+                      {nuevoDocumento.tipo === 'AFOCAT' && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="cobertura">Cobertura *</Label>
+                            <Input id="cobertura" value={nuevoDocumento.cobertura || ''} onChange={handleInputChange} placeholder="Ej: Nacional" />
+                          </div>
+                          <div>
+                            <Label htmlFor="numero_poliza">N° de Póliza *</Label>
+                            <Input id="numero_poliza" value={nuevoDocumento.numero_poliza || ''} onChange={handleInputChange} placeholder="Ej: POL-123456" />
+                          </div>
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="placa">Placa del Vehículo *</Label>
-                          <Input id="placa" placeholder="Ej: VAW-454" />
+                          <Input id="placa" value={nuevoDocumento.placa} onChange={handleInputChange} placeholder="Ej: VAW-454" />
                         </div>
                         <div>
                           <Label htmlFor="empresa">Empresa/Entidad Emisora *</Label>
-                          <Input id="empresa" placeholder="Ej: Municipalidad La Joya" />
+                          <Input id="entidad_empresa" value={nuevoDocumento.entidad_empresa} onChange={handleInputChange} placeholder="Ej: Municipalidad La Joya" />
                         </div>
                       </div>
-
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="fechaEmision">Fecha de Emisión *</Label>
-                          <Input id="fechaEmision" type="date" />
+                          <Input id="fecha_emision" type="date" value={nuevoDocumento.fecha_emision} onChange={handleInputChange} />
                         </div>
                         <div>
                           <Label htmlFor="fechaVencimiento">Fecha de Vencimiento *</Label>
-                          <Input id="fechaVencimiento" type="date" />
+                          <Input id="fecha_vencimiento" type="date" value={nuevoDocumento.fecha_vencimiento} onChange={handleInputChange} />
                         </div>
                       </div>
-
                       <div>
                         <Label htmlFor="observaciones">Observaciones</Label>
                         <Textarea 
                           id="observaciones" 
+                          value={nuevoDocumento.observaciones}
+                          onChange={handleInputChange}
                           placeholder="Observaciones adicionales sobre el documento"
                           rows={3}
                         />
                       </div>
-
-                      <div>
-                        <Label>Archivo del Documento</Label>
-                        <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                          <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-600">
-                            Arrastra el archivo aquí o <button className="text-blue-600 underline">selecciona un archivo</button>
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG hasta 10MB</p>
+                      {nuevoDocumento.tipo !== 'REVISION' && (
+                        <div>
+                          <Label>Archivo del Documento</Label>
+                          <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                            <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" id="archivo" />
+                            <label htmlFor="archivo" className="text-blue-600 underline cursor-pointer">{nuevoDocumento.archivo ? nuevoDocumento.archivo.name : 'Selecciona un archivo'}</label>
+                            <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG hasta 10MB</p>
+                          </div>
                         </div>
-                      </div>
-
+                      )}
                       <div className="flex gap-2 pt-4">
-                        <Button onClick={handleAddDocumento} className="flex-1">
-                          Registrar Documento
+                        <Button onClick={registrarDocumento} className="flex-1" disabled={registrando}>
+                          {registrando ? 'Registrando...' : 'Registrar Documento'}
                         </Button>
                         <Button variant="outline" onClick={() => setShowAddDialog(false)}>
                           Cancelar
@@ -353,7 +471,7 @@ const DocumentosPage = () => {
                           <TableCell className="text-gray-700 text-sm">
                             {documento.detalles ? (
                               documento.tipo === 'REVISION' 
-                                ? `Resultado: ${documento.detalles.resultado_inspeccion}`
+                                ? `Resultado: ${documento.detalles.inspection_result}`
                                 : `Cobertura: ${documento.detalles.cobertura}`
                             ) : 'Sin detalles'}
                           </TableCell>

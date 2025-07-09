@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Bell, User, Settings } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Search, Bell, User, Settings, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +15,18 @@ import {
 
 export function AdminHeader() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [theme, setTheme] = useState<'light' | 'dark'>(
+    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  );
+
+  // Cambia la clase del body/html según el tema
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-gray-200/60 bg-white/95 backdrop-blur-md shadow-sm">
@@ -76,9 +88,28 @@ export function AdminHeader() {
           </DropdownMenu>
 
           {/* Configuración */}
-          <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-lg hidden sm:flex">
-            <Settings className="w-5 h-5" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-lg hidden sm:flex">
+                <Settings className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 sm:w-56">
+              <DropdownMenuLabel>Configuración</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                {theme === 'dark' ? (
+                  <>
+                    <Sun className="w-4 h-4 mr-2" /> Tema: Claro
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-4 h-4 mr-2" /> Tema: Oscuro
+                  </>
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Perfil de Usuario */}
           <DropdownMenu>

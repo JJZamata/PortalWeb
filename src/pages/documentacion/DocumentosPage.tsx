@@ -172,13 +172,35 @@ const DocumentosPage = () => {
     try {
       const token = localStorage.getItem('token');
       if (nuevoDocumento.tipo === 'REVISION') {
+        // Validación previa
+        if (!nuevoDocumento.placa) {
+          setPlacaError(true);
+          toast({
+            title: 'Error al registrar',
+            description: 'La placa del vehículo es obligatoria para revisión técnica.',
+            variant: 'destructive',
+          });
+          setRegistrando(false);
+          return;
+        }
+        if (!nuevoDocumento.fecha_emision || !nuevoDocumento.fecha_vencimiento || !nuevoDocumento.inspection_result || !nuevoDocumento.certifying_company || !nuevoDocumento.numero) {
+          toast({
+            title: 'Error al registrar',
+            description: 'Completa todos los campos obligatorios para revisión técnica.',
+            variant: 'destructive',
+          });
+          setRegistrando(false);
+          return;
+        }
         const payload = {
+          review_id: nuevoDocumento.numero,
           vehicle_plate: nuevoDocumento.placa,
           issue_date: nuevoDocumento.fecha_emision,
           expiration_date: nuevoDocumento.fecha_vencimiento,
           inspection_result: nuevoDocumento.inspection_result,
           certifying_company: nuevoDocumento.certifying_company,
         };
+        console.log('Payload revisión técnica:', payload);
         await axiosInstance.post('/documents/technical-review', payload, {
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -235,8 +257,8 @@ const DocumentosPage = () => {
     setLoadingPlacas(true);
     try {
       const response = await axiosInstance.get('/vehicles');
-      const placasRaw = (response.data.data.vehicles || []).filter((v: any) => v.plateNumber && typeof v.plateNumber === 'string');
-      const placasUnicas = Array.from(new Map(placasRaw.map((v: any) => [v.plateNumber, v])).values());
+      const placasRaw = (response.data.data.vehicles || []).filter((v: any) => v.placa && v.placa.plateNumber && typeof v.placa.plateNumber === 'string');
+      const placasUnicas = Array.from(new Map(placasRaw.map((v: any) => [v.placa.plateNumber, v.placa])).values());
       setPlacas(placasUnicas as { plateNumber: string }[]);
     } catch (e) {
       setPlacas([]);
@@ -267,8 +289,8 @@ const DocumentosPage = () => {
       params.append('limit', '10');
       if (texto) params.append('search', texto);
       const response = await axios.get(`https://backendfiscamoto.onrender.com/api/vehicles/?${params.toString()}`);
-      const placasRaw = (response.data.data.vehicles || []).filter((v: any) => v.plateNumber && typeof v.plateNumber === 'string');
-      const placasUnicas = Array.from(new Map(placasRaw.map((v: any) => [v.plateNumber, v])).values());
+      const placasRaw = (response.data.data.vehicles || []).filter((v: any) => v.placa && v.placa.plateNumber && typeof v.placa.plateNumber === 'string');
+      const placasUnicas = Array.from(new Map(placasRaw.map((v: any) => [v.placa.plateNumber, v.placa])).values());
       setPlacas(placasUnicas as { plateNumber: string }[]);
     } catch (e) {
       setPlacas([]);
@@ -284,9 +306,26 @@ const DocumentosPage = () => {
 
   // useEffect para buscar placas cuando cambia el texto
   useEffect(() => {
-    debouncedBuscarPlacas(busquedaPlaca);
+    if (busquedaPlaca.length >= 3) {
+      debouncedBuscarPlacas(busquedaPlaca);
+    } else if (busquedaPlaca.length === 0) {
+      fetchPlacas();
+    } else {
+      setPlacas([]);
+      setNuevoDocumento(prev => ({ ...prev, placa: '' }));
+    }
     return debouncedBuscarPlacas.cancel;
   }, [busquedaPlaca]);
+
+  // useEffect para seleccionar automáticamente la placa si solo hay una opción
+  useEffect(() => {
+    if (placas.length === 1 && busquedaPlaca) {
+      setNuevoDocumento(prev => ({ ...prev, placa: placas[0].plateNumber }));
+    }
+  }, [placas, busquedaPlaca]);
+
+  // Estado para resaltar el select de placa si está vacío
+  const [placaError, setPlacaError] = useState(false);
 
   // 3. Cargar placas y empresas al abrir el modal
   useEffect(() => {
@@ -359,7 +398,14 @@ const DocumentosPage = () => {
                 </CardDescription>
               </div>
               <div className="flex gap-3 items-center">
-                <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                <Dialog open={showAddDialog} onOpenChange={(open) => {
+                  setShowAddDialog(open);
+                  if (!open) {
+                    setBusquedaPlaca('');
+                    setPlacas([]);
+                    setNuevoDocumento(prev => ({ ...prev, placa: '' }));
+                  }
+                }}>
                   <DialogTrigger asChild>
                     <Button className="bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl shadow-lg">
                       <Plus className="w-4 h-4 mr-2" />
@@ -407,7 +453,7 @@ const DocumentosPage = () => {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="APROBADO">APROBADO</SelectItem>
-                                <SelectItem value="DESAPROBADO">DESAPROBADO</SelectItem>
+                                <SelectItem value="OBSERVADO">OBSERVADO</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -440,10 +486,10 @@ const DocumentosPage = () => {
                           />
                           <Select
                             value={nuevoDocumento.placa || ''}
-                            onValueChange={value => setNuevoDocumento(prev => ({ ...prev, placa: value }))}
+                            onValueChange={value => { setNuevoDocumento(prev => ({ ...prev, placa: value })); setPlacaError(false); }}
                             disabled={loadingPlacas}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className={placaError ? 'border-red-500 ring-2 ring-red-300' : ''}>
                               <SelectValue placeholder={loadingPlacas ? 'Cargando placas...' : 'Seleccionar placa'} />
                             </SelectTrigger>
                             <SelectContent>

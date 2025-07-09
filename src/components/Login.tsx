@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import axiosInstance from '@/lib/axios';
 import axios from 'axios';
 import logoImage from '@/assets/images/logo.png';
+import lajoyaImage from '@/assets/images/LAJOYA.jpg';
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -109,8 +110,15 @@ const Login = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#8B1F1F] via-[#A52A2A] to-[#5E1515] flex relative overflow-hidden">
+      {/* Fondo de la imagen LAJOYA */}
+      <img
+        src={lajoyaImage}
+        alt="Fondo La Joya"
+        className="absolute inset-0 w-full h-full object-cover opacity-30 z-0 pointer-events-none select-none"
+        draggable="false"
+      />
       {/* Contenedor de lluvia */}
-      <div className="rain-container absolute inset-0 z-0 pointer-events-none"></div>
+      <div className="rain-container absolute inset-0 z-10 pointer-events-none"></div>
 
       {/* Panel izquierdo con logo */}
       <div className="w-1/2 p-12 flex items-center justify-center relative z-10">

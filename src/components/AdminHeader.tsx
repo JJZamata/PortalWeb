@@ -14,18 +14,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function AdminHeader() {
+  // Cambiar la inicialización para leer primero de localStorage
+  const getInitialTheme = () => {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'light' || stored === 'dark') return stored;
+    // Si no hay nada guardado, usar preferencia del sistema
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
   const [searchTerm, setSearchTerm] = useState('');
-  const [theme, setTheme] = useState<'light' | 'dark'>(
-    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  );
+  const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme());
 
-  // Cambia la clase del body/html según el tema
+  // Cambia la clase del body/html según el tema y guarda en localStorage
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+    localStorage.setItem('theme', theme);
   }, [theme]);
 
   return (

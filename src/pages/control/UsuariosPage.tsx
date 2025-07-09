@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Users, Search, Edit, Eye, Shield, RefreshCw, XCircle, ChevronLeft, ChevronRight, Plus, Filter } from "lucide-react";
+import { Users, Search, Edit, Eye, Shield, RefreshCw, XCircle, ChevronLeft, ChevronRight, Plus, Filter, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import AdminLayout from "@/components/AdminLayout";
@@ -40,6 +40,9 @@ const UsuariosPage = () => {
     has_previous: false
   });
   const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  // Cambiar el estado de roles a string (solo uno a la vez)
+  const [rolSeleccionado, setRolSeleccionado] = useState('fiscalizador');
 
   const form = useForm<AddUserFormData>({
     defaultValues: {
@@ -107,7 +110,8 @@ const UsuariosPage = () => {
     if (value.length < 6) {
       return "La contraseña debe tener al menos 6 caracteres";
     }
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(value)) {
+    // Acepta más caracteres especiales: #@!$%*?&-_.,:;+='/\\|<>~^[]{}()
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};:'",.<>/?\\|~`])/.test(value)) {
       return "La contraseña debe contener al menos: 1 minúscula, 1 mayúscula, 1 número y 1 carácter especial";
     }
     return true;
@@ -135,14 +139,14 @@ const UsuariosPage = () => {
         return;
       }
 
-      const requestData = {
+      const payload = {
         username: data.username,
         email: data.email,
         password: data.password,
-        roles: data.roles
+        roles: [rolSeleccionado],
       };
 
-      const response = await axiosInstance.post('/auth/signup', requestData);
+      const response = await axiosInstance.post('/auth/signup', payload);
 
       if (response.data.success) {
         toast({
@@ -350,7 +354,13 @@ const UsuariosPage = () => {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Rol *</FormLabel>
-                              <Select onValueChange={(value) => field.onChange([value])}>
+                              <Select
+                                value={rolSeleccionado}
+                                onValueChange={(value) => {
+                                  setRolSeleccionado(value);
+                                  field.onChange([value]);
+                                }}
+                              >
                                 <FormControl>
                                   <SelectTrigger className="bg-white">
                                     <SelectValue placeholder="Selecciona un rol" />
@@ -376,7 +386,17 @@ const UsuariosPage = () => {
                             <FormItem>
                               <FormLabel>Contraseña *</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="Ej: Admin123@" type="password" className="bg-white" />
+                                <div className="relative">
+                                  <Input {...field} placeholder="Ej: Admin123@" type={showPassword ? "text" : "password"} className="bg-white pr-10" />
+                                  <button
+                                    type="button"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                    tabIndex={-1}
+                                    onClick={() => setShowPassword((v) => !v)}
+                                  >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                  </button>
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>

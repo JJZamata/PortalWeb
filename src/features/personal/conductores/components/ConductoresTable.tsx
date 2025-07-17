@@ -1,16 +1,10 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash2, RefreshCw, Search } from "lucide-react";
-
-interface Conductor {
-  dni: string;
-  nombreCompleto: string;
-  telefono: string;
-  direccion: string;
-}
+import { ConductorDetalladoNuevo } from "../types";
 
 interface Props {
-  conductores: Conductor[];
+  conductores: ConductorDetalladoNuevo[];
   loading: boolean;
   onView: (dni: string) => void;
   onEdit: (conductor: any) => void; // Ajustar tipo según ConductorDetalladoNuevo
@@ -54,8 +48,8 @@ export const ConductoresTable = ({ conductores, loading, onView, onEdit, onDelet
               <TableRow key={conductor.dni} className="hover:bg-green-50/50 dark:hover:bg-green-900/40 transition-colors">
                 <TableCell className="font-mono font-semibold text-green-700 dark:text-green-200">{conductor.dni}</TableCell>
                 <TableCell className="font-semibold text-foreground dark:text-green-200">{conductor.nombreCompleto}</TableCell>
-                <TableCell className="text-gray-700 dark:text-green-200">{conductor.telefono}</TableCell>
-                <TableCell className="text-gray-700 dark:text-green-200">{conductor.direccion}</TableCell>
+                <TableCell className="text-gray-700 dark:text-green-200">{conductor.phoneNumber}</TableCell>
+                <TableCell className="text-gray-700 dark:text-green-200">{conductor.address}</TableCell>
                 <TableCell>
                   <div className="flex justify-center gap-2">
                     <Button

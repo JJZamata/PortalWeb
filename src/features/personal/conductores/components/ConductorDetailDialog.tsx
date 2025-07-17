@@ -5,9 +5,11 @@ import { User, Phone, Calendar, Clock, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { XCircle, RefreshCw } from "lucide-react";
-import { ConductorDetalladoNuevo, Licencia, LicenciasSummary } from "../types";
+import { ConductorDetalladoNuevo } from "../types";
+import { Licencia } from "../types";
+import { LicenciasSummary } from "../types";
+import { Label } from "@/components/ui/label";
 
 interface Props {
   open: boolean;

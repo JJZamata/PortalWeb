@@ -8,6 +8,7 @@ import { useMutation } from '@tanstack/react-query';
 import { conductoresService } from '../services/conductoresService';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
+import { ConductorDetalladoNuevo } from "../types";
 
 interface Props {
   open: boolean;

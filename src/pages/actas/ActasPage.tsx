@@ -253,13 +253,13 @@ const ActasPage = () => {
     <AdminLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="bg-gradient-to-br from-white to-red-50/30 p-8 rounded-2xl shadow-lg border border-red-200/40">
+        <div className="bg-gradient-to-br from-white to-red-50/30 dark:from-[#1a1a1a] dark:to-[#3b1c1c]/40 p-8 rounded-2xl shadow-lg border border-red-200/40 dark:border-[#812020]/40">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-800 to-amber-700 bg-clip-text text-transparent mb-2 dark:from-red-300 dark:to-amber-400">
                 Gestión de Actas
               </h1>
-              <p className="text-gray-600 text-base md:text-lg">
+              <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg">
                 Administra y supervisa todas las actas de inspección vehicular
               </p>
             </div>
@@ -290,10 +290,10 @@ const ActasPage = () => {
         </div>
 
         {/* Filtros y Búsqueda */}
-        <Card className="shadow-lg border-0 bg-white rounded-2xl">
+        <Card className="shadow-lg border-0 bg-background rounded-2xl">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Filter className="w-5 h-5 text-red-600" />
+            <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+              <Filter className="w-5 h-5 text-[#812020] dark:text-[#fca5a5]" />
               Filtros y Búsqueda
             </CardTitle>
           </CardHeader>
@@ -371,18 +371,18 @@ const ActasPage = () => {
         </Card>
 
         {/* Lista de Actas */}
-        <Card className="shadow-lg border-0 bg-white rounded-2xl">
+        <Card className="shadow-lg border-0 bg-background rounded-2xl">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                   Actas Registradas
-                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-red-600" />}
+                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-[#812020] dark:text-[#fca5a5]" />}
                 </CardTitle>
-                <CardDescription>Listado completo de actas de inspección</CardDescription>
+                <CardDescription className="dark:text-gray-300">Listado completo de actas de inspección</CardDescription>
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 rounded-xl">
+                <Button variant="outline" className="border-red-200 text-[#812020] dark:text-[#fca5a5] hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 rounded-xl">
                   <Download className="w-4 h-4 mr-2" />
                   Exportar
                 </Button>
@@ -390,33 +390,33 @@ const ActasPage = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
               {loading ? (
                 <div className="flex items-center justify-center h-32">
-                  <RefreshCw className="w-8 h-8 animate-spin text-red-600" />
-                  <span className="ml-2 text-gray-600">Cargando actas...</span>
+                  <RefreshCw className="w-8 h-8 animate-spin text-[#812020] dark:text-[#fca5a5]" />
+                  <span className="ml-2 text-gray-600 dark:text-gray-300">Cargando actas...</span>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader className="bg-gradient-to-r from-red-50 to-red-100/50">
+                    <TableHeader className="bg-gradient-to-r from-red-50 to-red-100/50 dark:from-[#2d0909] dark:to-[#3a1010]">
                       <TableRow>
-                        <TableHead className="font-bold text-red-900">ID</TableHead>
-                        <TableHead className="font-bold text-red-900">Tipo</TableHead>
-                        <TableHead className="font-bold text-red-900">Placa</TableHead>
-                        <TableHead className="font-bold text-red-900">Inspector</TableHead>
-                        <TableHead className="font-bold text-red-900">Ubicación</TableHead>
-                        <TableHead className="font-bold text-red-900">Fecha Inspección</TableHead>
-                        <TableHead className="font-bold text-red-900">Fotos</TableHead>
-                        <TableHead className="font-bold text-red-900">Infracciones</TableHead>
-                        <TableHead className="font-bold text-red-900 text-center">Acciones</TableHead>
+                        <TableHead className="font-bold text-red-900 dark:text-[#fca5a5]">ID</TableHead>
+                        <TableHead className="font-bold text-red-900 dark:text-[#fca5a5]">Tipo</TableHead>
+                        <TableHead className="font-bold text-red-900 dark:text-[#fca5a5]">Placa</TableHead>
+                        <TableHead className="font-bold text-red-900 dark:text-[#fca5a5]">Inspector</TableHead>
+                        <TableHead className="font-bold text-red-900 dark:text-[#fca5a5]">Ubicación</TableHead>
+                        <TableHead className="font-bold text-red-900 dark:text-[#fca5a5]">Fecha Inspección</TableHead>
+                        <TableHead className="font-bold text-red-900 dark:text-[#fca5a5]">Fotos</TableHead>
+                        <TableHead className="font-bold text-red-900 dark:text-[#fca5a5]">Infracciones</TableHead>
+                        <TableHead className="font-bold text-red-900 dark:text-[#fca5a5] text-center">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {records.length === 0 && !loading ? (
                         <TableRow>
                           <TableCell colSpan={9} className="h-32 text-center">
-                            <div className="flex flex-col items-center justify-center text-gray-500">
+                            <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                               <FileBarChart className="w-8 h-8 mb-2" />
                               <p>No se encontraron actas</p>
                             </div>
@@ -424,8 +424,8 @@ const ActasPage = () => {
                         </TableRow>
                       ) : (
                         records.map((record) => (
-                          <TableRow key={record.id} className="hover:bg-red-50/50 transition-colors">
-                            <TableCell className="font-mono font-semibold text-red-700">{record.id}</TableCell>
+                          <TableRow key={record.id} className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 transition-colors">
+                            <TableCell className="font-mono font-semibold text-[#812020] text-foreground dark:text-muted-foreground">{record.id}</TableCell>
                             <TableCell>
                               <Badge 
                                 variant="secondary"
@@ -435,24 +435,24 @@ const ActasPage = () => {
                                 {record.recordType === 'conforme' ? 'Conforme' : 'No Conforme'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="font-semibold text-gray-900">{record.vehiclePlate}</TableCell>
-                            <TableCell className="text-gray-700">{record.inspector.username}</TableCell>
-                            <TableCell className="text-gray-700">{record.location}</TableCell>
-                            <TableCell className="text-gray-700 text-sm">{formatDate(record.inspectionDateTime)}</TableCell>
+                            <TableCell className="font-semibold text-foreground dark:text-muted-foreground">{record.vehiclePlate}</TableCell>
+                            <TableCell className="text-foreground dark:text-muted-foreground">{record.inspector.username}</TableCell>
+                            <TableCell className="text-foreground dark:text-muted-foreground">{record.location}</TableCell>
+                            <TableCell className="text-foreground dark:text-muted-foreground text-sm">{formatDate(record.inspectionDateTime)}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className="text-blue-700">
+                              <Badge variant="outline" className="text-blue-700 dark:text-blue-300">
                                 <Camera className="w-3 h-3 mr-1" />
                                 {record.photosCount}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               {record.violationsCount > 0 ? (
-                                <Badge variant="outline" className="text-red-700">
+                                <Badge variant="outline" className="text-red-700 dark:text-red-300">
                                   <AlertTriangle className="w-3 h-3 mr-1" />
                                   {record.violationsCount}
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="text-emerald-700">
+                                <Badge variant="outline" className="text-emerald-700 dark:text-emerald-300">
                                   <CheckCircle className="w-3 h-3 mr-1" />
                                   0
                                 </Badge>
@@ -463,7 +463,7 @@ const ActasPage = () => {
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  className="hover:bg-red-100 rounded-lg"
+                                  className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 rounded-lg"
                                   onClick={() => fetchRecordDetail(record.id, record.recordType)}
                                   disabled={loadingDetail}
                                 >
@@ -473,7 +473,7 @@ const ActasPage = () => {
                                     <Eye className="w-4 h-4" />
                                   )}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg">
+                                <Button variant="ghost" size="sm" className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 rounded-lg">
                                   <Edit className="w-4 h-4" />
                                 </Button>
                               </div>

@@ -34,12 +34,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+    <div className="min-h-screen flex w-full bg-background text-foreground">
       <AppSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
       
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header con botón de toggle para móvil */}
-        <div className="lg:hidden p-3 sm:p-4 border-b border-gray-200 bg-white shadow-sm z-30 sticky top-0">
+        <div className="lg:hidden p-3 sm:p-4 border-b border-border bg-background shadow-sm z-30 sticky top-0">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -50,7 +50,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <Menu className="w-5 h-5" />
             </Button>
             <div className="flex-1 text-center">
-              <h1 className="text-lg font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent">
+              <h1 className="text-lg font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent dark:from-red-400 dark:to-red-700">
                 FISCAMOTO
               </h1>
             </div>

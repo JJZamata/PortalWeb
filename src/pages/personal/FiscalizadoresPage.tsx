@@ -273,13 +273,13 @@ const FiscalizadoresPage = () => {
     <AdminLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="bg-gradient-to-br from-white to-red-50/30 p-8 rounded-2xl shadow-lg border border-red-200/40">
+        <div className="bg-gradient-to-br from-white to-red-50/30 dark:from-[#1a1a1a] dark:to-[#3b1c1c]/40 p-8 rounded-2xl shadow-lg border border-red-200/40 dark:border-[#812020]/40">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#812020] to-[#a94442] bg-clip-text text-transparent mb-2 dark:from-[#fca5a5] dark:to-[#a94442]">
                 Gestión de Fiscalizadores
               </h1>
-              <p className="text-gray-600 text-base md:text-lg">Administra y supervisa el equipo de fiscalizadores del sistema</p>
+              <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg">Administra y supervisa el equipo de fiscalizadores del sistema</p>
             </div>
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
@@ -308,15 +308,15 @@ const FiscalizadoresPage = () => {
         </div>
 
         {/* Lista de Fiscalizadores */}
-        <Card className="shadow-lg border-0 bg-white rounded-2xl">
+        <Card className="shadow-lg border-0 bg-background rounded-2xl">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                   Fiscalizadores Registrados
-                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-red-600" />}
+                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-[#812020]" />}
                 </CardTitle>
-                <CardDescription>Listado completo de fiscalizadores en el sistema</CardDescription>
+                <CardDescription className="dark:text-gray-300">Listado completo de fiscalizadores en el sistema</CardDescription>
               </div>
               <div className="flex gap-3">
                 <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -409,35 +409,35 @@ const FiscalizadoresPage = () => {
                 placeholder="Buscar por nombre de usuario, email o ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-12 border-gray-200 rounded-xl focus:border-red-500 focus:ring-red-500"
+                className="pl-10 h-12 border-border rounded-xl focus:border-[#812020] focus:ring-[#812020] bg-background text-foreground dark:placeholder:text-gray-400"
               />
             </div>
 
-            <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
               {loading ? (
                 <div className="flex items-center justify-center h-32">
-                  <RefreshCw className="w-8 h-8 animate-spin text-red-600" />
-                  <span className="ml-2 text-gray-600">Cargando fiscalizadores...</span>
+                  <RefreshCw className="w-8 h-8 animate-spin text-[#812020]" />
+                  <span className="ml-2 text-gray-600 dark:text-gray-300">Cargando fiscalizadores...</span>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader className="bg-gradient-to-r from-red-50 to-red-100/50">
+                    <TableHeader className="bg-gradient-to-r from-[#812020]/10 to-[#a94442]/10 dark:from-[#2d0909] dark:to-[#3a1010]">
                       <TableRow>
-                        <TableHead className="font-bold text-red-900">ID Usuario</TableHead>
-                        <TableHead className="font-bold text-red-900">Usuario</TableHead>
-                        <TableHead className="font-bold text-red-900">Email</TableHead>
-                        <TableHead className="font-bold text-red-900">Estado</TableHead>
-                        <TableHead className="font-bold text-red-900">Último Acceso</TableHead>
-                        <TableHead className="font-bold text-red-900">Dispositivo</TableHead>
-                        <TableHead className="font-bold text-red-900 text-center">Acciones</TableHead>
+                        <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">ID Usuario</TableHead>
+                        <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Usuario</TableHead>
+                        <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Email</TableHead>
+                        <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Estado</TableHead>
+                        <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Último Acceso</TableHead>
+                        <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Dispositivo</TableHead>
+                        <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5] text-center">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredFiscalizadores.length === 0 && !loading ? (
                         <TableRow>
                           <TableCell colSpan={7} className="h-32 text-center">
-                            <div className="flex flex-col items-center justify-center text-gray-500">
+                            <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                               <Search className="w-8 h-8 mb-2" />
                               <p>No se encontraron fiscalizadores que coincidan con "{searchTerm}"</p>
                               {searchTerm && (
@@ -454,26 +454,26 @@ const FiscalizadoresPage = () => {
                         </TableRow>
                       ) : (
                         filteredFiscalizadores.map((fiscalizador) => (
-                          <TableRow key={fiscalizador.idUsuario} className="hover:bg-red-50/50 transition-colors">
-                            <TableCell className="font-mono font-semibold text-red-700">{fiscalizador.idUsuario}</TableCell>
-                            <TableCell className="font-semibold text-gray-900">{fiscalizador.usuario}</TableCell>
-                            <TableCell className="text-gray-700">{fiscalizador.email}</TableCell>
+                          <TableRow key={fiscalizador.idUsuario} className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 transition-colors">
+                            <TableCell className="font-mono font-semibold text-[#812020] text-foreground dark:text-muted-foreground">{fiscalizador.idUsuario}</TableCell>
+                            <TableCell className="font-semibold text-foreground dark:text-muted-foreground">{fiscalizador.usuario}</TableCell>
+                            <TableCell className="text-foreground dark:text-muted-foreground">{fiscalizador.email}</TableCell>
                             <TableCell>
                               <Badge 
                                 variant="secondary"
                                 className={`px-3 py-1 rounded-full font-semibold border ${fiscalizador.isActive 
-                                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
-                                  : 'bg-gray-100 text-gray-800 border-gray-200'
+                                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-800' 
+                                  : 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700'
                                 }`}
                               >
                                 {fiscalizador.estado}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-gray-700 text-sm">
+                            <TableCell className="text-foreground dark:text-muted-foreground text-sm">
                               {fiscalizador.ultimoAcceso}
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline" className={fiscalizador.deviceConfigured ? 'text-emerald-700' : 'text-amber-700'}>
+                              <Badge variant="outline" className={fiscalizador.deviceConfigured ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}>
                                 {fiscalizador.dispositivo}
                               </Badge>
                             </TableCell>
@@ -482,7 +482,7 @@ const FiscalizadoresPage = () => {
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  className="hover:bg-red-100 rounded-lg"
+                                  className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 rounded-lg"
                                   onClick={() => fetchFiscalizadorDetalle(fiscalizador.idUsuario)}
                                   disabled={loadingDetalle}
                                 >
@@ -492,7 +492,7 @@ const FiscalizadoresPage = () => {
                                     <Eye className="w-4 h-4" />
                                   )}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="hover:bg-red-100 rounded-lg">
+                                <Button variant="ghost" size="sm" className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 rounded-lg">
                                   <Edit className="w-4 h-4" />
                                 </Button>
                               </div>

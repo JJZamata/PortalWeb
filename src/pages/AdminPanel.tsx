@@ -172,21 +172,21 @@ const AdminPanel = () => {
     <AdminLayout>
       <div className="space-y-8">
         {/* Hero Section con color azul */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-8 text-white shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 dark:from-blue-900 dark:via-blue-950 dark:to-gray-900 p-8 text-white shadow-2xl">
           <div className="absolute inset-0 bg-black/10"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm">
+                  <div className="rounded-2xl bg-white/20 dark:bg-white/10 p-3 backdrop-blur-sm">
                     <Shield className="w-8 h-8" />
                   </div>
                   <div>
                     <h1 className="text-4xl font-bold tracking-tight">FISCAMOTO</h1>
-                    <p className="text-blue-100 text-lg">Sistema de Control y Fiscalización</p>
+                    <p className="text-blue-100 dark:text-blue-200 text-lg">Sistema de Control y Fiscalización</p>
                   </div>
                 </div>
-                <p className="text-blue-200 max-w-2xl">
+                <p className="text-blue-200 dark:text-blue-300 max-w-2xl">
                   Monitoreo en tiempo real del sistema de mototaxis. Control total sobre fiscalizadores, 
                   conductores, vehículos y empresas operativas.
                 </p>
@@ -194,27 +194,27 @@ const AdminPanel = () => {
               <div className="hidden lg:flex items-center gap-8">
                 <div className="text-center">
                   <div className="text-3xl font-bold">1,247</div>
-                  <div className="text-sm text-blue-200">Vehículos</div>
+                  <div className="text-sm text-blue-200 dark:text-blue-300">Vehículos</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold">94.2%</div>
-                  <div className="text-sm text-blue-200">Conformidad</div>
+                  <div className="text-sm text-blue-200 dark:text-blue-300">Conformidad</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold">24</div>
-                  <div className="text-sm text-blue-200">Fiscalizadores</div>
+                  <div className="text-sm text-blue-200 dark:text-blue-300">Fiscalizadores</div>
                 </div>
               </div>
             </div>
           </div>
           {/* Decorative elements */}
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-72 w-72 rounded-full bg-white/5"></div>
-          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-48 w-48 rounded-full bg-white/5"></div>
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-72 w-72 rounded-full bg-white/5 dark:bg-white/10"></div>
+          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-48 w-48 rounded-full bg-white/5 dark:bg-white/10"></div>
         </div>
 
         {/* Hero Section de Documentación */}
         <div 
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-600 via-red-700 to-red-800 p-8 text-white shadow-2xl cursor-pointer group hover:scale-[1.02] transition-all duration-500"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-600 via-red-700 to-red-800 dark:from-red-900 dark:via-red-950 dark:to-gray-900 p-8 text-white shadow-2xl cursor-pointer group hover:scale-[1.02] transition-all duration-500"
           onClick={() => window.open('https://documenter.getpostman.com/view/39175030/2sB2x9jqSU', '_blank')}
         >
           <div className="absolute inset-0 bg-black/10"></div>
@@ -222,36 +222,36 @@ const AdminPanel = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-4 flex-1">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-white/20 p-3 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
+                  <div className="rounded-2xl bg-white/20 dark:bg-white/10 p-3 backdrop-blur-sm group-hover:scale-110 transition-transform duration-300">
                     <FileText className="w-8 h-8" />
                   </div>
                   <div>
                     <h1 className="text-4xl font-bold tracking-tight">DOCUMENTACIÓN API</h1>
-                    <p className="text-red-100 text-lg">Guía Completa de Endpoints FISCAMOTO</p>
+                    <p className="text-red-100 dark:text-red-200 text-lg">Guía Completa de Endpoints FISCAMOTO</p>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <p className="text-red-200 max-w-2xl text-lg leading-relaxed">
+                  <p className="text-red-200 dark:text-red-300 max-w-2xl text-lg leading-relaxed">
                     Documentación completa desarrollada en <span className="font-semibold text-white">Postman</span> con todos los endpoints, 
                     ejemplos de uso, códigos de respuesta y modelos de datos del sistema FISCAMOTO.
                   </p>
                   <div className="flex flex-wrap gap-3 mt-4">
-                    <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 bg-white/10 dark:bg-white/5 rounded-full px-4 py-2 backdrop-blur-sm">
                       <Database className="w-4 h-4" />
                       <span className="text-sm font-medium">+50 Endpoints</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 bg-white/10 dark:bg-white/5 rounded-full px-4 py-2 backdrop-blur-sm">
                       <Shield className="w-4 h-4" />
                       <span className="text-sm font-medium">Autenticación JWT</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm">
+                    <div className="flex items-center gap-2 bg-white/10 dark:bg-white/5 rounded-full px-4 py-2 backdrop-blur-sm">
                       <CheckCircle className="w-4 h-4" />
                       <span className="text-sm font-medium">Ejemplos Completos</span>
                     </div>
                   </div>
                   <div className="mt-6">
                     <Button 
-                      className="bg-white text-red-600 hover:bg-red-50 font-bold py-3 px-6 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300"
+                      className="bg-background text-red-600 hover:bg-red-50 dark:hover:bg-red-900/40 font-bold py-3 px-6 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300"
                       onClick={(e) => {
                         e.stopPropagation();
                         window.open('https://documenter.getpostman.com/view/39175030/2sB2x9jqSU', '_blank');
@@ -280,23 +280,23 @@ const AdminPanel = () => {
                       </div>
                       
                       {/* Efecto de sombra para dar profundidad */}
-                      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
+                      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/30 to-transparent dark:from-black/60 pointer-events-none"></div>
                     </div>
                   </div>
                   
                   {/* Efecto de brillo opcional */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent dark:via-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 </div>
               </div>
             </div>
           </div>
           
           {/* Decorative elements */}
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-72 w-72 rounded-full bg-white/5"></div>
-          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-48 w-48 rounded-full bg-white/5"></div>
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-72 w-72 rounded-full bg-white/5 dark:bg-white/10"></div>
+          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-48 w-48 rounded-full bg-white/5 dark:bg-white/10"></div>
           
           {/* Efecto de hover adicional */}
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-400/5 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-400/5 to-red-500/0 dark:from-red-900/0 dark:via-red-900/10 dark:to-red-900/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         </div>
 
         {/* Stats Grid - Solo 3 tarjetas más relevantes */}
@@ -307,18 +307,18 @@ const AdminPanel = () => {
               className="group relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer hover:scale-105"
               onClick={stat.onClick}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} dark:from-gray-900 dark:to-gray-800 opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
               <CardContent className="relative z-10 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
+                  <div className={`p-3 rounded-2xl bg-gradient-to-br ${stat.gradient} dark:from-gray-900 dark:to-gray-800 shadow-lg`}>
                     <stat.icon className="w-6 h-6 text-white" />
                   </div>
-                  <TrendingUp className={`w-5 h-5 ${stat.color} opacity-60`} />
+                  <TrendingUp className={`w-5 h-5 ${stat.color} dark:text-gray-200 opacity-60`} />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">{stat.title}</p>
-                  <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
-                  <p className="text-sm text-green-600 font-medium flex items-center">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">{stat.title}</p>
+                  <p className="text-3xl font-bold text-foreground mb-1">{stat.value}</p>
+                  <p className="text-sm text-green-600 dark:text-green-400 font-medium flex items-center">
                     <TrendingUp className="w-4 h-4 mr-1" />
                     {stat.change}
                   </p>
@@ -331,13 +331,13 @@ const AdminPanel = () => {
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
-          <Card className="lg:col-span-1 border-0 shadow-lg bg-gradient-to-br from-gray-50 to-white">
+          <Card className="lg:col-span-1 border-0 shadow-lg bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Zap className="w-6 h-6 text-orange-500" />
                 Acciones Rápidas
               </CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-muted-foreground">
                 Acceso directo a las funciones más utilizadas
               </CardDescription>
             </CardHeader>
@@ -345,15 +345,15 @@ const AdminPanel = () => {
               {quickActions.map((action, index) => (
                 <div 
                   key={index}
-                  className="group flex items-center p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-white cursor-pointer transition-all duration-300 hover:shadow-md"
+                  className="group flex items-center p-4 rounded-xl border border-border hover:border-accent hover:bg-background dark:hover:bg-accent/10 cursor-pointer transition-all duration-300 hover:shadow-md"
                   onClick={action.onClick}
                 >
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${action.gradient} shadow-lg mr-4 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`p-3 rounded-xl bg-gradient-to-br ${action.gradient} dark:from-gray-900 dark:to-gray-800 shadow-lg mr-4 group-hover:scale-110 transition-transform duration-300`}>
                     <action.icon className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">{action.title}</p>
-                    <p className="text-sm text-gray-500">{action.description}</p>
+                    <p className="font-semibold text-foreground group-hover:text-muted-foreground transition-colors">{action.title}</p>
+                    <p className="text-sm text-muted-foreground">{action.description}</p>
                   </div>
                 </div>
               ))}
@@ -361,32 +361,32 @@ const AdminPanel = () => {
           </Card>
 
           {/* Recent Activity */}
-          <Card className="lg:col-span-2 border-0 shadow-lg bg-gradient-to-br from-gray-50 to-white">
+          <Card className="lg:col-span-2 border-0 shadow-lg bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Activity className="w-6 h-6 text-blue-500" />
                 Actividad Reciente
               </CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-muted-foreground">
                 Últimas actividades registradas en el sistema
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {recentActivities.map((activity, index) => (
-                  <div key={activity.id} className="group flex items-start space-x-4 p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-white transition-all duration-300 hover:shadow-md">
+                  <div key={activity.id} className="group flex items-start space-x-4 p-4 rounded-xl border border-border hover:border-accent hover:bg-background dark:hover:bg-accent/10 transition-all duration-300 hover:shadow-md">
                     <div className="flex-shrink-0">
-                      <div className={`p-3 rounded-xl bg-gradient-to-br ${activity.gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`p-3 rounded-xl bg-gradient-to-br ${activity.gradient} dark:from-gray-900 dark:to-gray-800 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                         <activity.icon className="w-5 h-5 text-white" />
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
+                      <p className="font-semibold text-foreground group-hover:text-muted-foreground transition-colors">
                         {activity.action}
                       </p>
-                      <p className="text-sm text-gray-500 mt-1">{activity.details}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{activity.details}</p>
                       <div className="flex items-center justify-between mt-3">
-                        <p className="text-xs text-gray-400 flex items-center">
+                        <p className="text-xs text-muted-foreground flex items-center">
                           <Clock className="w-3 h-3 mr-1" />
                           {activity.time}
                         </p>

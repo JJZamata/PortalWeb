@@ -254,11 +254,11 @@ const InfraccionesPage = () => {
         </div>
 
         {/* Controles */}
-        <Card className="shadow-lg border-0 bg-white rounded-2xl">
+        <Card className="shadow-lg border-0 bg-background rounded-2xl">
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-4">
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                   Infracciones Registradas
                   {loading && <RefreshCw className="w-5 h-5 animate-spin text-[#812020]" />}
                 </CardTitle>
@@ -273,7 +273,7 @@ const InfraccionesPage = () => {
                     placeholder="Buscar por código o descripción..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
-                    className="pl-10 h-12 border border-gray-200 rounded-xl focus:border-[#812020] focus:ring-[#812020] pr-10 w-full bg-white"
+                    className="pl-10 h-12 border border-border rounded-xl focus:border-[#812020] focus:ring-[#812020] pr-10 w-full bg-white"
                     disabled={searchLoading}
                   />
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -291,7 +291,7 @@ const InfraccionesPage = () => {
                   <select
                     value={severityFilter}
                     onChange={e => setSeverityFilter(e.target.value)}
-                    className="h-12 w-full border border-gray-200 rounded-xl focus:border-[#812020] focus:ring-[#812020] px-4 text-gray-700 bg-white"
+                    className="h-12 w-full border border-border rounded-xl focus:border-[#812020] focus:ring-[#812020] px-4 text-gray-700 bg-white"
                     disabled={filterLoading}
                   >
                     {severities.map(s => (
@@ -303,7 +303,7 @@ const InfraccionesPage = () => {
                       variant="outline"
                       size="sm"
                       onClick={clearFilters}
-                      className="h-12 px-3 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
+                      className="h-12 px-3 border border-border text-gray-600 hover:bg-gray-50 rounded-xl"
                       disabled={filterLoading || loading}
                     >
                       <XCircle className="w-4 h-4" />
@@ -315,17 +315,17 @@ const InfraccionesPage = () => {
           </CardHeader>
           <CardContent>
             {/* Tabla */}
-            <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
               <Table>
-                <TableHeader className="bg-gradient-to-r from-[#812020]/10 to-[#a94442]/10">
+                <TableHeader className="bg-gradient-to-r from-[#812020]/10 to-[#a94442]/10 dark:from-[#2d0909] dark:to-[#3a1010]">
                   <TableRow>
-                    <TableHead className="font-bold text-[#812020]">Código</TableHead>
-                    <TableHead className="font-bold text-[#812020]">Descripción</TableHead>
-                    <TableHead className="font-bold text-[#812020]">Gravedad</TableHead>
-                    <TableHead className="font-bold text-[#812020]">Medida Adm.</TableHead>
-                    <TableHead className="font-bold text-[#812020]">Objetivo</TableHead>
-                    <TableHead className="font-bold text-[#812020] text-right">UIT %</TableHead>
-                    <TableHead className="font-bold text-[#812020] text-center">Acciones</TableHead>
+                    <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Código</TableHead>
+                    <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Descripción</TableHead>
+                    <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Gravedad</TableHead>
+                    <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Medida Adm.</TableHead>
+                    <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Objetivo</TableHead>
+                    <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5] text-right">UIT %</TableHead>
+                    <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5] text-center">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -340,21 +340,21 @@ const InfraccionesPage = () => {
                     </TableRow>
                   ) : (
                     violations.map((v) => (
-                      <TableRow key={v.id} className="hover:bg-[#812020]/5 transition-colors">
-                        <TableCell className="font-mono font-bold text-[#812020]">{v.code}</TableCell>
-                        <TableCell className="max-w-md">{v.description}</TableCell>
+                      <TableRow key={v.id} className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 transition-colors">
+                        <TableCell className="font-mono font-bold text-[#812020] text-foreground dark:text-muted-foreground">{v.code}</TableCell>
+                        <TableCell className="max-w-md text-foreground dark:text-muted-foreground">{v.description}</TableCell>
                         <TableCell>
                           <Badge variant="secondary" className={`border font-semibold rounded-full ${getSeverityBadge(v.severity)}`}>
                             {translateSeverity(v.severity)}
                           </Badge>
                         </TableCell>
-                        <TableCell>{v.administrativeMeasure}</TableCell>
+                        <TableCell className="text-foreground dark:text-muted-foreground">{v.administrativeMeasure}</TableCell>
                         <TableCell>
                           <Badge variant="secondary" className={`border font-semibold rounded-full ${getTargetBadge(v.target)}`}>
                             {translateTarget(v.target)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right font-semibold text-[#812020]">{v.uitPercentage}</TableCell>
+                        <TableCell className="text-right font-semibold text-[#812020] text-foreground dark:text-muted-foreground">{v.uitPercentage}</TableCell>
                         <TableCell className="text-center">
                           <Dialog onOpenChange={open => { if (open) fetchViolationDetail(v.id); }}>
                             <DialogTrigger asChild>
@@ -362,7 +362,7 @@ const InfraccionesPage = () => {
                                 <Eye className="w-4 h-4 text-[#812020]" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-lg">
+                            <DialogContent className="shadow-xl border border-border rounded-xl max-w-lg">
                               <DialogHeader className="pb-4">
                                 <DialogTitle className="text-2xl font-bold text-[#812020] flex items-center gap-2">
                                   <AlertTriangle className="w-6 h-6 text-[#812020]" />
@@ -412,16 +412,23 @@ const InfraccionesPage = () => {
                                     {/* Objetivo */}
                                     <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
                                       <span className="text-xs font-semibold text-gray-500">Objetivo</span>
-                                      <Badge variant="secondary" className={`border font-semibold rounded-full text-base ${getTargetBadge(selectedViolation.target)}`}>{translateTarget(selectedViolation.target)}</Badge>
+                                      <Badge variant="secondary" className={`border font-semibold rounded-full text-base ${getTargetBadge(selectedViolation.target)}`}>
+                                        {translateTarget(selectedViolation.target)}
+                                      </Badge>
                                     </div>
-                                    {/* Porcentaje UIT */}
+                                    {/* UIT % */}
                                     <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
-                                      <span className="text-xs font-semibold text-gray-500">Porcentaje UIT</span>
-                                      <span className="text-lg font-bold text-[#812020]">{selectedViolation.uitPercentage}</span>
+                                      <span className="text-xs font-semibold text-gray-500">UIT %</span>
+                                      <span className="text-base font-semibold text-gray-900">{selectedViolation.uitPercentage}</span>
                                     </div>
                                   </div>
                                 </div>
-                              ) : null}
+                              ) : (
+                                <div className="flex items-center justify-center py-8">
+                                  <RefreshCw className="w-8 h-8 animate-spin text-[#812020]" />
+                                  <span className="ml-2 text-gray-600">Cargando infracción...</span>
+                                </div>
+                              )}
                             </DialogContent>
                           </Dialog>
                         </TableCell>
@@ -430,46 +437,42 @@ const InfraccionesPage = () => {
                   )}
                 </TableBody>
               </Table>
+              {paginationData && (
+                <Pagination className="mt-6">
+                  <PaginationContent>
+                    {currentPage === 1 ? (
+                      <span
+                        className="gap-1 pl-2.5 opacity-50 pointer-events-none select-none inline-flex items-center px-3 py-2 rounded-md border border-input bg-background text-sm font-medium text-muted-foreground"
+                        aria-disabled="true"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span>Previous</span>
+                      </span>
+                    ) : (
+                      <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} />
+                    )}
+                    {Array.from({ length: paginationData.totalPages }).map((_, index) => (
+                      <PaginationItem key={index + 1}>
+                        <PaginationLink onClick={() => handlePageChange(index + 1)} isActive={index + 1 === currentPage}>
+                          {index + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    {currentPage === paginationData.totalPages ? (
+                      <span
+                        className="gap-1 pr-2.5 opacity-50 pointer-events-none select-none inline-flex items-center px-3 py-2 rounded-md border border-input bg-background text-sm font-medium text-muted-foreground"
+                        aria-disabled="true"
+                      >
+                        <span>Next</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </span>
+                    ) : (
+                      <PaginationNext onClick={() => handlePageChange(currentPage + 1)} />
+                    )}
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
-
-            {/* Paginación */}
-            {paginationData && paginationData.totalPages > 1 && !error && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <div className="text-sm text-gray-600">
-                  {severityFilter && severityFilter !== "ALL"
-                    ? `Mostrando ${paginationData.totalViolations} infracciones de gravedad "${severities.find(s => s.value === severityFilter)?.label}" (página ${paginationData.currentPage} de ${paginationData.totalPages})`
-                    : `Mostrando página ${paginationData.currentPage} de ${paginationData.totalPages} (${paginationData.totalViolations} infracciones en total)`}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (paginationData.hasPrevPage) {
-                        setCurrentPage(paginationData.currentPage - 1);
-                      }
-                    }}
-                    disabled={!paginationData.hasPrevPage || loading || filterLoading}
-                  >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                    Anterior
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (paginationData.hasNextPage) {
-                        setCurrentPage(paginationData.currentPage + 1);
-                      }
-                    }}
-                    disabled={!paginationData.hasNextPage || loading || filterLoading}
-                  >
-                    Siguiente
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -478,3 +481,4 @@ const InfraccionesPage = () => {
 };
 
 export default InfraccionesPage;
+

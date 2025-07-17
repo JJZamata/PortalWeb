@@ -620,13 +620,13 @@ const EmpresasPage = () => {
     <AdminLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="bg-gradient-to-br from-white to-purple-50/30 p-8 rounded-2xl shadow-lg border border-purple-200/40">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-br from-white to-blue-50/30 dark:from-[#1a1a1a] dark:to-[#1a2340]/40 p-8 rounded-2xl shadow-lg border border-blue-200/40 dark:border-blue-900/40">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-800 to-purple-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-900 to-fuchsia-700 bg-clip-text text-transparent mb-2 dark:from-purple-400 dark:to-fuchsia-500">
                 Gestión de Empresas
               </h1>
-              <p className="text-gray-600 text-lg">Administración de empresas de transporte registradas</p>
+              <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg">Administra y supervisa las empresas registradas en el sistema</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-center">
@@ -646,11 +646,11 @@ const EmpresasPage = () => {
         </div>
 
         {/* Controles */}
-        <Card className="shadow-lg border-0 bg-white rounded-2xl">
+        <Card className="shadow-lg border-0 bg-background rounded-2xl">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                   Empresas Registradas
                   {loading && <RefreshCw className="w-5 h-5 animate-spin text-purple-600" />}
                 </CardTitle>
@@ -674,7 +674,7 @@ const EmpresasPage = () => {
                   placeholder="Buscar por nombre o RUC..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-12 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-purple-500 pr-10"
+                  className="pl-10 h-12 border-border rounded-xl focus:border-purple-500 focus:ring-purple-500 pr-10"
                   disabled={searchLoading}
                 />
                 {searchLoading && (
@@ -697,7 +697,7 @@ const EmpresasPage = () => {
                   }}
                   disabled={filterLoading}
                 >
-                  <SelectTrigger className="h-12 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-purple-500">
+                  <SelectTrigger className="h-12 border-border rounded-xl focus:border-purple-500 focus:ring-purple-500">
                     <SelectValue placeholder="Filtrar por estado" />
                   </SelectTrigger>
                   <SelectContent>
@@ -713,7 +713,7 @@ const EmpresasPage = () => {
                     variant="outline"
                     size="sm"
                     onClick={clearFilters}
-                    className="h-12 px-3 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
+                    className="h-12 px-3 border-border text-gray-600 hover:bg-gray-50 rounded-xl"
                     disabled={filterLoading || searchLoading}
                   >
                     <XCircle className="w-4 h-4" />
@@ -726,17 +726,17 @@ const EmpresasPage = () => {
             {/* Eliminado: Card de indicadores de filtros activos */}
 
             {/* Tabla */}
-            <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
               <Table>
-                <TableHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50">
+                <TableHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-950 dark:to-purple-900/50">
                   <TableRow>
-                    <TableHead className="font-bold text-purple-900">RUC</TableHead>
-                    <TableHead className="font-bold text-purple-900">Empresa</TableHead>
-                    <TableHead className="font-bold text-purple-900">Resolución</TableHead>
-                    <TableHead className="font-bold text-purple-900">Vencimiento</TableHead>
-                    <TableHead className="font-bold text-purple-900">Estado</TableHead>
-                    <TableHead className="font-bold text-purple-900">Vehículos</TableHead>
-                    <TableHead className="font-bold text-purple-900 text-center">Acciones</TableHead>
+                    <TableHead className="font-bold text-purple-900 dark:text-purple-200">RUC</TableHead>
+                    <TableHead className="font-bold text-purple-900 dark:text-purple-200">Empresa</TableHead>
+                    <TableHead className="font-bold text-purple-900 dark:text-purple-200">Resolución</TableHead>
+                    <TableHead className="font-bold text-purple-900 dark:text-purple-200">Vencimiento</TableHead>
+                    <TableHead className="font-bold text-purple-900 dark:text-purple-200">Estado</TableHead>
+                    <TableHead className="font-bold text-purple-900 dark:text-purple-200">Vehículos</TableHead>
+                    <TableHead className="font-bold text-purple-900 dark:text-purple-200 text-center">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -790,11 +790,11 @@ const EmpresasPage = () => {
                     </TableRow>
                   ) : (
                     empresas.map((empresa) => (
-                      <TableRow key={empresa.ruc} className="hover:bg-purple-50/50 transition-colors">
+                      <TableRow key={empresa.ruc} className="hover:bg-purple-50/50 dark:hover:bg-purple-900/40 transition-colors">
                         <TableCell className="font-mono font-bold text-purple-800">{empresa.ruc}</TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-semibold text-gray-900">{empresa.nombre}</p>
+                            <p className="font-semibold text-foreground">{empresa.nombre}</p>
                             <p className="text-sm text-gray-500 flex items-center">
                               <MapPin className="w-3 h-3 mr-1" />
                               {empresa.direccion}
@@ -803,7 +803,7 @@ const EmpresasPage = () => {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium text-gray-900">{empresa.nro_resolucion}</p>
+                            <p className="font-medium text-foreground">{empresa.nro_resolucion}</p>
                             <p className="text-sm text-gray-500">{empresa.entidad_emisora}</p>
                           </div>
                         </TableCell>
@@ -832,7 +832,7 @@ const EmpresasPage = () => {
                                   <Eye className="w-4 h-4" />
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-4xl max-h-[90vh] overflow-y-auto">
+                              <DialogContent className="shadow-xl border border-border rounded-xl max-w-4xl max-h-[90vh] overflow-y-auto">
                                 <DialogHeader className="pb-6">
                                   <DialogTitle className="text-2xl font-bold text-purple-800 flex items-center gap-2">
                                     <Building2 className="w-6 h-6 text-purple-600" />
@@ -850,7 +850,7 @@ const EmpresasPage = () => {
                                 ) : errorDetalle ? (
                                   <div className="flex flex-col items-center justify-center py-8">
                                     <XCircle className="w-12 h-12 text-red-500 mb-4" />
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar detalles</h3>
+                                    <h3 className="text-lg font-semibold text-foreground mb-2">Error al cargar detalles</h3>
                                     <p className="text-gray-600 mb-4 text-center">{errorDetalle}</p>
                                   </div>
                                 ) : empresaDetalle ? (
@@ -861,7 +861,7 @@ const EmpresasPage = () => {
                                         <Building2 className="w-12 h-12 text-purple-700" />
                                       </div>
                                       <div className="flex-1">
-                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">{empresaDetalle.name || 'No registrado'}</h2>
+                                        <h2 className="text-2xl font-bold text-foreground mb-2">{empresaDetalle.name || 'No registrado'}</h2>
                                         <div className="flex items-center gap-4 text-gray-600 flex-wrap">
                                           <div className="flex items-center gap-1">
                                             <span className="font-mono font-semibold text-purple-700">{empresaDetalle.ruc || 'No registrado'}</span>
@@ -882,7 +882,7 @@ const EmpresasPage = () => {
                                     {/* Información detallada */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                       {/* Información Registral */}
-                                      <Card className="shadow-sm border border-gray-200">
+                                      <Card className="shadow-sm border border-border">
                                         <CardHeader className="pb-4">
                                           <CardTitle className="text-lg font-semibold text-purple-900 flex items-center gap-2">
                                             <FileText className="w-5 h-5 text-purple-600" />
@@ -896,15 +896,15 @@ const EmpresasPage = () => {
                                           </div>
                                           <div>
                                             <label className="text-sm font-medium text-gray-700">Razón Social</label>
-                                            <p className="mt-1 text-lg font-semibold text-gray-900">{empresaDetalle.name || 'No registrado'}</p>
+                                            <p className="mt-1 text-lg font-semibold text-foreground">{empresaDetalle.name || 'No registrado'}</p>
                                           </div>
                                           <div>
                                             <label className="text-sm font-medium text-gray-700">Dirección</label>
-                                            <p className="mt-1 text-lg font-semibold text-gray-900">{empresaDetalle.address || 'No registrada'}</p>
+                                            <p className="mt-1 text-lg font-semibold text-foreground">{empresaDetalle.address || 'No registrada'}</p>
                                           </div>
                                           <div>
                                             <label className="text-sm font-medium text-gray-700">Representante Legal</label>
-                                            <p className="mt-1 text-lg font-semibold text-gray-900">{empresaDetalle.legalRepresentative || 'No registrado'}</p>
+                                            <p className="mt-1 text-lg font-semibold text-foreground">{empresaDetalle.legalRepresentative || 'No registrado'}</p>
                                           </div>
                                           <div>
                                             <label className="text-sm font-medium text-gray-700 block mb-1">Estado RUC</label>
@@ -915,7 +915,7 @@ const EmpresasPage = () => {
                                         </CardContent>
                                       </Card>
                                       {/* Información de Contacto */}
-                                      <Card className="shadow-sm border border-gray-200">
+                                      <Card className="shadow-sm border border-border">
                                         <CardHeader className="pb-4">
                                           <CardTitle className="text-lg font-semibold text-purple-900 flex items-center gap-2">
                                             <MapPin className="w-5 h-5 text-purple-600" />
@@ -925,17 +925,17 @@ const EmpresasPage = () => {
                                         <CardContent className="space-y-4">
                                           <div>
                                             <label className="text-sm font-medium text-gray-700">Teléfono</label>
-                                            <p className="mt-1 text-lg font-semibold text-gray-900">{empresaDetalle.phone || 'No registrado'}</p>
+                                            <p className="mt-1 text-lg font-semibold text-foreground">{empresaDetalle.phone || 'No registrado'}</p>
                                           </div>
                                           <div>
                                             <label className="text-sm font-medium text-gray-700">Email</label>
-                                            <p className="mt-1 text-lg font-semibold text-gray-900">{empresaDetalle.email || 'No registrado'}</p>
+                                            <p className="mt-1 text-lg font-semibold text-foreground">{empresaDetalle.email || 'No registrado'}</p>
                                           </div>
                                         </CardContent>
                                       </Card>
                                     </div>
                                     {/* Vehículos asociados */}
-                                    <Card className="shadow-sm border border-gray-200">
+                                    <Card className="shadow-sm border border-border">
                                       <CardHeader className="pb-4">
                                         <CardTitle className="text-lg font-semibold text-purple-900 flex items-center gap-2">
                                           <Car className="w-5 h-5 text-purple-600" />
@@ -974,7 +974,7 @@ const EmpresasPage = () => {
                                       </CardContent>
                                     </Card>
                                     {/* Información de Registro */}
-                                    <Card className="shadow-sm border border-gray-200 md:col-span-2">
+                                    <Card className="shadow-sm border border-border md:col-span-2">
                                       <CardHeader className="pb-4">
                                         <CardTitle className="text-lg font-semibold text-purple-900 flex items-center gap-2">
                                           <Calendar className="w-5 h-5 text-purple-600" />
@@ -988,7 +988,7 @@ const EmpresasPage = () => {
                                               <Clock className="w-4 h-4" />
                                               Fecha de Registro
                                             </label>
-                                            <p className="mt-1 text-lg font-semibold text-gray-900">
+                                            <p className="mt-1 text-lg font-semibold text-foreground">
                                               {empresaDetalle.registrationDate ? new Date(empresaDetalle.registrationDate).toLocaleDateString('es-ES', {
                                                 year: 'numeric',
                                                 month: 'long',
@@ -1001,7 +1001,7 @@ const EmpresasPage = () => {
                                               <Clock className="w-4 h-4" />
                                               Fecha de Vencimiento
                                             </label>
-                                            <p className="mt-1 text-lg font-semibold text-gray-900">
+                                            <p className="mt-1 text-lg font-semibold text-foreground">
                                               {empresaDetalle.expirationDate ? new Date(empresaDetalle.expirationDate).toLocaleDateString('es-ES', {
                                                 year: 'numeric',
                                                 month: 'long',

@@ -384,11 +384,11 @@ const DocumentosPage = () => {
         </div>
 
         {/* Búsqueda */}
-        <Card className="shadow-lg border-0 bg-white rounded-2xl">
+        <Card className="shadow-lg border-0 bg-background rounded-2xl">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
                   Documentos Registrados
                   {loading && <RefreshCw className="w-5 h-5 animate-spin text-cyan-600" />}
                 </CardTitle>
@@ -412,7 +412,7 @@ const DocumentosPage = () => {
                       Nuevo Documento
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl shadow-[0_8px_32px_-4px_rgba(0,0,0,0.2)] border border-gray-200/80 rounded-xl">
+                  <DialogContent className="max-w-2xl shadow-[0_8px_32px_-4px_rgba(0,0,0,0.2)] border border-border rounded-xl">
                     <DialogHeader>
                       <DialogTitle>Registrar Nuevo Documento</DialogTitle>
                       <DialogDescription>
@@ -544,7 +544,7 @@ const DocumentosPage = () => {
                       {nuevoDocumento.tipo !== 'REVISION' && (
                         <div>
                           <Label>Archivo del Documento</Label>
-                          <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                          <div className="mt-2 border-2 border-dashed border-border rounded-lg p-6 text-center">
                             <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                             <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" id="archivo" />
                             <label htmlFor="archivo" className="text-blue-600 underline cursor-pointer">{nuevoDocumento.archivo ? nuevoDocumento.archivo.name : 'Selecciona un archivo'}</label>
@@ -574,7 +574,7 @@ const DocumentosPage = () => {
                   placeholder="Buscar por placa, número de documento o tipo..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 h-12 border-gray-300 focus:border-cyan-500 rounded-xl bg-white text-base"
+                  className="pl-12 h-12 border-border focus:border-cyan-500 rounded-xl bg-background text-base"
                 />
               </div>
               <div className="flex gap-2 min-w-[200px]">
@@ -582,7 +582,7 @@ const DocumentosPage = () => {
                   value={tipoFiltro}
                   onValueChange={value => setTipoFiltro(value)}
                 >
-                  <SelectTrigger className="h-12 border-gray-200 rounded-xl focus:border-cyan-500 focus:ring-cyan-500">
+                  <SelectTrigger className="h-12 border-border rounded-xl focus:border-cyan-500 focus:ring-cyan-500">
                     <SelectValue placeholder="Filtrar por tipo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -593,7 +593,7 @@ const DocumentosPage = () => {
                 </Select>
               </div>
             </div>
-            <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
               {loading ? (
                 <div className="flex items-center justify-center h-32">
                   <RefreshCw className="w-8 h-8 animate-spin text-cyan-600" />
@@ -606,35 +606,35 @@ const DocumentosPage = () => {
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader className="bg-gradient-to-r from-cyan-50 to-cyan-100/50">
+                    <TableHeader className="bg-gradient-to-r from-cyan-50 to-cyan-100/50 dark:from-cyan-950 dark:to-cyan-900/50">
                       <TableRow>
-                        <TableHead className="font-bold text-cyan-900">Tipo</TableHead>
-                        <TableHead className="font-bold text-cyan-900">Número</TableHead>
-                        <TableHead className="font-bold text-cyan-900">Placa</TableHead>
-                        <TableHead className="font-bold text-cyan-900">Entidad/Empresa</TableHead>
-                        <TableHead className="font-bold text-cyan-900">Fecha Emisión</TableHead>
-                        <TableHead className="font-bold text-cyan-900">Vencimiento</TableHead>
-                        <TableHead className="font-bold text-cyan-900">Estado</TableHead>
-                        <TableHead className="font-bold text-cyan-900">Detalles</TableHead>
+                        <TableHead className="font-bold text-cyan-900 dark:text-cyan-200">Tipo</TableHead>
+                        <TableHead className="font-bold text-cyan-900 dark:text-cyan-200">Número</TableHead>
+                        <TableHead className="font-bold text-cyan-900 dark:text-cyan-200">Placa</TableHead>
+                        <TableHead className="font-bold text-cyan-900 dark:text-cyan-200">Entidad/Empresa</TableHead>
+                        <TableHead className="font-bold text-cyan-900 dark:text-cyan-200">Fecha Emisión</TableHead>
+                        <TableHead className="font-bold text-cyan-900 dark:text-cyan-200">Vencimiento</TableHead>
+                        <TableHead className="font-bold text-cyan-900 dark:text-cyan-200">Estado</TableHead>
+                        <TableHead className="font-bold text-cyan-900 dark:text-cyan-200">Detalles</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {documentos.map((documento, index) => (
-                        <TableRow key={index} className="hover:bg-cyan-50/50 transition-colors">
-                          <TableCell className="font-semibold text-gray-900">{documento.tipo}</TableCell>
-                          <TableCell className="font-mono text-gray-700">{documento.numero}</TableCell>
-                          <TableCell className="font-mono font-semibold text-gray-900">{documento.placa}</TableCell>
-                          <TableCell className="text-gray-800 font-medium">
+                        <TableRow key={index} className="hover:bg-cyan-50/50 dark:hover:bg-cyan-900/40 transition-colors">
+                          <TableCell className="font-semibold text-foreground">{documento.tipo}</TableCell>
+                          <TableCell className="font-mono text-muted-foreground">{documento.numero}</TableCell>
+                          <TableCell className="font-mono font-semibold text-foreground">{documento.placa}</TableCell>
+                          <TableCell className="text-muted-foreground font-medium">
                             {documento.entidad_empresa}
                           </TableCell>
-                          <TableCell className="text-gray-700">{documento.fecha_emision}</TableCell>
-                          <TableCell className="text-gray-700">{documento.fecha_vencimiento}</TableCell>
+                          <TableCell className="text-muted-foreground">{documento.fecha_emision}</TableCell>
+                          <TableCell className="text-muted-foreground">{documento.fecha_vencimiento}</TableCell>
                           <TableCell>
                             <Badge variant="secondary" className={`${getBadgeVariant(documento.estado)} border px-3 py-1 rounded-full font-semibold`}>
                               {documento.estado}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-gray-700 text-sm">
+                          <TableCell className="text-muted-foreground text-sm">
                             {documento.detalles ? (
                               documento.tipo === 'REVISION'
                                 ? `Resultado: ${documento.detalles.inspection_result}`

@@ -35,36 +35,18 @@ export function AdminHeader() {
   }, [theme]);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-gray-200/60 bg-white/95 backdrop-blur-md shadow-sm">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md shadow-sm">
       <div className="flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 lg:px-6">
         <div className="flex items-center gap-2 sm:gap-4">
           <div className="hidden lg:block">
-            <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent">
+            <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent dark:from-red-400 dark:to-red-700">
               Panel de Control
             </h1>
-            <p className="text-xs sm:text-sm text-gray-600">Sistema de Fiscalización</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Sistema de Fiscalización</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Buscador Global */}
-          <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Buscar..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-48 sm:w-64 lg:w-80 pl-10 bg-gray-50/80 border-gray-200/60 focus:bg-white transition-all duration-200 text-sm"
-            />
-          </div>
-
-          {/* Buscador móvil */}
-          <div className="sm:hidden">
-            <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 rounded-lg">
-              <Search className="w-5 h-5" />
-            </Button>
-          </div>
-
           {/* Notificaciones */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -185,7 +185,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
       
       {/* Sidebar */}
       <div className={cn(
-        "fixed left-0 top-0 z-50 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out",
+        "fixed left-0 top-0 z-50 bg-background border-r border-border transform transition-transform duration-300 ease-in-out",
         // Responsive widths
         "w-80 sm:w-80 md:w-80 lg:relative lg:translate-x-0 lg:w-64 xl:w-72",
         // Mobile/tablet behavior
@@ -195,14 +195,14 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-600 to-red-700 dark:from-red-400 dark:to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
               <Shield className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-bold text-gray-900 text-lg sm:text-xl tracking-tight truncate">FISCAMOTO</h2>
-              <p className="text-xs sm:text-sm text-gray-600 font-medium truncate">Sistema de Control</p>
+              <h2 className="font-bold text-foreground text-lg sm:text-xl tracking-tight truncate">FISCAMOTO</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate">Sistema de Control</p>
             </div>
           </div>
           <Button
@@ -228,8 +228,8 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     className={cn(
                       "w-full justify-start h-12 px-3 sm:px-4 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base",
                       isActive 
-                        ? "bg-red-100 text-red-800 hover:bg-red-200" 
-                        : "hover:bg-gray-100 text-gray-700"
+                        ? "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60" 
+                        : "hover:bg-accent text-foreground dark:hover:bg-accent/40"
                     )}
                     onClick={() => handleNavigation(item.url!)}
                   >
@@ -244,7 +244,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                 <div key={item.title} className="space-y-1">
                   <Button
                     variant="ghost"
-                    className="w-full justify-between h-12 px-3 sm:px-4 rounded-xl font-medium transition-all duration-200 hover:bg-gray-100 text-gray-700 text-sm sm:text-base"
+                    className="w-full justify-between h-12 px-3 sm:px-4 rounded-xl font-medium transition-all duration-200 hover:bg-accent text-foreground dark:hover:bg-accent/40 text-sm sm:text-base"
                     onClick={() => toggleSection(item.title)}
                   >
                     <div className="flex items-center min-w-0">
@@ -269,8 +269,8 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                             className={cn(
                               "w-full justify-start h-10 px-3 sm:px-4 rounded-lg text-sm font-medium transition-all duration-200",
                               isActive 
-                                ? "bg-red-100 text-red-800 hover:bg-red-200" 
-                                : "hover:bg-gray-100 text-gray-700"
+                                ? "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60" 
+                                : "hover:bg-accent text-foreground dark:hover:bg-accent/40"
                             )}
                             onClick={() => handleNavigation(subItem.url)}
                           >
@@ -288,10 +288,10 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-3 sm:p-4 border-t border-gray-200">
+        <div className="p-3 sm:p-4 border-t border-border">
           <Button
             variant="ghost"
-            className="w-full justify-start h-12 px-3 sm:px-4 rounded-xl font-medium text-gray-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 text-sm sm:text-base"
+            className="w-full justify-start h-12 px-3 sm:px-4 rounded-xl font-medium text-muted-foreground hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/40 dark:hover:text-red-200 transition-all duration-200 text-sm sm:text-base"
             onClick={handleLogout}
           >
             <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />

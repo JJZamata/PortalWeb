@@ -13,9 +13,9 @@ export const PaginationControls = ({ pagination, onPageChange, searchTerm }: Pro
     <div className="flex items-center justify-between mt-4 pt-4 border-t">
       <div className="text-sm text-gray-600">
         {searchTerm ? (
-          `Encontrados ${pagination.totalItems} conductores para "${searchTerm}" (página ${pagination.currentPage} de ${pagination.totalPages})`
+          `Encontrados ${pagination.totalItems} para "${searchTerm}" (página ${pagination.currentPage} de ${pagination.totalPages})`
         ) : (
-          `Mostrando página ${pagination.currentPage} de ${pagination.totalPages} (${pagination.totalItems} conductores en total)`
+          `Mostrando página ${pagination.currentPage} de ${pagination.totalPages}`
         )}
       </div>
       <div className="flex gap-2">

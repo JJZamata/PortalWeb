@@ -23,18 +23,19 @@ const FiscalizadoresTable = React.memo(({ fiscalizadores, loading, onView, onEdi
   }
 
   return (
-    <Table>
-      <TableHeader className="bg-gradient-to-r from-[#812020]/10 to-[#a94442]/10 dark:from-[#2d0909] dark:to-[#3a1010]">
-        <TableRow>
-          <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">ID Usuario</TableHead>
-          <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Usuario</TableHead>
-          <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Email</TableHead>
-          <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Estado</TableHead>
-          <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Último Acceso</TableHead>
-          <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Dispositivo</TableHead>
-          <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5] text-center">Acciones</TableHead>
-        </TableRow>
-      </TableHeader>
+    <div className="rounded-xl border border-border overflow-hidden">
+      <Table>
+        <TableHeader className="bg-gradient-to-r from-[#812020]/10 to-[#a94442]/10 dark:from-[#2d0909] dark:to-[#3a1010]">
+          <TableRow>
+            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">ID Usuario</TableHead>
+            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Usuario</TableHead>
+            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Email</TableHead>
+            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Estado</TableHead>
+            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Último Acceso</TableHead>
+            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Dispositivo</TableHead>
+            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5] text-center">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
       <TableBody>
         {fiscalizadores.length === 0 && !loading ? (
           <TableRow>
@@ -101,6 +102,7 @@ const FiscalizadoresTable = React.memo(({ fiscalizadores, loading, onView, onEdi
         )}
       </TableBody>
     </Table>
+    </div>
   );
 });
 

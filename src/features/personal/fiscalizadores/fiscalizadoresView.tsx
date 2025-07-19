@@ -11,7 +11,7 @@ import PaginationControls from "./components/PaginationControls";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, RefreshCw, XCircle, Filter, Plus } from "lucide-react";
+import { Search, RefreshCw, XCircle, Plus } from "lucide-react";
 import { Fiscalizador, PaginationData, SummaryData } from "./types";
 import { addFiscalizador, updateFiscalizador, deleteFiscalizador } from "@/features/personal/fiscalizadores/services/fiscalizadoresService";
 import { useToast } from "@/components/ui/use-toast";
@@ -224,10 +224,6 @@ const FiscalizadoresView = memo(() => {
                   <p className="text-sm text-gray-600">Inactivos</p>
                 </div>
               </div>
-              <Button variant="outline" onClick={() => refetch()} className="ml-2">
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Refrescar
-              </Button>
             </div>
           </div>
         </div>
@@ -245,10 +241,6 @@ const FiscalizadoresView = memo(() => {
                 <Button onClick={() => setShowAddDialog(true)} className="bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg">
                   <Plus className="w-4 h-4 mr-2" />
                   Nuevo Fiscalizador
-                </Button>
-                <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 rounded-xl">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filtros
                 </Button>
               </div>
             </div>

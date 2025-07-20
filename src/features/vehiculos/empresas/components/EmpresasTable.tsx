@@ -35,15 +35,15 @@ export const EmpresasTable = ({ empresas, loading, onView, onEdit, onDelete }: P
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <Table>
-        <TableHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-950/50 dark:to-purple-900/30 border-b border-purple-200 dark:border-purple-800/30">
+        <TableHeader className="bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-gray-800 dark:to-gray-800">
           <TableRow>
-            <TableHead className="font-bold text-purple-900 dark:text-purple-200">RUC</TableHead>
-            <TableHead className="font-bold text-purple-900 dark:text-purple-200">Empresa</TableHead>
-            <TableHead className="font-bold text-purple-900 dark:text-purple-200">Resolución</TableHead>
-            <TableHead className="font-bold text-purple-900 dark:text-purple-200">Vencimiento</TableHead>
-            <TableHead className="font-bold text-purple-900 dark:text-purple-200">Estado</TableHead>
-            <TableHead className="font-bold text-purple-900 dark:text-purple-200">Vehículos</TableHead>
-            <TableHead className="font-bold text-purple-900 dark:text-purple-200 text-center">Acciones</TableHead>
+            <TableHead className="font-bold text-purple-900 dark:text-gray-300">RUC</TableHead>
+            <TableHead className="font-bold text-purple-900 dark:text-gray-300">Empresa</TableHead>
+            <TableHead className="font-bold text-purple-900 dark:text-gray-300">Resolución</TableHead>
+            <TableHead className="font-bold text-purple-900 dark:text-gray-300">Vencimiento</TableHead>
+            <TableHead className="font-bold text-purple-900 dark:text-gray-300">Estado</TableHead>
+            <TableHead className="font-bold text-purple-900 dark:text-gray-300">Vehículos</TableHead>
+            <TableHead className="font-bold text-purple-900 dark:text-gray-300 text-center">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

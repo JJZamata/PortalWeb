@@ -17,7 +17,7 @@ const PaginationControls = React.memo(({ pagination, onPageChange, searchTerm }:
       <div className="text-sm text-gray-600" aria-live="polite">
         {searchTerm
           ? `Mostrando ${totalItems} (búsqueda: "${searchTerm}")`
-          : `Página ${currentPage} de ${totalPages}`}
+          : `Mostrando Página ${currentPage} de ${totalPages}`}
       </div>
       <div className="flex gap-2">
         <Button

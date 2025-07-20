@@ -28,16 +28,28 @@ export const DeleteConductorDialog = ({ open, onOpenChange, dni, onConfirm }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="shadow-xl border border-border rounded-xl max-w-md">
+      <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-md bg-white dark:bg-gray-900">
         <DialogHeader className="pb-6">
-          <DialogTitle className="text-2xl font-bold text-foreground">Eliminar Conductor</DialogTitle>
-          <DialogDescription className="text-gray-600">
+          <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">Eliminar Conductor</DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400">
             ¿Estás seguro de que deseas eliminar este conductor? Esta acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={submitting}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)} 
+            disabled={submitting}
+            className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            variant="destructive" 
+            onClick={handleDelete} 
+            disabled={submitting}
+            className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+          >
             {submitting ? 'Eliminando...' : 'Eliminar'}
           </Button>
         </div>

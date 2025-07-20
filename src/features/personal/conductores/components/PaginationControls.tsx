@@ -10,8 +10,8 @@ interface Props {
 
 export const PaginationControls = ({ pagination, onPageChange, searchTerm }: Props) => {
   return (
-    <div className="flex items-center justify-between mt-4 pt-4 border-t">
-      <div className="text-sm text-gray-600">
+    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="text-sm text-gray-600 dark:text-gray-400">
         {searchTerm ? (
           `Encontrados ${pagination.totalItems} para "${searchTerm}" (página ${pagination.currentPage} de ${pagination.totalPages})`
         ) : (
@@ -24,6 +24,7 @@ export const PaginationControls = ({ pagination, onPageChange, searchTerm }: Pro
           size="sm"
           onClick={() => onPageChange(pagination.currentPage - 1)}
           disabled={!pagination.hasPrevPage}
+          className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           Anterior
@@ -33,6 +34,7 @@ export const PaginationControls = ({ pagination, onPageChange, searchTerm }: Pro
           size="sm"
           onClick={() => onPageChange(pagination.currentPage + 1)}
           disabled={!pagination.hasNextPage}
+          className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           Siguiente
           <ChevronRight className="h-4 w-4 ml-1" />

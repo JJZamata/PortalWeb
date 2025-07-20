@@ -60,10 +60,10 @@ const ConductoresView = () => {
     return (
       <AdminLayout>
         <div className="flex flex-col items-center justify-center h-64">
-          <XCircle className="w-12 h-12 text-red-500 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar datos</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => handlePageChange(1)} variant="outline">
+          <XCircle className="w-12 h-12 text-red-500 dark:text-red-400 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error al cargar datos</h3>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
+          <Button onClick={() => handlePageChange(1)} variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
             <RefreshCw className="w-4 h-4 mr-2" />
             Reintentar
           </Button>
@@ -75,46 +75,46 @@ const ConductoresView = () => {
   return (
     <AdminLayout>
       <div className="space-y-8">
-        <div className="bg-gradient-to-br from-white to-green-50/30 dark:from-[#1a1a1a] dark:to-[#1a3b1a]/40 p-8 rounded-2xl shadow-lg border border-green-200/40 dark:border-green-900/40">
+        <div className="bg-gradient-to-br from-white to-green-50/30 dark:from-gray-900 dark:to-green-950/30 p-8 rounded-2xl shadow-lg border border-green-200/40 dark:border-green-800/40">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-800 to-green-600 bg-clip-text text-transparent mb-2 dark:from-[#6ee7b7] dark:to-[#059669]">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-800 to-green-600 dark:from-green-400 dark:to-green-300 bg-clip-text text-transparent mb-2">
                 Gestión de Conductores
               </h1>
               <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg">Administra y supervisa los conductores registrados en el sistema</p>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
               <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-green-700">
+                <p className="text-2xl md:text-3xl font-bold text-green-700 dark:text-green-400">
                   {loading ? '-' : summary?.total || 0}
                 </p>
-                <p className="text-sm text-gray-600">Total Conductores</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Total Conductores</p>
               </div>
             </div>
           </div>
         </div>
 
-        <Card className="shadow-lg border-0 bg-background rounded-2xl">
+        <Card className="shadow-lg border-0 bg-white dark:bg-gray-900 rounded-2xl">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
-                <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+                <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   Conductores Registrados
-                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-green-600" />}
+                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-green-600 dark:text-green-400" />}
                 </CardTitle>
-                <CardDescription>Listado completo de conductores en el sistema</CardDescription>
+                <CardDescription className="text-gray-600 dark:text-gray-400">Listado completo de conductores en el sistema</CardDescription>
               </div>
               <AddConductorDialog onSuccess={() => handlePageChange(page)} />
             </div>
           </CardHeader>
           <CardContent>
             <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
               <Input
                 placeholder="Buscar por DNI, nombre o teléfono..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-12 border-border rounded-xl focus:border-green-500 focus:ring-green-500 pr-10"
+                className="pl-10 h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-green-500 focus:ring-green-500 pr-10 bg-white dark:bg-gray-800 dark:text-white"
               />
             </div>
             <ConductoresTable

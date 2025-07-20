@@ -57,13 +57,13 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
           <Plus className="w-4 h-4 mr-2" /> Nuevo Vehículo
         </Button>
       </DialogTrigger>
-      <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
         <DialogHeader className="pb-4">
-          <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Plus className="w-6 h-6 text-blue-600" />
+          <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Plus className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Agregar Vehículo
           </DialogTitle>
-          <DialogDescription className="text-gray-600">
+          <DialogDescription className="text-gray-600 dark:text-gray-400">
             Completa la información para registrar un nuevo vehículo
           </DialogDescription>
         </DialogHeader>
@@ -71,22 +71,22 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-6">
             {/* Información del Vehículo */}
-            <Card className="border border-blue-200 bg-blue-50/30">
+            <Card className="border border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/30">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Car className="w-5 h-5 text-blue-600" />
+                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Car className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   Información del Vehículo
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField name="plateNumber" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
                       <Hash className="w-4 h-4" />
                       Placa del Vehículo
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Ej: ABC-123" className="bg-white border-gray-300 focus:border-blue-500 font-mono font-bold" maxLength={10} />
+                      <Input {...field} placeholder="Ej: ABC-123" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 font-mono font-bold text-gray-900 dark:text-white" maxLength={10} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -94,12 +94,12 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
 
                 <FormField name="vehicleStatus" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
                       <Settings className="w-4 h-4" />
                       Estado del Vehículo
                     </FormLabel>
                     <FormControl>
-                      <select {...field} className="w-full border border-gray-300 rounded-md h-10 px-3 bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                      <select {...field} className="w-full border border-gray-300 dark:border-gray-600 rounded-md h-10 px-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400">
                         <option value="OPERATIVO">🟢 Operativo</option>
                         <option value="REPARACIÓN">⚙️ Reparación</option>
                         <option value="FUERA DE SERVICIO">🔴 Fuera de Servicio</option>
@@ -112,9 +112,9 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
 
                 <FormField name="brand" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">Marca</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Marca</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Ej: Toyota, Honda" className="bg-white border-gray-300 focus:border-blue-500" />
+                      <Input {...field} placeholder="Ej: Toyota, Honda" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -122,9 +122,9 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
 
                 <FormField name="model" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">Modelo</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Modelo</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Ej: Corolla, Civic" className="bg-white border-gray-300 focus:border-blue-500" />
+                      <Input {...field} placeholder="Ej: Corolla, Civic" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -132,12 +132,12 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
 
                 <FormField name="manufacturingYear" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       Año de Fabricación
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" placeholder="Ej: 2020" className="bg-white border-gray-300 focus:border-blue-500" min="1990" max={new Date().getFullYear() + 1} />
+                      <Input {...field} type="number" placeholder="Ej: 2020" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" min="1990" max={new Date().getFullYear() + 1} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -145,9 +145,9 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
 
                 <FormField name="typeId" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">ID Tipo de Vehículo</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">ID Tipo de Vehículo</FormLabel>
                     <FormControl>
-                      <Input {...field} type="number" placeholder="Ej: 1" className="bg-white border-gray-300 focus:border-blue-500" min="1" />
+                      <Input {...field} type="number" placeholder="Ej: 1" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" min="1" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -158,19 +158,19 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
             {/* Información del Propietario y Empresa */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Propietario */}
-              <Card className="border border-green-200 bg-green-50/30">
+              <Card className="border border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <User className="w-5 h-5 text-green-600" />
+                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <User className="w-5 h-5 text-green-600 dark:text-green-400" />
                     Propietario
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <FormField name="ownerDni" control={form.control} render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">DNI del Propietario</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">DNI del Propietario</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Ej: 12345678" className="bg-white border-gray-300 focus:border-green-500" maxLength={8} />
+                        <Input {...field} placeholder="Ej: 12345678" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-green-500 dark:focus:border-green-400" maxLength={8} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -179,19 +179,19 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
               </Card>
 
               {/* Empresa */}
-              <Card className="border border-purple-200 bg-purple-50/30">
+              <Card className="border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/30">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-purple-600" />
+                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     Empresa Operadora
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <FormField name="companyRuc" control={form.control} render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">RUC de la Empresa</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">RUC de la Empresa</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Ej: 20123456789" className="bg-white border-gray-300 focus:border-purple-500" maxLength={11} />
+                        <Input {...field} placeholder="Ej: 20123456789" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-purple-500 dark:focus:border-purple-400" maxLength={11} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -201,20 +201,20 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
             </div>
 
             {/* Botones */}
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setOpen(false)}
                 disabled={mutation.isPending}
-                className="px-6"
+                className="px-6 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
                 disabled={mutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-6"
               >
                 {mutation.isPending ? "Agregando..." : "Agregar Vehículo"}
               </Button>

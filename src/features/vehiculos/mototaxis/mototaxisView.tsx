@@ -127,10 +127,10 @@ const VehiculosView = () => {
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
                 <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  Vehículos Registrados
+                   Mototaxis Registrados
                   {loading && <RefreshCw className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />}
                 </CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-400">Listado completo de vehículos en el sistema</CardDescription>
+                <CardDescription className="text-gray-600 dark:text-gray-400">Listado completo de mototaxis en el sistema</CardDescription>
               </div>
               <AddVehiculoDialog onSuccess={refreshVehiculos} />
             </div>

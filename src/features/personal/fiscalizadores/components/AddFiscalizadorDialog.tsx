@@ -2,10 +2,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { memo } from "react";
+import { User, Mail, Lock, Shield, Plus, UserPlus } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -52,74 +54,156 @@ export const AddFiscalizadorDialog = memo(({ open, onOpenChange, onAdd, submitti
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="shadow-xl border border-gray-200 rounded-xl max-w-md">
-        <DialogHeader className="pb-6">
-          <DialogTitle className="text-2xl font-bold text-gray-800">Agregar Fiscalizador</DialogTitle>
-          <DialogDescription className="text-gray-600">Completa la información del nuevo fiscalizador</DialogDescription>
+      <DialogContent className="shadow-2xl border-0 rounded-2xl max-w-2xl bg-white dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-red-700 to-red-600 dark:from-red-400 dark:to-red-300 bg-clip-text text-transparent flex items-center gap-2">
+            <UserPlus className="w-6 h-6 text-red-600 dark:text-red-400" />
+            Registrar Nuevo Fiscalizador
+          </DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
+            Complete toda la información requerida para registrar un nuevo fiscalizador en el sistema
+          </DialogDescription>
         </DialogHeader>
+        
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pt-2">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre de usuario</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Ej: fiscal30_test" className="bg-white" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Ingrese el email" type="email" className="bg-white" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contraseña</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Ej: Fiscal123@" type="password" className="bg-white" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirmar Contraseña</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Repita la contraseña" type="password" className="bg-white" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter className="pt-2">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pt-4">
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-5">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                  <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  Información de Acceso
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                          <User className="w-4 h-4" />
+                          Nombre de Usuario *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="fiscal30_test" 
+                            className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-red-500 focus:ring-red-500" 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-500 text-sm" />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                          <Mail className="w-4 h-4" />
+                          Correo Electrónico *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="fiscalizador@lajoya.gob.pe" 
+                            type="email" 
+                            className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-red-500 focus:ring-red-500" 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-500 text-sm" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                          <Lock className="w-4 h-4" />
+                          Contraseña *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Mínimo 8 caracteres" 
+                            type="password" 
+                            className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-red-500 focus:ring-red-500" 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-500 text-sm" />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                          <Lock className="w-4 h-4" />
+                          Confirmar Contraseña *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Repita la contraseña" 
+                            type="password" 
+                            className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-red-500 focus:ring-red-500" 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-500 text-sm" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-950/50 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Requisitos de la contraseña:</h4>
+                  <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                    <li>• Mínimo 8 caracteres</li>
+                    <li>• Al menos una letra mayúscula y una minúscula</li>
+                    <li>• Al menos un número</li>
+                    <li>• Al menos un carácter especial (!@#$%^&*)</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                className="rounded-lg border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                Cancelar
+              </Button>
               <Button
                 type="submit"
-                className="bg-red-600 hover:bg-red-700 text-white rounded-xl w-full transition-colors"
+                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg px-8 shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={submitting}
               >
-                {submitting ? "Agregando..." : "Agregar Fiscalizador"}
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+                    Registrando...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Registrar Fiscalizador
+                  </>
+                )}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
       </DialogContent>

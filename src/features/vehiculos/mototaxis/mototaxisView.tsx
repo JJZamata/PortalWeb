@@ -116,7 +116,7 @@ const VehiculosView = () => {
                 <p className="text-2xl md:text-3xl font-bold text-blue-700 dark:text-blue-400">
                   {statsLoading ? '-' : stats?.totalVehicles || 0}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Total</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Total mototaxis</p>
               </div>
             </div>
           </div>

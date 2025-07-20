@@ -81,16 +81,16 @@ const EmpresasView = () => {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{loading ? '-' : stats?.totalCompanies || 0}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Total Empresas</p>
-              </div>
-              <div className="text-center">
                 <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{loading ? '-' : stats?.activeCompanies || 0}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Activas</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-amber-700 dark:text-amber-400">{loading ? '-' : stats?.suspendedCompanies || 0}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Suspendidas</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{loading ? '-' : stats?.totalCompanies || 0}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Total Empresas</p>
               </div>
             </div>
           </div>

@@ -12,11 +12,32 @@ export const vehiculosService = {
     
     // Devolver la estructura real de la API
     const data = response.data.data;
+    const vehicles = data.vehicles || [];
+    
+    // Calcular estadísticas por estado
+    const statsOPERATIVO = vehicles.filter((v: any) => v.vehicleStatus === 'OPERATIVO').length;
+    const statsREPARACION = vehicles.filter((v: any) => v.vehicleStatus === 'REPARACIÓN').length;
+    const statsFUERA_SERVICIO = vehicles.filter((v: any) => v.vehicleStatus === 'FUERA DE SERVICIO').length;
+    const statsINSPECCION = vehicles.filter((v: any) => v.vehicleStatus === 'INSPECCIÓN').length;
+    
     return {
-      vehicles: data.vehicles || [],
+      vehicles,
       pagination: data.pagination || null,
-      summary: { total: data.pagination?.totalItems || 0 } // Crear summary del pagination.totalItems
+      summary: { 
+        total: data.pagination?.totalItems || 0,
+        operativo: statsOPERATIVO,
+        reparacion: statsREPARACION,
+        fueraServicio: statsFUERA_SERVICIO,
+        inspeccion: statsINSPECCION
+      }
     };
+  },
+
+  // Nuevo método para obtener estadísticas globales
+  getVehicleStats: async () => {
+    const currentYear = new Date().getFullYear();
+    const response = await axiosInstance.get(`/vehicles/stats?dateFrom=2021-01-01&dateTo=${currentYear}-12-31&groupBy=status`);
+    return response.data.data;
   },
   getVehiculoDetail: async (plate: string) => {
     const cleanPlate = plate.replace(/[-\s]/g, '').toUpperCase();

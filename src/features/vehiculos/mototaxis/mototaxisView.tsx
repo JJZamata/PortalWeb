@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { useVehiculos } from './hooks/useVehiculos';
 import { useVehiculoDetail } from './hooks/useVehiculoDetail';
+import { useVehicleStats } from './hooks/useVehicleStats';
 import { VehiculosTable } from './components/VehiculosTable';
 import { VehiculoDetailDialog } from './components/VehiculoDetailDialog';
 import { AddVehiculoDialog } from './components/AddVehiculoDialog';
@@ -20,6 +21,7 @@ const VehiculosView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { vehiculos, pagination, summary, loading, error, page, handlePageChange } = useVehiculos(searchTerm);
   const { vehiculoDetail, loadingDetail, errorDetail, fetchVehiculoDetail } = useVehiculoDetail();
+  const { stats, loading: statsLoading } = useVehicleStats();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -49,6 +51,7 @@ const VehiculosView = () => {
   const refreshVehiculos = () => {
     // Invalidar todas las queries de vehículos para forzar refetch
     queryClient.invalidateQueries({ queryKey: ['vehiculos'] });
+    queryClient.invalidateQueries({ queryKey: ['vehicleStats'] });
   };
 
   if (error) {
@@ -72,18 +75,48 @@ const VehiculosView = () => {
       <div className="space-y-8">
         <div className="bg-gradient-to-br from-white to-blue-50/30 p-8 rounded-2xl shadow-lg border border-blue-200/40">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-2">
-                Gestión de Vehículos
+                Gestión de Mototaxis
               </h1>
-              <p className="text-gray-600 text-base md:text-lg">Administra y supervisa los vehículos registrados en el sistema</p>
+              <p className="text-gray-600 text-base md:text-lg">Administra y supervisa las mototaxis registrados en el sistema</p>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
+
+            {/* Estadísticas juntas tipo fiscalizadores */}
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-green-700">
+                  {statsLoading ? '-' : stats?.byStatus?.OPERATIVO || 0}
+                </p>
+                <p className="text-sm text-gray-600">Operativo</p>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-orange-700">
+                  {statsLoading ? '-' : stats?.byStatus?.REPARACIÓN || 0}
+                </p>
+                <p className="text-sm text-gray-600">Reparación</p>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-red-700">
+                  {statsLoading ? '-' : stats?.byStatus?.['FUERA DE SERVICIO'] || 0}
+                </p>
+                <p className="text-sm text-gray-600">Fuera Servicio</p>
+              </div>
+              
               <div className="text-center">
                 <p className="text-2xl md:text-3xl font-bold text-blue-700">
-                  {loading ? '-' : summary?.total || 0}
+                  {statsLoading ? '-' : stats?.byStatus?.INSPECCIÓN || 0}
                 </p>
-                <p className="text-sm text-gray-600">Total Vehículos</p>
+                <p className="text-sm text-gray-600">Inspección</p>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-blue-700">
+                  {statsLoading ? '-' : stats?.totalVehicles || 0}
+                </p>
+                <p className="text-sm text-gray-600">Total</p>
               </div>
             </div>
           </div>

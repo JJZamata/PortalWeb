@@ -201,10 +201,10 @@ const FiscalizadoresView = memo(() => {
   return (
     <AdminLayout>
       <div className="space-y-8">
-        <div className="bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-900 dark:to-orange-950/30 p-8 rounded-2xl shadow-lg border border-orange-200/40 dark:border-orange-800/40">
+        <div className="bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-900 dark:to-orange-950/20 p-8 rounded-2xl shadow-lg border border-orange-200/40 dark:border-orange-800/30">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-800 to-orange-600 dark:from-orange-400 dark:to-orange-300 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-800 to-orange-600 dark:from-orange-300 dark:to-orange-400 bg-clip-text text-transparent mb-2">
                 Gestión de Fiscalizadores
               </h1>
               <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg">Administra y supervisa el equipo de fiscalizadores del sistema</p>
@@ -216,12 +216,12 @@ const FiscalizadoresView = memo(() => {
                   <p className="text-sm text-gray-600 dark:text-gray-300">Activos</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-orange-700 dark:text-orange-400">{isLoading ? "-" : summary?.inactivos || 0}</p>
+                  <p className="text-2xl md:text-3xl font-bold text-orange-700 dark:text-orange-300">{isLoading ? "-" : summary?.inactivos || 0}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Inactivos</p>
                 </div>
               </div>
               <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-orange-700 dark:text-orange-400">
+                <p className="text-2xl md:text-3xl font-bold text-orange-700 dark:text-orange-300">
                   {isLoading ? '-' : summary?.total || 0}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Total Fiscalizadores</p>
@@ -240,7 +240,7 @@ const FiscalizadoresView = memo(() => {
                 <CardDescription className="text-gray-600 dark:text-gray-400">Listado completo de fiscalizadores en el sistema</CardDescription>
               </div>
               <div className="flex gap-3">
-                <Button onClick={() => setShowAddDialog(true)} className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0">
+                <Button onClick={() => setShowAddDialog(true)} className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 dark:from-orange-500 dark:to-orange-600 dark:hover:from-orange-600 dark:hover:to-orange-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0">
                   <Plus className="w-4 h-4 mr-2" />
                   Nuevo Fiscalizador
                 </Button>
@@ -254,7 +254,7 @@ const FiscalizadoresView = memo(() => {
                 placeholder="Buscar por nombre de usuario, email o ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-orange-500 focus:ring-orange-500 pr-10 bg-white dark:bg-gray-800 dark:text-white"
+                className="pl-10 h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-orange-500 focus:ring-orange-500/20 pr-10 bg-white dark:bg-gray-800 dark:text-white"
               />
             </div>
             <FiscalizadoresTable fiscalizadores={filteredFiscalizadores} loading={isLoading} onView={handleView} onEdit={handleEdit} searchTerm={searchTerm} />

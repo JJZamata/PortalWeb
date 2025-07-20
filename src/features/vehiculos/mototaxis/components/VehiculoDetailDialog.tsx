@@ -6,8 +6,6 @@ import { Vehiculo } from "../types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RefreshCw, XCircle } from "lucide-react";
-import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
 
 interface Props {
   open: boolean;  

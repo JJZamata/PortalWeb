@@ -1,11 +1,13 @@
 // src/features/gestion/fiscalizadores/hooks/useFiscalizadores.ts
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchFiscalizadores } from '../services/fiscalizadoresService';
 import { Fiscalizador } from '../types';
+import { useScrollPreservation } from '@/hooks/useScrollPreservation';
 
 export const useFiscalizadores = (searchTerm: string, currentPage: number) => {
   const [page, setPage] = useState(currentPage);
+  const lastPageChangeRef = useRef<number>(0);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['fiscalizadores', page, searchTerm],
@@ -14,7 +16,18 @@ export const useFiscalizadores = (searchTerm: string, currentPage: number) => {
     enabled: !!page, // Solo ejecuta si page es válido
   });
 
+  const { preparePageChange } = useScrollPreservation({ isLoading });
+
   const handlePageChange = (newPage: number) => {
+    const now = Date.now();
+    
+    // Prevenir múltiples clicks rápidos (menos de 500ms)
+    if (now - lastPageChangeRef.current < 500) {
+      return;
+    }
+    
+    lastPageChangeRef.current = now;
+    preparePageChange(); // Guardar posición antes del cambio
     setPage(newPage);
   };
 

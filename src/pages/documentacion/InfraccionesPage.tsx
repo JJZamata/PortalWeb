@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import AdminLayout from "@/components/AdminLayout";
 import axios from '@/lib/axios';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from "@/components/ui/input";
+import { useScrollPreservation } from "@/hooks/useScrollPreservation";
 import {
   Dialog,
   DialogContent,
@@ -74,6 +75,13 @@ const InfraccionesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const lastPageChangeRef = useRef<number>(0);
+  
+  // Hook para preservar scroll position
+  const { preparePageChange } = useScrollPreservation({ 
+    isLoading: loading || filterLoading || searchLoading 
+  });
+  
   const [stats, setStats] = useState({
     totalViolations: 0,
     verySerious: 0,
@@ -162,6 +170,15 @@ const InfraccionesPage = () => {
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= (paginationData?.totalPages || 1)) {
+      const now = Date.now();
+      
+      // Prevenir múltiples clicks rápidos (menos de 500ms)
+      if (now - lastPageChangeRef.current < 500) {
+        return;
+      }
+      
+      lastPageChangeRef.current = now;
+      preparePageChange(); // Guardar posición antes del cambio
       setCurrentPage(newPage);
     }
   };

@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { conductoresService } from '../services/conductoresService';
+import { useScrollPreservation } from '@/hooks/useScrollPreservation';
 
 export const useConductores = (searchTerm: string) => {
   const [page, setPage] = useState(1);
   const [isSearching, setIsSearching] = useState(false);
+  const lastPageChangeRef = useRef<number>(0);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['conductores', page, searchTerm],
@@ -12,6 +14,8 @@ export const useConductores = (searchTerm: string) => {
     enabled: searchTerm.length < 2 || searchTerm.length >= 2,
     staleTime: 5 * 60 * 1000,
   });
+
+  const { preparePageChange } = useScrollPreservation({ isLoading });
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -27,6 +31,15 @@ export const useConductores = (searchTerm: string) => {
   }, [searchTerm, isSearching]);
 
   const handlePageChange = (newPage: number) => {
+    const now = Date.now();
+    
+    // Prevenir múltiples clicks rápidos (menos de 500ms)
+    if (now - lastPageChangeRef.current < 500) {
+      return;
+    }
+    
+    lastPageChangeRef.current = now;
+    preparePageChange(); // Guardar posición antes del cambio
     setPage(newPage);
   };
 

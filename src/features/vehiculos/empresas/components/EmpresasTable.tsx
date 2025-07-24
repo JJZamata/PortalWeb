@@ -11,9 +11,11 @@ interface Props {
   onView: (ruc: string) => void;
   onEdit: (empresa: Empresa) => void;
   onDelete: (ruc: string) => void;
+  searchTerm?: string;
+  statusFilter?: string;
 }
 
-export const EmpresasTable = ({ empresas, loading, onView, onEdit, onDelete }: Props) => {
+export const EmpresasTable = ({ empresas, loading, onView, onEdit, onDelete, searchTerm = '', statusFilter = 'ALL' }: Props) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -52,7 +54,24 @@ export const EmpresasTable = ({ empresas, loading, onView, onEdit, onDelete }: P
               <TableCell colSpan={7} className="h-32 text-center">
                 <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                   <Search className="w-8 h-8 mb-2" />
-                  <p>No hay empresas registradas en el sistema</p>
+                  {searchTerm.length >= 2 && statusFilter !== 'ALL' ? (
+                    <div>
+                      <p className="font-medium">No se encontraron empresas</p>
+                      <p className="text-sm">que contengan "{searchTerm}" con estado "{statusFilter}"</p>
+                    </div>
+                  ) : searchTerm.length >= 2 ? (
+                    <div>
+                      <p className="font-medium">No se encontraron empresas</p>
+                      <p className="text-sm">que contengan "{searchTerm}"</p>
+                    </div>
+                  ) : statusFilter !== 'ALL' ? (
+                    <div>
+                      <p className="font-medium">No se encontraron empresas</p>
+                      <p className="text-sm">con estado "{statusFilter}"</p>
+                    </div>
+                  ) : (
+                    <p>No hay empresas registradas en el sistema</p>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

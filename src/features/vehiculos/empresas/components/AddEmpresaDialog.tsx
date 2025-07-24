@@ -6,7 +6,7 @@ import { Plus, Building2, FileText, MapPin, Calendar, IdCard } from "lucide-reac
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasService } from '../services/empresasService';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -45,6 +45,8 @@ interface Props {
 export const AddEmpresaDialog = ({ onSuccess }: Props) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const form = useForm<EmpresaForm>({
     resolver: zodResolver(empresaSchema),
     defaultValues: { 
@@ -60,6 +62,10 @@ export const AddEmpresaDialog = ({ onSuccess }: Props) => {
   const mutation = useMutation({
     mutationFn: (data: EmpresaForm) => empresasService.addEmpresa(data),
     onSuccess: () => {
+      // Invalidar todas las queries relacionadas con empresas para refrescar los datos
+      queryClient.invalidateQueries({ queryKey: ['empresas'] });
+      queryClient.invalidateQueries({ queryKey: ['empresas-stats'] });
+      
       toast({ 
         title: "✅ Empresa registrada", 
         description: "La empresa fue registrada correctamente en el sistema.", 

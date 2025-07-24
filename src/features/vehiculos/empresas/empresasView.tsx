@@ -10,7 +10,8 @@ import { DeleteEmpresaDialog } from './components/DeleteEmpresaDialog';
 import { PaginationControls } from './components/PaginationControls';
 import { empresasService } from './services/empresasService';
 import { useToast } from '@/hooks/use-toast';
-import { XCircle, RefreshCw, Search } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { XCircle, RefreshCw, Search, X, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ const EmpresasView = () => {
   const { empresas, pagination, stats, loading, error, page, handlePageChange } = useEmpresas(searchTerm, statusFilter);
   const { empresaDetail, loadingDetail, errorDetail, fetchEmpresaDetail } = useEmpresaDetail();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editEmpresa, setEditEmpresa] = useState<any>(null);
@@ -43,13 +45,33 @@ const EmpresasView = () => {
       try {
         await empresasService.deleteEmpresa(deleteRuc);
         toast({ title: "Empresa eliminada", description: "La empresa fue eliminada exitosamente.", variant: "success" });
+        
+        // Invalidar cache y recargar datos
+        queryClient.invalidateQueries({ queryKey: ['empresas'] });
+        queryClient.invalidateQueries({ queryKey: ['empresas-stats'] });
+        
         handlePageChange(page);
-      } catch (error) {
-        toast({ title: "Error al eliminar empresa", description: "Error desconocido", variant: "destructive" });
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
+        toast({ 
+          title: "Error al eliminar empresa", 
+          description: `Error: ${errorMessage}`, 
+          variant: "destructive" 
+        });
       } finally {
         setShowDeleteDialog(false);
       }
     }
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('ALL');
+    toast({
+      title: "Filtros limpiados",
+      description: "Mostrando todas las empresas",
+      variant: "default",
+    });
   };
 
   if (error) {
@@ -114,34 +136,57 @@ const EmpresasView = () => {
           <CardContent>
             <div className="flex flex-col lg:flex-row gap-4 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                 <Input
                   placeholder="Buscar por nombre o RUC..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-purple-500 focus:ring-purple-500/20 pr-10 bg-white dark:bg-gray-800 dark:text-white"
                 />
+                {searchTerm.length > 0 && searchTerm.length < 2 && (
+                  <div className="absolute -bottom-6 left-0 text-xs text-amber-600 dark:text-amber-400">
+                    Ingresa al menos 2 caracteres para buscar
+                  </div>
+                )}
               </div>
               <div className="flex gap-2 min-w-[200px]">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-purple-500 focus:ring-purple-500/20 bg-white dark:bg-gray-800 dark:text-white">
-                    <SelectValue placeholder="Filtrar por estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Todos los estados</SelectItem>
-                    <SelectItem value="ACTIVO">Activo</SelectItem>
-                    <SelectItem value="SUSPENDIDO">Suspendido</SelectItem>
-                    <SelectItem value="BAJA PROV.">Baja Provisional</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="relative">
+                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="h-12 pl-10 border-gray-200 dark:border-gray-700 rounded-xl focus:border-purple-500 focus:ring-purple-500/20 bg-white dark:bg-gray-800 dark:text-white">
+                      <SelectValue placeholder="Filtrar por estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">Todos los estados</SelectItem>
+                      <SelectItem value="ACTIVO">Activo</SelectItem>
+                      <SelectItem value="SUSPENDIDO">Suspendido</SelectItem>
+                      <SelectItem value="BAJA PROV.">Baja Provisional</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {(statusFilter !== 'ALL' || searchTerm.length > 0) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-12 px-3 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
+                    title="Limpiar filtros"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </div>
+
             <EmpresasTable
               empresas={empresas}
               loading={loading}
               onView={fetchEmpresaDetail}
               onEdit={openEditDialog}
               onDelete={openDeleteDialog}
+              searchTerm={searchTerm}
+              statusFilter={statusFilter}
             />
             {pagination && <PaginationControls pagination={pagination} onPageChange={handlePageChange} searchTerm={searchTerm} statusFilter={statusFilter} />}
           </CardContent>

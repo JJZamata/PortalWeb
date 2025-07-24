@@ -7,7 +7,7 @@ import { Edit, Building2, MapPin, Calendar, IdCard, Loader2 } from "lucide-react
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { empresasService } from '../services/empresasService';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
@@ -36,6 +36,8 @@ interface Props {
 
 export const EditEmpresaDialog = ({ open, onOpenChange, empresa, onSuccess }: Props) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   const form = useForm<EmpresaEditForm>({
     resolver: zodResolver(empresaEditSchema),
     defaultValues: { name: "", address: "", expirationDate: "", rucStatus: "ACTIVO" },
@@ -44,6 +46,10 @@ export const EditEmpresaDialog = ({ open, onOpenChange, empresa, onSuccess }: Pr
   const mutation = useMutation({
     mutationFn: (data: EmpresaEditForm) => empresasService.updateEmpresa(empresa?.ruc || '', data),
     onSuccess: () => {
+      // Invalidar todas las queries relacionadas con empresas para refrescar los datos
+      queryClient.invalidateQueries({ queryKey: ['empresas'] });
+      queryClient.invalidateQueries({ queryKey: ['empresas-stats'] });
+      
       toast({ title: "Empresa actualizada", description: "La empresa fue actualizada exitosamente.", variant: "success" });
       onOpenChange(false);
       onSuccess();
@@ -55,10 +61,34 @@ export const EditEmpresaDialog = ({ open, onOpenChange, empresa, onSuccess }: Pr
 
   useEffect(() => {
     if (empresa) {
+      // Función para manejar fechas correctamente sin problemas de zona horaria
+      const formatDateForInput = (dateString: string) => {
+        if (!dateString) return "";
+        
+        // Si la fecha ya está en formato YYYY-MM-DD, usarla directamente
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+          return dateString;
+        }
+        
+        // Si la fecha incluye tiempo, extraer solo la parte de la fecha
+        if (dateString.includes('T')) {
+          return dateString.split('T')[0];
+        }
+        
+        // Para otros formatos, intentar parsear y formatear
+        try {
+          const date = new Date(dateString + 'T00:00:00'); // Agregar tiempo local para evitar zona horaria
+          return date.toISOString().split('T')[0];
+        } catch (error) {
+          console.warn('Error al parsear fecha:', dateString);
+          return "";
+        }
+      };
+
       form.reset({
         name: empresa.nombre,
         address: empresa.direccion,
-        expirationDate: empresa.fecha_vencimiento?.slice(0, 10) || "",
+        expirationDate: formatDateForInput(empresa.fecha_vencimiento || ""),
         rucStatus: empresa.estado as any,
       });
     }

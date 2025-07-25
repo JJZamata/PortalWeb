@@ -43,10 +43,6 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
   const queryClient = useQueryClient();
   const { placas, loadingPlacas, fetchPlacas } = usePlacas();
   const { empresas, loadingEmpresas, fetchEmpresas } = useEmpresas();
-  const [nuevoDocumento, setNuevoDocumento] = useState<DocumentoForm>({
-    tipo: '', numero: '', placa: '', entidad_empresa: '', fecha_emision: '', fecha_vencimiento: '', observaciones: '',
-    inspection_result: '', certifying_company: '', cobertura: '', numero_poliza: '',
-  });
   const [file, setFile] = useState<File | null>(null);
   const [busquedaPlaca, setBusquedaPlaca] = useState('');
 
@@ -57,6 +53,8 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
       inspection_result: '', certifying_company: '', cobertura: '', numero_poliza: '',
     },
   });
+
+  const tipoDocumento = form.watch('tipo');
 
   const mutation = useMutation({
     mutationFn: (data: { values: DocumentoForm; archivo?: File | null }) => 
@@ -76,10 +74,6 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
       
       // Reset form and state
       form.reset();
-      setNuevoDocumento({
-        tipo: '', numero: '', placa: '', entidad_empresa: '', fecha_emision: '', fecha_vencimiento: '', observaciones: '',
-        inspection_result: '', certifying_company: '', cobertura: '', numero_poliza: '',
-      });
       setFile(null);
     },
     onError: (error: any) => {
@@ -98,26 +92,13 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
     }
   }, [open, fetchPlacas, fetchEmpresas]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setNuevoDocumento(prev => ({ ...prev, [id]: value }));
-    form.setValue(id as keyof DocumentoForm, value);
-  };
-
-  const handleSelectChange = (field: keyof DocumentoForm, value: string) => {
-    setNuevoDocumento(prev => ({ ...prev, [field]: value }));
-    form.setValue(field, value);
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
   };
 
-  const registrarDocumento = async () => {
-    const values = form.getValues();
-    
+  const onSubmit = async (values: DocumentoForm) => {
     try {
       // Validaciones específicas por tipo
       if (values.tipo === 'REVISION' && (!values.placa || !values.inspection_result || !values.certifying_company || !values.numero)) {
@@ -168,27 +149,30 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400">Completa la información del documento</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              name="tipo"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Documento *</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="REVISION">Revisión</SelectItem>
-                      <SelectItem value="AFOCAT">Afocat</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <Form {...form}>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                name="tipo"
+                control={form.control}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Documento *</FormLabel>
+                    <FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="REVISION">Revisión</SelectItem>
+                          <SelectItem value="AFOCAT">Afocat</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             <FormField
               name="numero"
               control={form.control}
@@ -203,7 +187,7 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
               )}
             />
           </div>
-          {nuevoDocumento.tipo === 'REVISION' && (
+          {tipoDocumento === 'REVISION' && (
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 name="inspection_result"
@@ -211,15 +195,17 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Resultado Inspección *</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar resultado" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="APROBADO">APROBADO</SelectItem>
-                        <SelectItem value="OBSERVADO">OBSERVADO</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar resultado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="APROBADO">APROBADO</SelectItem>
+                          <SelectItem value="OBSERVADO">OBSERVADO</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -239,7 +225,7 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
               />
             </div>
           )}
-          {nuevoDocumento.tipo === 'AFOCAT' && (
+          {tipoDocumento === 'AFOCAT' && (
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 name="cobertura"
@@ -282,22 +268,24 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
                     onChange={(e) => setBusquedaPlaca(e.target.value)}
                     className="mb-2"
                   />
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={loadingPlacas}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={loadingPlacas ? 'Cargando placas...' : 'Seleccionar placa'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {placas.map((placa) => (
-                        placa.plateNumber ? (
-                          <SelectItem key={placa.plateNumber} value={placa.plateNumber}>{placa.plateNumber}</SelectItem>
-                        ) : null
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={loadingPlacas}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={loadingPlacas ? 'Cargando placas...' : 'Seleccionar placa'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {placas.map((placa) => (
+                          placa.plateNumber ? (
+                            <SelectItem key={placa.plateNumber} value={placa.plateNumber}>{placa.plateNumber}</SelectItem>
+                          ) : null
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -308,22 +296,24 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Empresa/Entidad Emisora *</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={loadingEmpresas}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={loadingEmpresas ? 'Cargando empresas...' : 'Seleccionar empresa'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {empresas.map((empresa) => (
-                        empresa.name ? (
-                          <SelectItem key={empresa.name} value={empresa.name}>{empresa.name}</SelectItem>
-                        ) : null
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={loadingEmpresas}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={loadingEmpresas ? 'Cargando empresas...' : 'Seleccionar empresa'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {empresas.map((empresa) => (
+                          empresa.name ? (
+                            <SelectItem key={empresa.name} value={empresa.name}>{empresa.name}</SelectItem>
+                          ) : null
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -374,7 +364,7 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
               </FormItem>
             )}
           />
-          {nuevoDocumento.tipo !== 'REVISION' && (
+          {tipoDocumento !== 'REVISION' && (
             <div>
               <FormLabel>Archivo del Documento</FormLabel>
               <div className="mt-2 border-2 border-dashed border-border rounded-lg p-6 text-center">
@@ -386,7 +376,7 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
             </div>
           )}
           <div className="flex gap-2 pt-4">
-            <Button onClick={registrarDocumento} className="flex-1" disabled={mutation.isPending}>
+            <Button onClick={form.handleSubmit(onSubmit)} className="flex-1" disabled={mutation.isPending}>
               {mutation.isPending ? 'Registrando...' : 'Registrar Documento'}
             </Button>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -394,6 +384,7 @@ export const AddDocumentoDialog = ({ open, onOpenChange, onSuccess }: Props) => 
             </Button>
           </div>
         </div>
+        </Form>
       </DialogContent>
     </Dialog>
   );

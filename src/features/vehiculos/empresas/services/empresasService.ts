@@ -148,22 +148,18 @@ export const empresasService = {
     return response.data.data;
   },
   addEmpresa: async (data: any) => {
-    const token = localStorage.getItem('token');
     const response = await axiosInstance.post('/companies', data, {
-      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      headers: { "Content-Type": "application/json" },
     });
     return response.data;
   },
   updateEmpresa: async (ruc: string, data: any) => {
-    const token = localStorage.getItem('token');
     const response = await axiosInstance.put(`/companies/${ruc}`, data, {
-      headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      headers: { "Content-Type": "application/json" },
     });
     return response.data;
   },
-  deleteEmpresa: async (ruc: string) => {
-    const token = localStorage.getItem('token');
-    
+  deleteEmpresa: async (ruc: string) => {    
     // Intentar varios endpoints comunes para eliminación
     const endpoints = [
       `/companies/${ruc}`,           // Endpoint original
@@ -175,9 +171,7 @@ export const empresasService = {
     
     for (const endpoint of endpoints) {
       try {
-        const response = await axiosInstance.delete(endpoint, {
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        });
+        const response = await axiosInstance.delete(endpoint);
         return response.data;
       } catch (error: any) {
         lastError = error;

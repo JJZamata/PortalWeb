@@ -26,6 +26,12 @@ const Login = () => {
       );
 
       if (response.data.success) {
+        // Guardar el token en localStorage
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+          console.log('Token guardado:', response.data.token);
+        }
+        
         toast({
           title: "¡Inicio de sesión exitoso!",
           description: "Bienvenido al sistema.",

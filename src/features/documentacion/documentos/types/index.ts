@@ -8,7 +8,9 @@ export interface Documento {
   estado: string;
   detalles?: {
     inspection_result?: string;
+    resultado_inspeccion?: string;
     cobertura?: string;
+    clase_vehiculo?: string;
   };
 }
 

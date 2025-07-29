@@ -60,11 +60,9 @@ export const vehiculosService = {
     
     try {
       // Usar la misma estructura que en tu código que funcionaba
-      const token = localStorage.getItem('token');
       const response = await axiosInstance.post("/vehicles", vehiculoData, {
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
       });
       return response.data;

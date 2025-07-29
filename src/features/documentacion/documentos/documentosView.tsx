@@ -6,7 +6,9 @@ import { useEmpresas } from './hooks/useEmpresas';
 import { DocumentosTable } from './components/DocumentosTable';
 import { AddDocumentoDialog } from './components/AddDocumentoDialog';
 import { PaginationControls } from './components/PaginationControls';
+import { documentosService } from './services/documentosService';
 import { useToast } from '@/hooks/use-toast';
+import { Documento } from './types';
 import { RefreshCw, XCircle, Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,6 +26,25 @@ const DocumentosView = () => {
 
   const handleRefresh = () => {
     handlePageChange(1);
+  };
+
+  const handleDelete = async (documento: any) => {
+    try {
+      await documentosService.deleteDocumento(documento);
+      toast({
+        title: "Documento eliminado",
+        description: `El documento ${documento.tipo} número ${documento.numero} ha sido eliminado exitosamente.`,
+      });
+      // Refrescar la lista de documentos
+      handlePageChange(page);
+    } catch (error: any) {
+      console.error('Error al eliminar documento:', error);
+      toast({
+        title: "Error al eliminar",
+        description: error.response?.data?.message || "No se pudo eliminar el documento. Inténtalo nuevamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (error) {
@@ -125,7 +146,7 @@ const DocumentosView = () => {
                 </Select>
               </div>
             </div>
-            <DocumentosTable documentos={documentos} loading={loading} />
+            <DocumentosTable documentos={documentos} loading={loading} onDelete={handleDelete} />
             {pagination && <PaginationControls pagination={pagination} onPageChange={handlePageChange} searchTerm={searchTerm} tipoFiltro={tipoFiltro} />}
           </CardContent>
         </Card>

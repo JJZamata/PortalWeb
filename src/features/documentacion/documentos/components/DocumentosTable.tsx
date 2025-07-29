@@ -1,14 +1,27 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { RefreshCw, Search, Trash2 } from "lucide-react";
 import { Documento } from "../types";
 
 interface Props {
   documentos: Documento[];
   loading: boolean;
+  onDelete: (documento: Documento) => void;
 }
 
-export const DocumentosTable = ({ documentos, loading }: Props) => {
+export const DocumentosTable = ({ documentos, loading, onDelete }: Props) => {
   const getBadgeVariant = (estado: string) => {
     const estadoLower = estado.toLowerCase();
     switch (estadoLower) {
@@ -41,12 +54,13 @@ export const DocumentosTable = ({ documentos, loading }: Props) => {
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Vencimiento</TableHead>
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Estado</TableHead>
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Detalles</TableHead>
+            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {documentos.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="h-32 text-center">
+              <TableCell colSpan={9} className="h-32 text-center">
                 <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                   <Search className="w-8 h-8 mb-2" />
                   <p>No hay documentos disponibles</p>
@@ -78,6 +92,40 @@ export const DocumentosTable = ({ documentos, loading }: Props) => {
                         ? `Cobertura: ${documento.detalles.cobertura}`
                         : 'Sin detalles'
                   ) : 'Sin detalles'}
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-center gap-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta acción eliminará permanentemente el documento <strong>{documento.tipo}</strong> número <strong>{documento.numero}</strong> de la placa <strong>{documento.placa}</strong>.
+                            <br />
+                            <span className="text-red-600 dark:text-red-400 font-medium">Esta acción no se puede deshacer.</span>
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => onDelete(documento)}
+                            className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                          >
+                            Eliminar
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </TableCell>
               </TableRow>
             ))

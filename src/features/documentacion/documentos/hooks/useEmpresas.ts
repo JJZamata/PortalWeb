@@ -9,19 +9,33 @@ export const useEmpresas = () => {
   const { data, refetch: fetchEmpresas, isLoading, error } = useQuery({
     queryKey: ['empresas-documentos'],
     queryFn: () => documentosService.getEmpresas(),
-    enabled: false,
+    enabled: false, // Se ejecuta manualmente
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    retry: (failureCount, error: any) => {
+      // No reintentar si es 403 (Forbidden)
+      if (error?.response?.status === 403) {
+        return false;
+      }
+      return failureCount < 2;
+    }
   });
 
   useEffect(() => {
     if (data) {
-      const empresasRaw = (data.companies || []).filter((c: any) => 
-        c.ruc && typeof c.ruc === 'string' && c.name && typeof c.name === 'string'
-      );
+      const companiesArray = data.companies || data || []; // Intentar diferentes estructuras
+      
+      const empresasRaw = companiesArray.filter((c: any) => {
+        return c && (c.ruc || c.id) && c.name && typeof c.name === 'string';
+      });
+      
       const empresasUnicas = Array.from(
-        new Map(empresasRaw.map((c: any) => [c.ruc, c])).values()
+        new Map(empresasRaw.map((c: any) => [c.ruc || c.id, c])).values()
       );
       setEmpresas(empresasUnicas as { ruc: string; name: string }[]);
     } else if (error) {
+      if ((error as any)?.response?.status === 403) {
+        console.warn('Sin permisos para acceder a empresas. El formulario funcionará sin el listado de empresas.');
+      }
       setEmpresas([]);
     }
   }, [data, error]);

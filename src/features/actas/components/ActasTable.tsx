@@ -71,27 +71,27 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
   }
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className="bg-gradient-to-r from-red-50 to-red-100/50 dark:from-gray-800 dark:to-gray-800">
+          <TableHeader className="bg-red-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <TableRow>
-              <TableHead className="font-bold text-red-900 dark:text-gray-300">ID</TableHead>
-              <TableHead className="font-bold text-red-900 dark:text-gray-300">Tipo</TableHead>
-              <TableHead className="font-bold text-red-900 dark:text-gray-300">Placa</TableHead>
-              <TableHead className="font-bold text-red-900 dark:text-gray-300">Inspector</TableHead>
-              <TableHead className="font-bold text-red-900 dark:text-gray-300">Ubicación</TableHead>
-              <TableHead className="font-bold text-red-900 dark:text-gray-300">Fecha Inspección</TableHead>
-              <TableHead className="font-bold text-red-900 dark:text-gray-300">Fotos</TableHead>
-              <TableHead className="font-bold text-red-900 dark:text-gray-300">Infracciones</TableHead>
-              <TableHead className="font-bold text-red-900 dark:text-gray-300 text-center">Acciones</TableHead>
+              <TableHead className="font-bold text-red-900 dark:text-white py-4">ID</TableHead>
+              <TableHead className="font-bold text-red-900 dark:text-white py-4">Tipo</TableHead>
+              <TableHead className="font-bold text-red-900 dark:text-white py-4">Placa</TableHead>
+              <TableHead className="font-bold text-red-900 dark:text-white py-4">Inspector</TableHead>
+              <TableHead className="font-bold text-red-900 dark:text-white py-4">Ubicación</TableHead>
+              <TableHead className="font-bold text-red-900 dark:text-white py-4">Fecha Inspección</TableHead>
+              <TableHead className="font-bold text-red-900 dark:text-white py-4">Fotos</TableHead>
+              <TableHead className="font-bold text-red-900 dark:text-white py-4">Infracciones</TableHead>
+              <TableHead className="font-bold text-red-900 dark:text-white text-center py-4">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {records.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-32 text-center">
-                  <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                <TableCell colSpan={9} className="h-32 text-center border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-8">
                     <FileBarChart className="w-8 h-8 mb-2" />
                     {searchTerm.length >= 2 ? (
                       <div>
@@ -106,8 +106,8 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
               </TableRow>
             ) : (
               records.map((record) => (
-                <TableRow key={record.id} className="hover:bg-[#812020]/10 dark:hover:bg-gray-800 transition-colors">
-                  <TableCell className="font-mono font-semibold text-[#812020] dark:text-red-400">{record.id}</TableCell>
+                <TableRow key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-200 dark:border-gray-700">
+                  <TableCell className="font-mono font-semibold text-red-600 dark:text-red-400 py-4">{record.id}</TableCell>
                   <TableCell>
                     <Badge 
                       variant="secondary"
@@ -117,10 +117,10 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
                       {record.recordType === 'conforme' ? 'Conforme' : 'No Conforme'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-semibold text-foreground dark:text-gray-300">{record.vehiclePlate}</TableCell>
-                  <TableCell className="text-foreground dark:text-gray-300">{record.inspector.username}</TableCell>
-                  <TableCell className="text-foreground dark:text-gray-300">{record.location}</TableCell>
-                  <TableCell className="text-foreground dark:text-gray-300 text-sm">{formatDate(record.inspectionDateTime)}</TableCell>
+                  <TableCell className="font-semibold text-gray-900 dark:text-white py-4">{record.vehiclePlate}</TableCell>
+                  <TableCell className="text-gray-700 dark:text-gray-300 py-4">{record.inspector.username}</TableCell>
+                  <TableCell className="text-gray-700 dark:text-gray-300 py-4">{record.location}</TableCell>
+                  <TableCell className="text-gray-700 dark:text-gray-300 text-sm py-4">{formatDate(record.inspectionDateTime)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-blue-700 dark:text-blue-300">
                       <Camera className="w-3 h-3 mr-1" />
@@ -140,17 +140,17 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <div className="flex justify-center gap-2">
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="hover:bg-[#812020]/10 dark:hover:bg-gray-700 rounded-lg"
+                        className="hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-red-700 dark:hover:text-red-300"
                         onClick={() => fetchRecordDetail(record.id, record.recordType)}
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="hover:bg-[#812020]/10 dark:hover:bg-gray-700 rounded-lg">
+                      <Button variant="ghost" size="sm" className="hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-300">
                         <Edit className="w-4 h-4" />
                       </Button>
                     </div>

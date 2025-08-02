@@ -95,12 +95,7 @@ const ActasView = memo(() => {
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
               <div className="flex items-center gap-6">
-                <div className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-red-700 dark:text-red-400">
-                    {loading ? '-' : summary?.totalRecords || 0}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Total</p>
-                </div>
+                
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-emerald-700 dark:text-emerald-400">
                     {loading ? '-' : summary?.totalCompliant || 0}
@@ -112,6 +107,12 @@ const ActasView = memo(() => {
                     {loading ? '-' : summary?.totalNonCompliant || 0}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">No Conformes</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl md:text-3xl font-bold text-red-700 dark:text-red-400">
+                    {loading ? '-' : summary?.totalRecords || 0}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Total Actas</p>
                 </div>
               </div>
             </div>
@@ -143,14 +144,12 @@ const ActasView = memo(() => {
               handleSearch={handleSearch}
               handleResetFilters={handleResetFilters}
             />
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg mt-6">
-              <ActasTable 
-                records={filteredRecords} 
-                loading={loading} 
-                fetchRecordDetail={handleFetchRecordDetail} 
-                searchTerm={searchTerm}
-              />
-            </div>
+            <ActasTable 
+              records={filteredRecords} 
+              loading={loading} 
+              fetchRecordDetail={handleFetchRecordDetail} 
+              searchTerm={searchTerm}
+            />
             {pagination && (
               <PaginationControls 
                 pagination={pagination} 

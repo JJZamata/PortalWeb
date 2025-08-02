@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Bell, User, Settings, Moon, Sun } from "lucide-react";
+import { Search, Bell, User, Settings, Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,19 +12,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from '@/lib/axios';
+import { useToast } from "@/hooks/use-toast";
 
 export function AdminHeader() {
-  // Cambiar la inicialización para leer primero de localStorage
   const getInitialTheme = () => {
     const stored = localStorage.getItem('theme');
     if (stored === 'light' || stored === 'dark') return stored;
-    // Si no hay nada guardado, usar preferencia del sistema
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   };
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme());
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  // Cambia la clase del body/html según el tema y guarda en localStorage
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -33,6 +36,20 @@ export function AdminHeader() {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post('/auth/signout');
+      toast({
+        title: "Sesión Cerrada",
+        description: "Has cerrado sesión exitosamente.",
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      navigate('/');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md shadow-sm">
@@ -50,7 +67,7 @@ export function AdminHeader() {
           {/* Notificaciones */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 rounded-lg">
+              <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
                 <Bell className="w-5 h-5" />
                 <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center">
                   3
@@ -62,15 +79,15 @@ export function AdminHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem className="flex flex-col items-start p-3 sm:p-4">
                 <span className="font-medium text-sm">Documentos por vencer</span>
-                <span className="text-xs text-gray-500">15 CITV vencen en los próximos 30 días</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">15 CITV vencen en los próximos 30 días</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex flex-col items-start p-3 sm:p-4">
                 <span className="font-medium text-sm">Nueva infracción registrada</span>
-                <span className="text-xs text-gray-500">Placa ABC-123 - Hace 2 horas</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">Placa ABC-123 - Hace 2 horas</span>
               </DropdownMenuItem>
               <DropdownMenuItem className="flex flex-col items-start p-3 sm:p-4">
                 <span className="font-medium text-sm">Control técnico pendiente</span>
-                <span className="text-xs text-gray-500">5 vehículos requieren inspección</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">5 vehículos requieren inspección</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -78,7 +95,7 @@ export function AdminHeader() {
           {/* Configuración */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 rounded-lg hidden sm:flex">
+              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg hidden sm:flex">
                 <Settings className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -102,16 +119,16 @@ export function AdminHeader() {
           {/* Perfil de Usuario */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 hover:bg-gray-100 rounded-lg px-2 sm:px-3">
-                <Avatar className="w-7 h-7 sm:w-8 sm:h-8 border-2 border-gray-200">
+              <Button variant="ghost" className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-2 sm:px-3">
+                <Avatar className="w-7 h-7 sm:w-8 sm:h-8 border-2 border-gray-200 dark:border-gray-700">
                   <AvatarImage src="" />
-                  <AvatarFallback className="bg-red-100 text-red-800 font-semibold text-xs">
+                  <AvatarFallback className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 font-semibold text-xs">
                     AD
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-900">Administrador</p>
-                  <p className="text-xs text-gray-500">admin@fiscamoto.pe</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Administrador</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">admin@fiscamoto.pe</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -125,6 +142,14 @@ export function AdminHeader() {
               <DropdownMenuItem>
                 <Settings className="w-4 h-4 mr-2" />
                 Configuración
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={handleLogout}
+                className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Cerrar Sesión
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

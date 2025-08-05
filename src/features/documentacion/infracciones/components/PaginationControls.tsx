@@ -19,7 +19,7 @@ export const PaginationControls = ({ pagination, onPageChange }: Props) => {
   return (
     <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        Mostrando página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalViolations} infracciones)
+        Mostrando página {pagination.currentPage} de {pagination.totalPages}
       </div>
       <div className="flex gap-2">
         <Button

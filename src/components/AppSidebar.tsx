@@ -28,6 +28,7 @@ import axios from '@/lib/axios';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import logoImage from '@/assets/images/logo.png';
 
 const menuItems = [
   {
@@ -197,8 +198,12 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-600 to-red-700 dark:from-red-400 dark:to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
-              <Shield className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+              <img 
+                src={logoImage} 
+                alt="FISCAMOTO Logo" 
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+              />
             </div>
             <div className="min-w-0">
               <h2 className="font-bold text-foreground text-lg sm:text-xl tracking-tight truncate">FISCAMOTO</h2>

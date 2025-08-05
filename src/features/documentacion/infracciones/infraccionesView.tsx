@@ -55,10 +55,10 @@ const InfraccionesView = () => {
     <AdminLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="bg-gradient-to-br from-white to-[#812020]/10 dark:from-gray-900 dark:to-[#812020]/20 p-8 rounded-2xl shadow-lg border border-[#812020]/30 dark:border-[#812020]/40">
+        <div className="bg-gradient-to-br from-white to-red-50/30 dark:from-gray-900 dark:to-red-950/20 p-8 rounded-2xl shadow-lg border border-red-200/40 dark:border-red-800/30">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#812020] to-[#a94442] dark:from-[#fca5a5] dark:to-[#f87171] bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#74140B] to-red-600 dark:from-red-400 dark:to-red-300 bg-clip-text text-transparent mb-2">
                 Catálogo de Infracciones
               </h1>
               <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg">
@@ -68,12 +68,7 @@ const InfraccionesView = () => {
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
               <div className="flex items-center gap-6">
-                <div className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-[#812020] dark:text-[#fca5a5]">
-                    {loadingStats ? '-' : stats.totalViolations}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Total</p>
-                </div>
+                
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-red-700 dark:text-red-400">
                     {loadingStats ? '-' : stats.verySerious}
@@ -92,6 +87,12 @@ const InfraccionesView = () => {
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Leves</p>
                 </div>
+                <div className="text-center">
+                  <p className="text-2xl md:text-3xl font-bold text-[#74140B] dark:text-red-400">
+                    {loadingStats ? '-' : stats.totalViolations}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Total Infracciones</p>
+                </div>
               </div>
             </div>
           </div>
@@ -103,7 +104,7 @@ const InfraccionesView = () => {
               <div>
                 <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   Infracciones Registradas
-                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-[#812020] dark:text-[#fca5a5]" />}
+                  {loading && <RefreshCw className="w-5 h-5 animate-spin text-[#74140B] dark:text-red-400" />}
                 </CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-400">
                   Catálogo completo de infracciones de tránsito
@@ -123,7 +124,8 @@ const InfraccionesView = () => {
             <InfraccionesTable 
               violations={violations} 
               loading={loading} 
-              fetchViolationDetail={fetchViolationDetail} 
+              fetchViolationDetail={fetchViolationDetail}
+              loadingDetail={loadingDetail}
             />
             {paginationData && (
               <PaginationControls 

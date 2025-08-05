@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -32,6 +32,10 @@ import FotosPage from "./pages/unused/FotosPage";
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {
+  useEffect(() => {
+    document.title = 'FISCAMOTO';
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

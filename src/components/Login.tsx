@@ -15,6 +15,26 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Verificar si ya hay un token válido al montar el componente
+  useEffect(() => {
+    const checkExistingToken = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // Verificar si el token sigue siendo válido
+          await axiosInstance.get('/auth/verify');
+          // Si llega aquí, el token es válido
+          navigate('/admin');
+        } catch (error) {
+          // Token inválido, limpiarlo
+          localStorage.removeItem('token');
+        }
+      }
+    };
+
+    checkExistingToken();
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);

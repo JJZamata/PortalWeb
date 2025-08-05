@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AdminHeader } from "@/components/AdminHeader";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,9 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Agregar verificación periódica de token
+  useTokenRefresh();
 
   // Función para detectar el tamaño de pantalla y ajustar el sidebar
   useEffect(() => {

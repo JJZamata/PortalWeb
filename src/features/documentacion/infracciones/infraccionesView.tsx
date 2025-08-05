@@ -68,12 +68,11 @@ const InfraccionesView = () => {
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
               <div className="flex items-center gap-6">
-                
                 <div className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-red-700 dark:text-red-400">
-                    {loadingStats ? '-' : stats.verySerious}
+                  <p className="text-2xl md:text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                    {loadingStats ? '-' : stats.minor}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Muy Graves</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Leves</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-orange-700 dark:text-orange-400">
@@ -82,10 +81,10 @@ const InfraccionesView = () => {
                   <p className="text-sm text-gray-600 dark:text-gray-300">Graves</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                    {loadingStats ? '-' : stats.minor}
+                  <p className="text-2xl md:text-3xl font-bold text-red-700 dark:text-red-400">
+                    {loadingStats ? '-' : stats.verySerious}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Leves</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Muy Graves</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-[#74140B] dark:text-red-400">
@@ -124,8 +123,7 @@ const InfraccionesView = () => {
             <InfraccionesTable 
               violations={violations} 
               loading={loading} 
-              fetchViolationDetail={fetchViolationDetail}
-              loadingDetail={loadingDetail}
+              fetchViolationDetail={fetchViolationDetail} 
             />
             {paginationData && (
               <PaginationControls 

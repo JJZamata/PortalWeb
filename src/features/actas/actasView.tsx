@@ -95,7 +95,6 @@ const ActasView = memo(() => {
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
               <div className="flex items-center gap-6">
-                
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-emerald-700 dark:text-emerald-400">
                     {loading ? '-' : summary?.totalCompliant || 0}

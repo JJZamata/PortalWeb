@@ -13,7 +13,7 @@ export const PaginationControls = ({ pagination, onPageChange, searchTerm, actio
   return (
     <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        Mostrando página {pagination.current_page} de {pagination.total_pages} ({pagination.total_records} registros en total)
+        Mostrando página {pagination.current_page} de {pagination.total_pages} 
       </div>
       <div className="flex gap-2">
         <Button

@@ -113,17 +113,8 @@ const UsuariosView = () => {
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{loading ? '-' : estadisticas?.total_usuarios || 0}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Total</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Total Usuarios</p>
               </div>
-              <Button 
-                onClick={() => refetch()} 
-                variant="outline" 
-                disabled={loading}
-                className="flex items-center gap-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                {loading ? 'Actualizando...' : 'Actualizar'}
-              </Button>
             </div>
           </div>
         </div>
@@ -146,10 +137,6 @@ const UsuariosView = () => {
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Nuevo Usuario
-                </Button>
-                <Button variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-950/30 rounded-xl">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filtros
                 </Button>
               </div>
             </div>

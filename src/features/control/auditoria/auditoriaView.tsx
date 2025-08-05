@@ -94,12 +94,8 @@ const AuditoriaView = () => {
               </div>
               <div className="text-center">
                 <p className="text-2xl md:text-3xl font-bold text-indigo-700 dark:text-indigo-400">{loading ? '-' : estadisticas?.total_registros || 0}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Total</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Total Registros</p>
               </div>
-              <Button variant="outline" onClick={handleExport} className="flex items-center gap-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <Download className="w-4 h-4" />
-                Exportar
-              </Button>
             </div>
           </div>
         </div>

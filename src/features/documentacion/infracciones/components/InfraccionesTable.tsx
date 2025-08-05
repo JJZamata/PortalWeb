@@ -64,17 +64,17 @@ export const InfraccionesTable = ({ violations, loading, fetchViolationDetail }:
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
       <Table>
-        <TableHeader className="bg-gradient-to-r from-[#812020]/10 to-[#a94442]/10 dark:from-[#2d0909] dark:to-[#3a1010]">
+        <TableHeader className="bg-red-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <TableRow>
-            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Código</TableHead>
-            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Descripción</TableHead>
-            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Gravedad</TableHead>
-            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Medida Adm.</TableHead>
-            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5]">Objetivo</TableHead>
-            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5] text-right">UIT %</TableHead>
-            <TableHead className="font-bold text-[#812020] dark:text-[#fca5a5] text-center">Acciones</TableHead>
+            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Código</TableHead>
+            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Descripción</TableHead>
+            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Gravedad</TableHead>
+            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Medida Adm.</TableHead>
+            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Objetivo</TableHead>
+            <TableHead className="font-bold text-[#74140B] dark:text-white text-right py-4">UIT %</TableHead>
+            <TableHead className="font-bold text-[#74140B] dark:text-white text-center py-4">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

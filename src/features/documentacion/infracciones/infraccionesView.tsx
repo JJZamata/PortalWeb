@@ -90,7 +90,7 @@ const InfraccionesView = () => {
                   <p className="text-2xl md:text-3xl font-bold text-[#74140B] dark:text-red-400">
                     {loadingStats ? '-' : stats.totalViolations}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Total Infracciones</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Total</p>
                 </div>
               </div>
             </div>

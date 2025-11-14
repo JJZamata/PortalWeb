@@ -12,13 +12,14 @@ import { PaginationControls } from './components/PaginationControls';
 import { vehiculosService } from './services/vehiculosService';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { XCircle, RefreshCw, Search } from 'lucide-react';
+import { XCircle, RefreshCw, Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 const VehiculosView = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { vehiculos, pagination, summary, loading, error, page, handlePageChange } = useVehiculos(searchTerm);
   const { vehiculoDetail, loadingDetail, errorDetail, fetchVehiculoDetail } = useVehiculoDetail();
   const { stats, loading: statsLoading } = useVehicleStats();
@@ -132,7 +133,15 @@ const VehiculosView = () => {
                 </CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-400">Listado completo de mototaxis en el sistema</CardDescription>
               </div>
-              <AddVehiculoDialog onSuccess={refreshVehiculos} />
+              <div className="flex gap-3">
+                <Button 
+                  onClick={() => setShowAddDialog(true)}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nueva Mototaxi
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -177,6 +186,11 @@ const VehiculosView = () => {
           }}
           plate={deletePlate}
           onConfirm={handleDeleteVehiculo}
+          onSuccess={refreshVehiculos}
+        />
+        <AddVehiculoDialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
           onSuccess={refreshVehiculos}
         />
       </div>

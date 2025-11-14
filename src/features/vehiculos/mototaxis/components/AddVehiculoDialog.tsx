@@ -1,222 +1,298 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Car, Hash, Settings, Calendar, User, Building2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation } from '@tanstack/react-query';
-import { vehiculosService } from '../services/vehiculosService';
-import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { Plus, Car, User, FileText, Calendar, Building2, Settings } from "lucide-react";
+import { memo } from "react";
 
-const vehiculoSchema = z.object({
-  plateNumber: z.string().min(5, "La placa debe tener al menos 5 caracteres").max(10, "Máximo 10 caracteres"),
-  companyRuc: z.string().length(11, "El RUC debe tener 11 dígitos"),
-  ownerDni: z.string().length(8, "El DNI debe tener 8 dígitos"),
-  typeId: z.coerce.number().int().positive("Debe ser un número positivo"),
-  vehicleStatus: z.enum(["OPERATIVO", "REPARACIÓN", "FUERA DE SERVICIO", "INSPECCIÓN"]),
-  brand: z.string().min(2, "Marca requerida"),
-  model: z.string().min(1, "Modelo requerido"),
-  manufacturingYear: z.coerce.number().int().gte(1900, "Año inválido").lte(new Date().getFullYear(), "Año inválido"),
+const formSchema = z.object({
+  plateNumber: z.string()
+    .min(6, "La placa debe tener al menos 6 caracteres")
+    .max(8, "La placa debe tener máximo 8 caracteres")
+    .regex(/^[A-Z0-9-]+$/, "La placa solo puede contener letras mayúsculas, números y guiones"),
+  ownerDni: z.string()
+    .min(8, "El DNI debe tener 8 dígitos")
+    .max(8, "El DNI debe tener 8 dígitos")
+    .regex(/^\d{8}$/, "El DNI solo debe contener números"),
+  ownerName: z.string()
+    .min(2, "El nombre debe tener al menos 2 caracteres")
+    .max(100, "El nombre debe tener máximo 100 caracteres"),
+  companyName: z.string()
+    .min(2, "El nombre de la empresa debe tener al menos 2 caracteres")
+    .max(100, "El nombre de la empresa debe tener máximo 100 caracteres"),
+  status: z.string().min(1, "Debe seleccionar un estado"),
+  registrationDate: z.string().min(1, "La fecha de registro es obligatoria"),
 });
 
-type VehiculoFormData = z.infer<typeof vehiculoSchema>;
+type FormData = z.infer<typeof formSchema>;
 
 interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
-export const AddVehiculoDialog = ({ onSuccess }: Props) => {
-  const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const form = useForm<VehiculoFormData>({
-    resolver: zodResolver(vehiculoSchema),
-    defaultValues: { plateNumber: "", companyRuc: "", ownerDni: "", typeId: 1, vehicleStatus: "OPERATIVO", brand: "", model: "", manufacturingYear: new Date().getFullYear() },
+export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props) => {
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      plateNumber: '',
+      ownerDni: '',
+      ownerName: '',
+      companyName: '',
+      status: '',
+      registrationDate: new Date().toISOString().split('T')[0],
+    }
   });
 
-  const mutation = useMutation({
-    mutationFn: (data: VehiculoFormData) => vehiculosService.addVehiculo(data),
-    onSuccess: () => {
-      toast({ title: "Vehículo agregado", description: "El vehículo fue registrado correctamente.", variant: "success" });
+  const handleSubmit = async (values: FormData) => {
+    try {
+      // Aquí iría la lógica para enviar al servicio
+      console.log('Nuevo vehículo:', values);
+      
+      // Simular éxito
       form.reset();
-      setOpen(false);
+      onOpenChange(false);
       onSuccess();
-    },
-    onError: (error: any) => {
-      toast({ title: "Error al agregar vehículo", description: error.response?.data?.message || 'Error desconocido', variant: "destructive" });
-    },
-  });
+    } catch (error) {
+      console.error('Error al agregar vehículo:', error);
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg">
-          <Plus className="w-4 h-4 mr-2" /> Nuevo Vehículo
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Plus className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            Agregar Vehículo
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="shadow-2xl border-0 rounded-2xl max-w-2xl bg-white dark:bg-gray-900 max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-600 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent flex items-center gap-2">
+            <Car className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            Registrar Nueva Mototaxi
           </DialogTitle>
-          <DialogDescription className="text-gray-600 dark:text-gray-400">
-            Completa la información para registrar un nuevo vehículo
+          <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
+            Complete toda la información requerida para registrar una nueva mototaxi en el sistema
           </DialogDescription>
         </DialogHeader>
-
+        
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pt-4">
             {/* Información del Vehículo */}
-            <Card className="border border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/30">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-5">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
                   <Car className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   Información del Vehículo
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField name="plateNumber" control={form.control} render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                      <Hash className="w-4 h-4" />
-                      Placa del Vehículo
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Ej: ABC-123" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 font-mono font-bold text-gray-900 dark:text-white" maxLength={10} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="plateNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                          <FileText className="w-4 h-4" />
+                          Número de Placa *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="ABC-123"
+                            value={field.value.toUpperCase()}
+                            onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                            className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500" 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-500 text-sm" />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField name="vehicleStatus" control={form.control} render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                      <Settings className="w-4 h-4" />
-                      Estado del Vehículo
-                    </FormLabel>
-                    <FormControl>
-                      <select {...field} className="w-full border border-gray-300 dark:border-gray-600 rounded-md h-10 px-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400">
-                        <option value="OPERATIVO">🟢 Operativo</option>
-                        <option value="REPARACIÓN">⚙️ Reparación</option>
-                        <option value="FUERA DE SERVICIO">🔴 Fuera de Servicio</option>
-                        <option value="INSPECCIÓN">✅ Inspección</option>
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                          <Settings className="w-4 h-4" />
+                          Estado del Vehículo *
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500">
+                              <SelectValue placeholder="Selecciona el estado" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                            <SelectItem value="OPERATIVO">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span>Operativo</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="REPARACIÓN">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                <span>En Reparación</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="FUERA DE SERVICIO">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                <span>Fuera de Servicio</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="INSPECCIÓN">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span>En Inspección</span>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-red-500 text-sm" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                <FormField name="brand" control={form.control} render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Marca</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Ej: Toyota, Honda" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField name="model" control={form.control} render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">Modelo</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Ej: Corolla, Civic" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField name="manufacturingYear" control={form.control} render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      Año de Fabricación
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} type="number" placeholder="Ej: 2020" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" min="1990" max={new Date().getFullYear() + 1} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField name="typeId" control={form.control} render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">ID Tipo de Vehículo</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="number" placeholder="Ej: 1" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" min="1" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <FormField
+                  control={form.control}
+                  name="registrationDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        Fecha de Registro *
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="date"
+                          className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500" 
+                        />
+                      </FormControl>
+                      <FormMessage className="text-red-500 text-sm" />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
-            {/* Información del Propietario y Empresa */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Propietario */}
-              <Card className="border border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <User className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    Propietario
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FormField name="ownerDni" control={form.control} render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">DNI del Propietario</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Ej: 12345678" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-green-500 dark:focus:border-green-400" maxLength={8} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </CardContent>
-              </Card>
+            {/* Información del Propietario */}
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-5">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                  <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  Información del Propietario
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="ownerDni"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                          <FileText className="w-4 h-4" />
+                          DNI del Propietario *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="12345678"
+                            maxLength={8}
+                            className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500" 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-500 text-sm" />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="ownerName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                          <User className="w-4 h-4" />
+                          Nombre del Propietario *
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            placeholder="Juan Pérez García"
+                            className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500" 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-500 text-sm" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Empresa */}
-              <Card className="border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/30">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    Empresa Operadora
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FormField name="companyRuc" control={form.control} render={({ field }) => (
+            {/* Información de la Empresa */}
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-5">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                  <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  Información de la Empresa
+                </h3>
+                
+                <FormField
+                  control={form.control}
+                  name="companyName"
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">RUC de la Empresa</FormLabel>
+                      <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
+                        <Building2 className="w-4 h-4" />
+                        Nombre de la Empresa *
+                      </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Ej: 20123456789" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-purple-500 dark:focus:border-purple-400" maxLength={11} />
+                        <Input 
+                          {...field} 
+                          placeholder="Transportes La Joya S.A.C."
+                          className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500" 
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-500 text-sm" />
                     </FormItem>
-                  )} />
-                </CardContent>
-              </Card>
-            </div>
+                  )}
+                />
 
-            {/* Botones */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="bg-blue-50 dark:bg-blue-950/50 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Información importante:</h4>
+                  <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                    <li>• La placa debe seguir el formato estándar (ABC-123)</li>
+                    <li>• El DNI debe corresponder al propietario registrado</li>
+                    <li>• La empresa debe estar previamente registrada en el sistema</li>
+                    <li>• Verificar que la información sea correcta antes de registrar</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
               <Button 
                 type="button" 
                 variant="outline" 
-                onClick={() => setOpen(false)}
-                disabled={mutation.isPending}
-                className="px-6 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                onClick={() => onOpenChange(false)}
+                className="rounded-lg border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
-                disabled={mutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-6"
+              <Button
+                type="submit"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg px-8 shadow-lg hover:shadow-xl transition-all duration-200"
               >
-                {mutation.isPending ? "Agregando..." : "Agregar Vehículo"}
+                <Plus className="w-4 h-4 mr-2" />
+                Registrar Mototaxi
               </Button>
             </div>
           </form>
@@ -224,4 +300,6 @@ export const AddVehiculoDialog = ({ onSuccess }: Props) => {
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+AddVehiculoDialog.displayName = "AddVehiculoDialog";

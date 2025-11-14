@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";0
 import { Separator } from "@/components/ui/separator";
 import { 
   Users, 
@@ -21,7 +21,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-const Dashboard = ({ onLogout }: DashboardProps) => {
+const Dashboard = ({ onLogout }: DashboardProps) => {  
   const { toast } = useToast();
 
   // Estadísticas relevantes para el sistema FISCAMOTO

@@ -2,16 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, RefreshCw, Search } from "lucide-react";
-
-interface Violation {
-  id: number;
-  code: string;
-  description: string;
-  severity: 'serious' | 'very_serious' | 'mild';
-  administrativeMeasure: string;
-  target: 'driver-owner' | 'company';
-  uitPercentage: string;
-}
+import { Violation } from "../types";
 
 interface Props {
   violations: Violation[];

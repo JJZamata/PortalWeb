@@ -139,18 +139,7 @@ export function AdminHeader() {
                 <User className="w-4 h-4 mr-2" />
                 Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="w-4 h-4 mr-2" />
-                Configuración
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={handleLogout}
-                className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Cerrar Sesión
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

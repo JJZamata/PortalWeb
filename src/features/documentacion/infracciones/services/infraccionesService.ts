@@ -16,7 +16,7 @@ export const infraccionesService = {
         params.append('query', searchTerm);
       }
 
-      let url = '/violations/';
+      let url = '/violations/list';
       if (searchTerm.length >= 2) {
         url = '/violations/search';
       } else if (severity !== 'ALL') {
@@ -26,7 +26,6 @@ export const infraccionesService = {
       const response = await axiosInstance.get(`${url}?${params.toString()}`);
       return response.data.data;
     } catch (error) {
-      console.error('Error en infraccionesService.getInfracciones:', error);
       throw error;
     }
   },
@@ -36,18 +35,15 @@ export const infraccionesService = {
       const response = await axiosInstance.get(`/violations/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error en infraccionesService.getInfraccionDetail:', error);
       throw error;
     }
   },
 
   getStats: async () => {
     try {
-      const response = await axiosInstance.get('/violations/admin/stats');
+      const response = await axiosInstance.get('/violations/stats');
       return response.data.data;
     } catch (error) {
-      console.error('Error en infraccionesService.getStats:', error);
-      // Retornar datos por defecto si falla
       return {
         totalViolations: 0,
         verySerious: 0,

@@ -5,7 +5,8 @@ import { Eye, Edit, RefreshCw, Camera, AlertTriangle, CheckCircle, FileBarChart 
 
 interface Record {
   id: number;
-  recordType: 'conforme' | 'noconforme';
+  recordType: 'conforme' | 'noconforme'; // Mantener compatibilidad
+  type: 'CONFORME' | 'NOCONFORME'; // Campo principal para separación
   vehiclePlate: string;
   location: string;
   observations: string;
@@ -52,12 +53,23 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
 
   const getRecordTypeIcon = (type: string) => {
     switch (type) {
-      case 'conforme':
+      case 'CONFORME':
         return <CheckCircle className="w-4 h-4" />;
-      case 'noconforme':
+      case 'NOCONFORME':
         return <AlertTriangle className="w-4 h-4" />;
       default:
         return <FileBarChart className="w-4 h-4" />;
+    }
+  };
+
+  const getRecordTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case 'CONFORME':
+        return 'bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700';
+      case 'NOCONFORME':
+        return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-300 dark:border-red-700';
+      default:
+        return 'bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-700';
     }
   };
 
@@ -109,12 +121,12 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
                 <TableRow key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-200 dark:border-gray-700">
                   <TableCell className="font-mono font-semibold text-red-600 dark:text-red-400 py-4">{record.id}</TableCell>
                   <TableCell>
-                    <Badge 
+                    <Badge
                       variant="secondary"
-                      className={`px-3 py-1 rounded-full font-semibold border flex items-center gap-1 w-fit ${getRecordTypeColor(record.recordType)}`}
+                      className={`px-3 py-1 rounded-full font-semibold border flex items-center gap-1 w-fit ${getRecordTypeBadgeColor(record.type)}`}
                     >
-                      {getRecordTypeIcon(record.recordType)}
-                      {record.recordType === 'conforme' ? 'Conforme' : 'No Conforme'}
+                      {getRecordTypeIcon(record.type)}
+                      {record.type === 'CONFORME' ? 'CONFORME' : 'NO CONFORME'}
                     </Badge>
                   </TableCell>
                   <TableCell className="font-semibold text-gray-900 dark:text-white py-4">{record.vehiclePlate}</TableCell>

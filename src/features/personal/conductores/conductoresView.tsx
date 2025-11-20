@@ -19,7 +19,7 @@ import { conductoresService } from './services/conductoresService';
 
 const ConductoresView = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { conductores, pagination, summary, loading, error, page, handlePageChange } = useConductores(searchTerm);
+  const { conductores, pagination, summary, stats, loading, error, page, handlePageChange } = useConductores(searchTerm);
   const { conductorDetail, licencias, licenciasSummary, loadingDetail, errorDetail, fetchConductorDetail } = useConductorDetail();
   const { toast } = useToast();
 
@@ -86,9 +86,27 @@ const ConductoresView = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
               <div className="text-center">
                 <p className="text-2xl md:text-3xl font-bold text-green-700 dark:text-green-400">
-                  {loading ? '-' : summary?.total || 0}
+                  {loading ? '-' : stats?.totales?.total || 0}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Total Conductores</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-blue-700 dark:text-blue-400">
+                  {loading ? '-' : stats?.totales?.completados || 0}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Completados</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
+                  {loading ? '-' : stats?.totales?.pendientes || 0}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Pendientes</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-purple-700 dark:text-purple-400">
+                  {loading ? '-' : stats?.totales?.porcentajeCompletado || 0}%
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">% Completado</p>
               </div>
             </div>
           </div>

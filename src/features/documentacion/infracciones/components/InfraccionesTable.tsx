@@ -13,7 +13,7 @@ interface Props {
 export const InfraccionesTable = ({ violations, loading, fetchViolationDetail }: Props) => {
   const getSeverityBadge = (severity: Violation['severity']) => {
     switch (severity) {
-      case 'mild':
+      case 'minor':
         return 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700';
       case 'serious':
         return 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700';
@@ -36,7 +36,7 @@ export const InfraccionesTable = ({ violations, loading, fetchViolationDetail }:
   };
 
   const translateSeverity = (severity: Violation['severity']) => {
-    const map = { mild: 'Leve', serious: 'Grave', very_serious: 'Muy Grave' };
+    const map = { minor: 'Leve', serious: 'Grave', very_serious: 'Muy Grave' };
     return map[severity] || 'Desconocida';
   };
 

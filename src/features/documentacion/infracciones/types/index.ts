@@ -2,7 +2,7 @@ export interface Violation {
   id: number;
   code: string;
   description: string;
-  severity: 'serious' | 'very_serious' | 'mild';
+  severity: 'serious' | 'very_serious' | 'minor';
   administrativeMeasure: string;
   target: 'driver-owner' | 'company';
   uitPercentage: string;

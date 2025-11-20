@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from '@/hooks/use-toast';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://backendfiscamoto.onrender.com/api',
+  baseURL: 'https://backfiscamotov2.onrender.com/api',
   withCredentials: true,
 });
 

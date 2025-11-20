@@ -14,7 +14,7 @@ interface Props {
 
 const severities = [
   { value: "ALL", label: "Todas" },
-  { value: "mild", label: "Leve" },
+  { value: "minor", label: "Leve" },
   { value: "serious", label: "Grave" },
   { value: "very_serious", label: "Muy Grave" },
 ];

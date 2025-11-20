@@ -36,10 +36,19 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }
       onSuccess();
     },
     onError: (error: any) => {
-      toast({ 
-        title: "❌ Error al actualizar conductor", 
-        description: error.response?.data?.message || 'Error desconocido al actualizar los datos', 
-        variant: "destructive" 
+      // Manejo mejorado de errores
+      let errorMessage = error.response?.data?.message || 'Error desconocido al actualizar los datos';
+
+      // Si hay errores específicos de validación, mostrar el primer error
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const firstError = error.response.data.errors[0];
+        errorMessage = firstError.message || errorMessage;
+      }
+
+      toast({
+        title: "❌ Error al actualizar conductor",
+        description: errorMessage,
+        variant: "destructive"
       });
     },
   });

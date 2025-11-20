@@ -16,7 +16,7 @@ interface Props {
 export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selectedViolation, loadingDetail, errorDetail }: Props) => {
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
-      case 'mild':
+      case 'minor':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800';
       case 'serious':
         return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-800';
@@ -39,7 +39,7 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
   };
 
   const translateSeverity = (severity: string) => {
-    const map = { mild: 'Leve', serious: 'Grave', very_serious: 'Muy Grave' };
+    const map = { minor: 'Leve', serious: 'Grave', very_serious: 'Muy Grave' };
     return map[severity] || 'Desconocida';
   };
 
@@ -88,7 +88,6 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center py-12">
-            {/* Animación de carga mejorada */}
             <div className="relative w-20 h-20 mb-6">
               <div className="absolute inset-0 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center animate-pulse">
                 <RefreshCw className="w-8 h-8 animate-spin text-[#74140B] dark:text-red-400" />
@@ -96,8 +95,6 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
               <div className="absolute inset-0 border-4 border-red-200 dark:border-red-800 rounded-full animate-pulse"></div>
               <div className="absolute inset-2 border-2 border-red-300 dark:border-red-700 rounded-full animate-ping"></div>
             </div>
-            
-            {/* Animación de puntos de carga */}
             <div className="flex items-center space-x-1 mb-4">
               <div className="w-2 h-2 bg-[#74140B] dark:bg-red-400 rounded-full animate-bounce"></div>
               <div className="w-2 h-2 bg-[#74140B] dark:bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>

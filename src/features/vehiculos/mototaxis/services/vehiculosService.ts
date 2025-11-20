@@ -1,43 +1,98 @@
 import axiosInstance from '@/lib/axios';
 
+// Función reutilizable para manejo de errores específicos
+const handleApiError = (error: any) => {
+  if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+    const firstError = error.response.data.errors[0];
+    const enhancedError = new Error(firstError.message || 'Error de validación');
+    (enhancedError as any).field = firstError.field;
+    (enhancedError as any).value = firstError.value;
+    (enhancedError as any).details = error.response.data.errors;
+    throw enhancedError;
+  }
+  throw error;
+};
+
 export const vehiculosService = {
-  getVehiculos: async (page: number, searchTerm: string) => {
-    // Usar la misma estructura que funcionaba en tu código
-    const params = new URLSearchParams();
-    params.append('page', String(page));
-    params.append('limit', '6'); // Cambiar a 6 elementos por página
-    if (searchTerm) params.append('search', searchTerm);
-    
-    const response = await axiosInstance.get(`/vehicles/?${params.toString()}`);
-    
-    // Devolver la estructura real de la API
-    const data = response.data.data;
-    const vehicles = data.vehicles || [];
-    
-    // Calcular estadísticas por estado
-    const statsOPERATIVO = vehicles.filter((v: any) => v.vehicleStatus === 'OPERATIVO').length;
-    const statsREPARACION = vehicles.filter((v: any) => v.vehicleStatus === 'REPARACIÓN').length;
-    const statsFUERA_SERVICIO = vehicles.filter((v: any) => v.vehicleStatus === 'FUERA DE SERVICIO').length;
-    const statsINSPECCION = vehicles.filter((v: any) => v.vehicleStatus === 'INSPECCIÓN').length;
-    
-    return {
-      vehicles,
-      pagination: data.pagination || null,
-      summary: { 
-        total: data.pagination?.totalItems || 0,
-        operativo: statsOPERATIVO,
-        reparacion: statsREPARACION,
-        fueraServicio: statsFUERA_SERVICIO,
-        inspeccion: statsINSPECCION
+  // Método principal unificado que maneja búsqueda y paginación
+  getVehiculos: async (page: number, searchTerm: string = '') => {
+    try {
+      // Validaciones según backend FISCAMOTO para vehicles
+      const SEARCH_MIN_LENGTH = 3;
+
+      // Construir parámetros query según documentación
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', '6'); // Límite fijo según backend
+
+      const hasSearch = searchTerm && searchTerm.length >= SEARCH_MIN_LENGTH;
+
+      // Agregar parámetro de búsqueda si aplica
+      if (hasSearch) {
+        params.append('search', searchTerm);
       }
-    };
+
+      // Usar endpoint único /vehicles con parámetros query
+      const response = await axiosInstance.get(`/vehicles?${params.toString()}`);
+
+      if (response.data.success) {
+        // Acceder a estructura real: data.data (como en empresas y conductores)
+        const vehicles = response.data.data.data || [];
+
+        // Transform vehicles para mantener compatibilidad con tipos existentes
+        const vehiclesTransformados = vehicles.map((vehicle: any) => ({
+          placa: {
+            plateNumber: vehicle.placa?.plateNumber || '',
+            companyRuc: vehicle.placa?.companyRuc || ''
+          },
+          propietario: {
+            nombreCompleto: vehicle.propietario?.nombreCompleto || '',
+            dni: vehicle.propietario?.dni || '',
+            telefono: vehicle.propietario?.telefono || '',
+            email: vehicle.propietario?.email || ''
+          },
+          empresa: {
+            nombre: vehicle.empresa?.nombre || '',
+            ruc: vehicle.empresa?.ruc || '',
+            estado: vehicle.empresa?.estado || '',
+            direccion: vehicle.empresa?.direccion || ''
+          },
+          tipo: {
+            categoria: vehicle.tipo?.categoria || '',
+            descripcion: vehicle.tipo?.descripcion || '',
+            marca: vehicle.tipo?.marca || '',
+            modelo: vehicle.tipo?.modelo || '',
+            año: vehicle.tipo?.año || null,
+            vehicleInfo: vehicle.tipo?.vehicleInfo || ''
+          },
+          estado: vehicle.estado || '',
+          placa_v: vehicle.placa?.plateNumber || ''
+        }));
+
+        return {
+          vehicles: vehiclesTransformados,
+          pagination: response.data.data.pagination || null,
+          summary: response.data.data.summary || null
+        };
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en vehiculosService.getVehiculos:', error);
+      throw error;
+    }
   },
 
-  // Nuevo método para obtener estadísticas globales
-  getVehicleStats: async () => {
-    const currentYear = new Date().getFullYear();
-    const response = await axiosInstance.get(`/vehicles/stats?dateFrom=2021-01-01&dateTo=${currentYear}-12-31&groupBy=status`);
-    return response.data.data;
+  // Método para obtener estadísticas usando endpoint específico del backend
+  getStats: async () => {
+    try {
+      const response = await axiosInstance.get('/vehicles/stats');
+      // Backend devuelve estructura: data.data.general o data.message (verificar según backend)
+      return response.data.data.data || response.data.data.general || response.data.data.message;
+    } catch (error) {
+      console.error('Error en vehiculosService.getStats:', error);
+      throw error;
+    }
   },
   getVehiculoDetail: async (plate: string) => {
     const cleanPlate = plate.replace(/[-\s]/g, '').toUpperCase();
@@ -46,41 +101,34 @@ export const vehiculosService = {
   },
   
   addVehiculo: async (data: any) => {
-    // Adaptar a la estructura que funcionaba en tu código anterior
-    const vehiculoData = {
-      plateNumber: data.plateNumber,
-      companyRuc: data.companyRuc,
-      ownerDni: data.ownerDni,
-      typeId: Number(data.typeId),
-      vehicleStatus: data.vehicleStatus,
-      brand: data.brand,
-      model: data.model,
-      manufacturingYear: Number(data.manufacturingYear)
-    };
-    
     try {
-      // Usar la misma estructura que en tu código que funcionaba
-      const response = await axiosInstance.post("/vehicles", vehiculoData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const response = await axiosInstance.post('/vehicles/', data, {
+        headers: { "Content-Type": "application/json" },
       });
       return response.data;
     } catch (error: any) {
-      throw error;
+      handleApiError(error);
     }
   },
   
   updateVehiculo: async (plate: string, data: any) => {
-    const response = await axiosInstance.put(`/vehicles/${plate}`, data, {
-      headers: { "Content-Type": "application/json" },
-    });
-    return response.data;
+    try {
+      const response = await axiosInstance.put(`/vehicles/${plate}`, data, {
+        headers: { "Content-Type": "application/json" },
+      });
+      return response.data;
+    } catch (error: any) {
+      handleApiError(error);
+    }
   },
-  
+
   deleteVehiculo: async (plate: string) => {
-    const cleanPlate = plate.replace(/[-\s]/g, '').toUpperCase();
-    const response = await axiosInstance.delete(`/vehicles/${cleanPlate}`);
-    return response.data;
+    try {
+      const cleanPlate = plate.replace(/[-\s]/g, '').toUpperCase();
+      const response = await axiosInstance.delete(`/vehicles/${cleanPlate}`);
+      return response.data;
+    } catch (error: any) {
+      handleApiError(error);
+    }
   },
 };

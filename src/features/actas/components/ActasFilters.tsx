@@ -10,6 +10,8 @@ interface Props {
   setRecordType: (value: string) => void;
   sortBy: string;
   setSortBy: (value: string) => void;
+  sortOrder: string;
+  setSortOrder: (value: string) => void;
   handleSearch: () => void;
   handleResetFilters: () => void;
 }
@@ -21,6 +23,8 @@ export const ActasFilters = ({
   setRecordType,
   sortBy,
   setSortBy,
+  sortOrder,
+  setSortOrder,
   handleSearch,
   handleResetFilters
 }: Props) => {
@@ -60,7 +64,23 @@ export const ActasFilters = ({
           </SelectContent>
         </Select>
       </div>
-      
+      <div className="flex gap-2">
+        <Button
+          onClick={handleSearch}
+          className="h-12 px-6 bg-[#812020] hover:bg-[#6a1a1a] text-white rounded-xl font-medium"
+        >
+          <Search className="w-4 h-4 mr-2" />
+          Buscar
+        </Button>
+        <Button
+          onClick={handleResetFilters}
+          variant="outline"
+          className="h-12 px-6 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium"
+        >
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Limpiar
+        </Button>
+      </div>
     </div>
   );
 };

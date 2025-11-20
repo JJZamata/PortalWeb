@@ -19,7 +19,7 @@ const ActasView = memo(() => {
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 6;
 
-  const { records, loading, error, pagination, summary, refreshRecords, handlePageChange: hookHandlePageChange } = useActas(currentPage, limit, searchTerm, recordType, sortBy, sortOrder);
+  const { records, loading, error, pagination, summary, stats, refreshRecords, handlePageChange: hookHandlePageChange } = useActas(currentPage, searchTerm, recordType, sortBy, sortOrder);
   const { recordDetailed, loadingDetail, errorDetail, fetchRecordDetail } = useActaDetail();
   const { toast } = useToast();
   const [showDetailDialog, setShowDetailDialog] = useState(false);
@@ -49,18 +49,9 @@ const ActasView = memo(() => {
     setShowDetailDialog(true);
   }, [fetchRecordDetail]);
 
-  // Filtrar records basado en el término de búsqueda (solo para mostrar)
-  const filteredRecords = records.filter(record => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      record.vehiclePlate.toLowerCase().includes(searchLower) ||
-      record.location.toLowerCase().includes(searchLower) ||
-      record.observations.toLowerCase().includes(searchLower) ||
-      record.inspector.username.toLowerCase().includes(searchLower) ||
-      record.id.toString().includes(searchTerm)
-    );
-  });
+  // El filtrado se realiza en el backend a través de los parámetros
+  // Solo mostramos los datos como vienen del servicio
+  const displayRecords = records;
 
   if (error) {
     return (
@@ -97,19 +88,19 @@ const ActasView = memo(() => {
               <div className="flex items-center gap-6">
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-emerald-700 dark:text-emerald-400">
-                    {loading ? '-' : summary?.totalCompliant || 0}
+                    {loading ? '-' : stats?.statusStats?.totalCompliant || 0}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Conformes</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
-                    {loading ? '-' : summary?.totalNonCompliant || 0}
+                    {loading ? '-' : stats?.statusStats?.totalNonCompliant || 0}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">No Conformes</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-red-700 dark:text-red-400">
-                    {loading ? '-' : summary?.totalRecords || 0}
+                    {loading ? '-' : stats?.statusStats?.totalRecords || 0}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Total Actas</p>
                 </div>
@@ -140,13 +131,15 @@ const ActasView = memo(() => {
               setRecordType={setRecordType}
               sortBy={sortBy}
               setSortBy={setSortBy}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
               handleSearch={handleSearch}
               handleResetFilters={handleResetFilters}
             />
-            <ActasTable 
-              records={filteredRecords} 
-              loading={loading} 
-              fetchRecordDetail={handleFetchRecordDetail} 
+            <ActasTable
+              records={displayRecords}
+              loading={loading}
+              fetchRecordDetail={handleFetchRecordDetail}
               searchTerm={searchTerm}
             />
             {pagination && (

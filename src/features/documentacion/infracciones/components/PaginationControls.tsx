@@ -18,7 +18,7 @@ export const PaginationControls = ({ pagination, onPageChange }: Props) => {
           variant="outline"
           size="sm"
           onClick={() => onPageChange(pagination.currentPage - 1)}
-          disabled={!pagination.hasPrevPage}
+          disabled={!pagination.hasPreviousPage}
           className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />

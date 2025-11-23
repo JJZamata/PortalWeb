@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, XCircle, RefreshCw } from "lucide-react";
 import React from "react";
+import { Violation } from "../types";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedViolation: any;
+  selectedViolation: Violation | null;
   loadingDetail: boolean;
   errorDetail: string | null;
 }
@@ -128,7 +129,7 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
             </div>
             <div>
               <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
-                Infracción {selectedViolation.code}
+                Infracción {selectedViolation.identificacion.codigo}
               </DialogTitle>
               <DialogDescription className="text-gray-600 dark:text-gray-400">
                 Detalles completos de la infracción seleccionada
@@ -144,8 +145,8 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
               <AlertTriangle className="w-10 h-10 text-[#74140B] dark:text-red-400" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-[#74140B] dark:text-red-400 mb-1">{selectedViolation.code}</h2>
-              <p className="text-gray-700 dark:text-gray-300 font-medium">{selectedViolation.description}</p>
+              <h2 className="text-xl font-bold text-[#74140B] dark:text-red-400 mb-1">{selectedViolation.identificacion.codigo}</h2>
+              <p className="text-gray-700 dark:text-gray-300 font-medium">{selectedViolation.descripcion.texto}</p>
             </div>
           </div>
 
@@ -158,8 +159,8 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
                   <AlertTriangle className="w-4 h-4 text-[#74140B] dark:text-red-400" />
                   <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Gravedad</span>
                 </div>
-                <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getSeverityBadge(selectedViolation.severity)}`}>
-                  {translateSeverity(selectedViolation.severity)}
+                <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getSeverityBadge(selectedViolation.clasificacion.gravedad)}`}>
+                  {translateSeverity(selectedViolation.clasificacion.gravedad)}
                 </Badge>
               </CardContent>
             </Card>
@@ -170,7 +171,7 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Medida Administrativa</span>
                 </div>
-                <span className="text-base font-semibold text-gray-900 dark:text-white">{selectedViolation.administrativeMeasure}</span>
+                <span className="text-base font-semibold text-gray-900 dark:text-white">{selectedViolation.sancion.medidaAdministrativa}</span>
               </CardContent>
             </Card>
 
@@ -180,8 +181,8 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Objetivo</span>
                 </div>
-                <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getTargetBadge(selectedViolation.target)}`}>
-                  {translateTarget(selectedViolation.target)}
+                <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getTargetBadge(selectedViolation.clasificacion.objetivo)}`}>
+                  {translateTarget(selectedViolation.clasificacion.objetivo)}
                 </Badge>
               </CardContent>
             </Card>
@@ -192,10 +193,55 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">UIT %</span>
                 </div>
-                <span className="text-base font-semibold text-gray-900 dark:text-white">{selectedViolation.uitPercentage}</span>
+                <span className="text-base font-semibold text-gray-900 dark:text-white">{selectedViolation.sancion.porcentajeUIT}</span>
               </CardContent>
             </Card>
           </div>
+
+          {/* Fechas si existen */}
+          {selectedViolation.fechas && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Fecha de creación */}
+              {selectedViolation.fechas.creacion && (
+                <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Fecha de Creación</span>
+                    </div>
+                    <span className="text-sm text-gray-900 dark:text-white">
+                      {new Date(selectedViolation.fechas.creacion).toLocaleString('es-PE', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Fecha de actualización */}
+              {selectedViolation.fechas.actualizacion && (
+                <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Última Actualización</span>
+                    </div>
+                    <span className="text-sm text-gray-900 dark:text-white">
+                      {new Date(selectedViolation.fechas.actualizacion).toLocaleString('es-PE', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </div>
 
         <DialogFooter className="pt-4 border-t border-gray-200 dark:border-gray-700">

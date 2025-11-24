@@ -4,10 +4,12 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, User, Mail, Lock, Shield, Eye, EyeOff, UserPlus } from "lucide-react";
+import { Plus, User, Mail, Lock, Shield, Eye, EyeOff, UserPlus, X } from "lucide-react";
 import { useState, memo } from "react";
 import { AddUserFormData } from "../types";
 
@@ -19,13 +21,12 @@ const formSchema = z
       .regex(/^[a-zA-Z0-9_]+$/, "El nombre de usuario solo puede contener letras, números y guiones bajos"),
     email: z.string().email("Debe ser un email válido"),
     password: z.string()
-      .min(8, "La contraseña debe tener al menos 8 caracteres")
-      .regex(/[A-Z]/, "La contraseña debe contener al menos una mayúscula")
-      .regex(/[a-z]/, "La contraseña debe contener al menos una minúscula")
-      .regex(/\d/, "La contraseña debe contener al menos un número")
-      .regex(/[!@#$%^&*(),.?":{}|<>]/, "La contraseña debe contener al menos un carácter especial"),
+      .min(6, "La contraseña debe tener entre 6 y 100 caracteres")
+      .max(100, "La contraseña debe tener entre 6 y 100 caracteres"),
     confirmPassword: z.string().min(1, "La confirmación de la contraseña es obligatoria"),
-    roles: z.array(z.string()).min(1, "Debe seleccionar un rol"),
+    roles: z.array(z.string()).min(1, "Debe seleccionar al menos un rol"),
+    isActive: z.boolean().optional(),
+    platform: z.literal('web').optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
@@ -42,7 +43,7 @@ interface Props {
 export const AddUsuarioDialog = memo(({ open, onOpenChange, onAdd, submitting }: Props) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
   const form = useForm<AddUserFormData>({
     resolver: zodResolver(formSchema),
@@ -51,15 +52,24 @@ export const AddUsuarioDialog = memo(({ open, onOpenChange, onAdd, submitting }:
       email: '',
       password: '',
       confirmPassword: '',
-      roles: []
+      roles: [],
+      isActive: true,
+      platform: 'web'
     }
   });
 
   const handleSubmit = async (values: AddUserFormData) => {
     try {
-      await onAdd(values);
+      // Preparar los datos para la API
+      const submitData = {
+        ...values,
+        isActive: values.isActive !== undefined ? values.isActive : true,
+        platform: 'web' as const
+      };
+
+      await onAdd(submitData);
       form.reset();
-      setSelectedRole('');
+      setSelectedRoles([]);
       setShowPassword(false);
       setShowConfirmPassword(false);
       onOpenChange(false);
@@ -142,35 +152,72 @@ export const AddUsuarioDialog = memo(({ open, onOpenChange, onAdd, submitting }:
                     <FormItem>
                       <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
                         <Shield className="w-4 h-4" />
-                        Rol del Usuario *
+                        Roles del Usuario *
                       </FormLabel>
-                      <Select
-                        value={selectedRole}
-                        onValueChange={(value) => {
-                          setSelectedRole(value);
-                          field.onChange([value]);
-                        }}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-purple-500 focus:ring-purple-500">
-                            <SelectValue placeholder="Selecciona un rol" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                          <SelectItem value="admin">
-                            <div className="flex items-center gap-2">
-                              <Shield className="w-4 h-4 text-purple-600" />
-                              <span>Administrador</span>
+                      <FormControl>
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap gap-3">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="role-admin"
+                                checked={selectedRoles.includes('admin')}
+                                onCheckedChange={(checked) => {
+                                  const newRoles = checked
+                                    ? [...selectedRoles, 'admin']
+                                    : selectedRoles.filter(role => role !== 'admin');
+                                  setSelectedRoles(newRoles);
+                                  field.onChange(newRoles);
+                                }}
+                              />
+                              <label
+                                htmlFor="role-admin"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 cursor-pointer"
+                              >
+                                <Shield className="w-4 h-4 text-purple-600" />
+                                Administrador
+                              </label>
                             </div>
-                          </SelectItem>
-                          <SelectItem value="fiscalizador">
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-blue-600" />
-                              <span>Fiscalizador</span>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="role-fiscalizador"
+                                checked={selectedRoles.includes('fiscalizador')}
+                                onCheckedChange={(checked) => {
+                                  const newRoles = checked
+                                    ? [...selectedRoles, 'fiscalizador']
+                                    : selectedRoles.filter(role => role !== 'fiscalizador');
+                                  setSelectedRoles(newRoles);
+                                  field.onChange(newRoles);
+                                }}
+                              />
+                              <label
+                                htmlFor="role-fiscalizador"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 cursor-pointer"
+                              >
+                                <User className="w-4 h-4 text-blue-600" />
+                                Fiscalizador
+                              </label>
                             </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                          </div>
+
+                          {selectedRoles.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {selectedRoles.map((role) => (
+                                <Badge
+                                  key={role}
+                                  variant="secondary"
+                                  className={`${
+                                    role === 'admin'
+                                      ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800'
+                                      : 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800'
+                                  }`}
+                                >
+                                  {role === 'admin' ? 'Administrador' : 'Fiscalizador'}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </FormControl>
                       <FormMessage className="text-red-500 text-sm" />
                     </FormItem>
                   )}

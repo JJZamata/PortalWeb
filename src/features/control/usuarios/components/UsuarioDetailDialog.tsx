@@ -65,7 +65,7 @@ export const UsuarioDetailDialog = React.memo(({ open, onOpenChange, usuario, lo
             Detalles del Usuario
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400">
-            Información completa y detallada del usuario: {usuario.usuario}
+            Información completa y detallada del usuario: {usuario.username}
           </DialogDescription>
         </DialogHeader>
 
@@ -76,13 +76,13 @@ export const UsuarioDetailDialog = React.memo(({ open, onOpenChange, usuario, lo
               <div className="flex items-center gap-4">
                 <Avatar className="w-16 h-16 border-4 border-purple-200 dark:border-purple-700 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 dark:from-purple-600 dark:to-purple-700">
                   <AvatarFallback className="text-xl font-bold text-white bg-gradient-to-br from-purple-500 to-purple-600">
-                    {(usuario.usuario || 'U').charAt(0).toUpperCase()}
+                    {(usuario.username || 'U').charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl font-bold text-purple-800 dark:text-purple-200">
-                      {usuario.usuario}
+                      {usuario.username}
                     </span>
                     <Badge 
                       variant={usuario.isActive ? 'default' : 'secondary'} 
@@ -123,7 +123,7 @@ export const UsuarioDetailDialog = React.memo(({ open, onOpenChange, usuario, lo
                 <div className="space-y-1">
                   <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Usuario</Label>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {usuario.usuario}
+                    {usuario.username}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -175,6 +175,62 @@ export const UsuarioDetailDialog = React.memo(({ open, onOpenChange, usuario, lo
               </CardContent>
             </Card>
           </div>
+
+          {/* Información de Dispositivo */}
+          {usuario.deviceConfigured && usuario.deviceInfo && (
+            <Card className="shadow-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  Información de Dispositivo
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Dispositivo Configurado
+                    </Label>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {usuario.deviceInfo.configurado ? 'Sí' : 'No'}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Nombre del Dispositivo
+                    </Label>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {usuario.deviceInfo.detalles.deviceName}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Plataforma
+                    </Label>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {usuario.deviceInfo.detalles.platform}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Versión
+                    </Label>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {usuario.deviceInfo.detalles.version}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Configurado el
+                    </Label>
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {formatDate(usuario.deviceInfo.detalles.configuredAt)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Información de Fechas */}
           <Card className="shadow-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">

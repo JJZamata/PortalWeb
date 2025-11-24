@@ -30,24 +30,22 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
 
   // Form state
   const [formData, setFormData] = useState({
-    nextReviewDate: "",
-    certifyingCompany: "",
-    inspectionResult: "",
-    observations: "",
-    reviewCertificateUrl: "",
     vehiclePlate: "",
+    issueDate: "",
+    expirationDate: "",
+    inspectionResult: "",
+    certifyingCompany: "",
   });
 
   // Initialize form data when technicalReview changes
   useEffect(() => {
     if (technicalReview && open) {
       setFormData({
-        nextReviewDate: technicalReview.fechas.vencimiento.split('T')[0] || "",
-        certifyingCompany: technicalReview.revision.certifyingCompany || "",
-        inspectionResult: technicalReview.revision.inspectionResult || "",
-        observations: technicalReview.revision.observations || "",
-        reviewCertificateUrl: technicalReview.revision.reviewCertificateUrl || "",
         vehiclePlate: technicalReview.vehiculo.placa || "",
+        issueDate: technicalReview.fechas.emision?.split('T')[0] || "",
+        expirationDate: technicalReview.fechas.vencimiento?.split('T')[0] || "",
+        inspectionResult: technicalReview.revision.inspectionResult || "",
+        certifyingCompany: technicalReview.revision.certifyingCompany || "",
       });
     }
   }, [technicalReview, open]);
@@ -60,12 +58,11 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
     setLoading(true);
     try {
       const updateData = {
-        nextReviewDate: formData.nextReviewDate || undefined,
-        certifyingCompany: formData.certifyingCompany || undefined,
-        inspectionResult: formData.inspectionResult || undefined,
-        observations: formData.observations || undefined,
-        reviewCertificateUrl: formData.reviewCertificateUrl || undefined,
         vehiclePlate: formData.vehiclePlate || undefined,
+        issueDate: formData.issueDate || undefined,
+        expirationDate: formData.expirationDate || undefined,
+        inspectionResult: formData.inspectionResult || undefined,
+        certifyingCompany: formData.certifyingCompany || undefined,
       };
 
       // Remove undefined values
@@ -148,10 +145,6 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
               <h4 className="font-semibold text-green-900 dark:text-green-100 mb-3">Información Actual</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600 dark:text-gray-400">Inspector:</span>
-                  <p className="font-medium">{technicalReview.inspector.nombre}</p>
-                </div>
-                <div>
                   <span className="text-gray-600 dark:text-gray-400">Vehículo:</span>
                   <p className="font-medium">{technicalReview.vehiculo.placa} ({technicalReview.vehiculo.marca} {technicalReview.vehiculo.modelo})</p>
                 </div>
@@ -174,17 +167,47 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
 
             {/* Campos Editables */}
 
-            {/* Próxima Fecha de Revisión */}
+            {/* Placa Vehículo */}
             <div className="space-y-2">
-              <Label htmlFor="nextReviewDate" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Próxima Fecha Revisión
+              <Label htmlFor="vehiclePlate" className="flex items-center gap-2">
+                <Car className="w-4 h-4" />
+                Placa Vehículo
               </Label>
               <Input
-                id="nextReviewDate"
+                id="vehiclePlate"
+                placeholder="ABC123"
+                value={formData.vehiclePlate}
+                onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
+                className="border-gray-200 dark:border-gray-700"
+              />
+            </div>
+
+            {/* Fecha de Emisión */}
+            <div className="space-y-2">
+              <Label htmlFor="issueDate" className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Fecha Emisión
+              </Label>
+              <Input
+                id="issueDate"
                 type="date"
-                value={formData.nextReviewDate}
-                onChange={(e) => handleInputChange("nextReviewDate", e.target.value)}
+                value={formData.issueDate}
+                onChange={(e) => handleInputChange("issueDate", e.target.value)}
+                className="border-gray-200 dark:border-gray-700"
+              />
+            </div>
+
+            {/* Fecha de Vencimiento */}
+            <div className="space-y-2">
+              <Label htmlFor="expirationDate" className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Fecha Vencimiento
+              </Label>
+              <Input
+                id="expirationDate"
+                type="date"
+                value={formData.expirationDate}
+                onChange={(e) => handleInputChange("expirationDate", e.target.value)}
                 className="border-gray-200 dark:border-gray-700"
               />
             </div>
@@ -215,72 +238,20 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
                   <SelectValue placeholder="Seleccionar resultado" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="APPROVED">
+                  <SelectItem value="APROBADO">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
                       APROBADO
                     </div>
                   </SelectItem>
-                  <SelectItem value="REJECTED">
-                    <div className="flex items-center gap-2">
-                      <XCircle className="w-4 h-4 text-red-600" />
-                      REPROBADO
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="PENDING">
+                  <SelectItem value="OBSERVADO">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-yellow-600" />
-                      PENDIENTE
+                      OBSERVADO
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* Placa Vehículo */}
-            <div className="space-y-2">
-              <Label htmlFor="vehiclePlate" className="flex items-center gap-2">
-                <Car className="w-4 h-4" />
-                Placa Vehículo
-              </Label>
-              <Input
-                id="vehiclePlate"
-                placeholder="ABC123"
-                value={formData.vehiclePlate}
-                onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
-                className="border-gray-200 dark:border-gray-700"
-              />
-            </div>
-
-            {/* Observaciones */}
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="observations" className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Observaciones
-              </Label>
-              <Textarea
-                id="observations"
-                placeholder="Ingrese observaciones de la inspección..."
-                value={formData.observations}
-                onChange={(e) => handleInputChange("observations", e.target.value)}
-                className="border-gray-200 dark:border-gray-700 min-h-[100px]"
-              />
-            </div>
-
-            {/* URL Certificado de Revisión */}
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="reviewCertificateUrl" className="flex items-center gap-2">
-                <FileCheck className="w-4 h-4" />
-                URL Certificado de Revisión
-              </Label>
-              <Input
-                id="reviewCertificateUrl"
-                type="url"
-                placeholder="https://ejemplo.com/certificado-revision.pdf"
-                value={formData.reviewCertificateUrl}
-                onChange={(e) => handleInputChange("reviewCertificateUrl", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
             </div>
           </div>
 

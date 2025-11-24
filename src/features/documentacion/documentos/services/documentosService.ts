@@ -1,6 +1,6 @@
 import axiosInstance from '@/lib/axios';
 
-// Función para manejar errores específicos del endpoint /documents
+// Función para manejar errores específicos del endpoint /documents y API V2
 const handleDocumentosError = (error: any) => {
   // Error específico del backend con formato {success: false, message, errors}
   if (error.response?.data?.success === false && error.response?.data?.errors) {
@@ -18,6 +18,33 @@ const handleDocumentosError = (error: any) => {
     // Agregar información detallada para el frontend
     (enhancedError as any).backendMessage = responseData.message;
     (enhancedError as any).validationErrors = responseData.errors;
+    (enhancedError as any).status = error.response.status;
+    (enhancedError as any).isValidationError = true;
+
+    return enhancedError;
+  }
+
+  // Error específico con formato {success: false, message, code, details}
+  if (error.response?.data?.success === false && error.response?.data?.code) {
+    const responseData = error.response.data;
+    const enhancedError = new Error(responseData.message);
+
+    // Agregar información específica del error
+    (enhancedError as any).backendMessage = responseData.message;
+    (enhancedError as any).errorCode = responseData.code;
+    (enhancedError as any).errorDetails = responseData.details;
+    (enhancedError as any).status = error.response.status;
+    (enhancedError as any).isValidationError = true;
+
+    return enhancedError;
+  }
+
+  // Error específico con formato {success: false, message} sin details
+  if (error.response?.data?.success === false) {
+    const responseData = error.response.data;
+    const enhancedError = new Error(responseData.message);
+
+    (enhancedError as any).backendMessage = responseData.message;
     (enhancedError as any).status = error.response.status;
     (enhancedError as any).isValidationError = true;
 
@@ -198,6 +225,56 @@ export const documentosService = {
       }
   },
 
+  // Método para crear un seguro específico
+  createInsurance: async (data: {
+    insuranceCompanyName: string;
+    policyNumber: string;
+    vehiclePlate: string;
+    startDate: string;
+    expirationDate: string;
+    coverage: string;
+    licenseId: number;
+    ownerDni: string;
+  }) => {
+    try {
+      const response = await axiosInstance.post(`/insurance`, data);
+
+      if (response.data.success) {
+        return response.data;
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en documentosService.createInsurance:', error);
+      // Manejar errores específicos del endpoint
+      throw handleDocumentosError(error);
+    }
+  },
+
+  // Método para crear una revisión técnica específica
+  createTechnicalReview: async (data: {
+    reviewId: string;
+    vehiclePlate: string;
+    issueDate: string;
+    expirationDate: string;
+    inspectionResult: 'APROBADO' | 'OBSERVADO';
+    certifyingCompany: string;
+  }) => {
+    try {
+      const response = await axiosInstance.post(`/technical-reviews`, data);
+
+      if (response.data.success) {
+        return response.data;
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en documentosService.createTechnicalReview:', error);
+      // Manejar errores específicos del endpoint
+      throw handleDocumentosError(error);
+    }
+  },
+
   // Método para obtener un seguro específico por número de póliza
   getInsuranceByNumber: async (insuranceNumber: string) => {
     try {
@@ -234,13 +311,14 @@ export const documentosService = {
 
   // Método para actualizar un seguro específico
   updateInsurance: async (insuranceNumber: string, updateData: {
-    expirationDate?: string;
-    coverage?: string;
-    premiumAmount?: number;
-    ownerPhone?: string;
-    ownerEmail?: string;
-    certificateUrl?: string;
-    vehiclePlate?: string;
+    insuranceCompanyName?: string;    // Nombre de la compañía de seguros
+    policyNumber?: string;           // Número de póliza
+    vehiclePlate?: string;           // Placa del vehículo
+    startDate?: string;              // Fecha de inicio (YYYY-MM-DD)
+    expirationDate?: string;         // Fecha de vencimiento (YYYY-MM-DD)
+    coverage?: string;               // Cobertura del seguro
+    licenseId?: number;              // ID de licencia
+    ownerDni?: string;               // DNI del propietario
   }) => {
     try {
       const response = await axiosInstance.put(`/insurance/${insuranceNumber}`, updateData);
@@ -276,12 +354,11 @@ export const documentosService = {
 
   // Método para actualizar una revisión técnica específica
   updateTechnicalReview: async (reviewId: string, updateData: {
-    nextReviewDate?: string;
-    certifyingCompany?: string;
-    inspectionResult?: string;
-    observations?: string;
-    reviewCertificateUrl?: string;
-    vehiclePlate?: string;
+    vehiclePlate?: string;                // Placa del vehículo
+    issueDate?: string;                   // Fecha de emisión (YYYY-MM-DD)
+    expirationDate?: string;              // Fecha de vencimiento (YYYY-MM-DD)
+    inspectionResult?: 'APROBADO' | 'OBSERVADO';  // Resultado de inspección
+    certifyingCompany?: string;           // Empresa certificadora
   }) => {
     try {
       const response = await axiosInstance.put(`/technical-reviews/${reviewId}`, updateData);
@@ -317,15 +394,34 @@ export const documentosService = {
 
   addDocumento: async (data: any) => {
     if (data.tipo === 'REVISION') {
+      // Verificar campos requeridos para Technical Review según API V2
+      if (!data.numero || !data.placa || !data.fecha_emision || !data.fecha_vencimiento ||
+          !data.inspection_result || !data.certifying_company) {
+        throw new Error('Faltan campos obligatorios para Revisión Técnica. Se requiere: reviewId, vehiclePlate, issueDate, expirationDate, inspectionResult, certifyingCompany');
+      }
+
+      // Validar que inspection_result sea un valor permitido
+      const validResults = ['APROBADO', 'OBSERVADO'];
+      if (!validResults.includes(data.inspection_result)) {
+        throw new Error('inspectionResult debe ser "APROBADO" u "OBSERVADO"');
+      }
+
       const payload = {
-        review_id: data.numero,
-        vehicle_plate: data.placa,
-        issue_date: data.fecha_emision,
-        expiration_date: data.fecha_vencimiento,
-        inspection_result: data.inspection_result,
-        certifying_company: data.certifying_company,
+        reviewId: data.numero,                    // ID único de la revisión técnica
+        vehiclePlate: data.placa,                 // Placa del vehículo
+        issueDate: data.fecha_emision,            // Fecha de emisión (YYYY-MM-DD)
+        expirationDate: data.fecha_vencimiento,   // Fecha de vencimiento (YYYY-MM-DD)
+        inspectionResult: data.inspection_result, // Resultado de inspección: 'APROBADO' | 'OBSERVADO'
+        certifyingCompany: data.certifying_company, // Empresa certificadora
       };
-      await axiosInstance.post('/documents/technical-review', payload);
+
+      const response = await axiosInstance.post('/technical-reviews', payload);
+
+      if (response.data.success) {
+        return response.data;
+      }
+
+      throw new Error('Error en la respuesta del servidor al crear revisión técnica');
     } else if (data.tipo === 'AFOCAT') {
       // Endpoint específico para seguros AFOCAT
       // Verificar si todos los campos requeridos están presentes

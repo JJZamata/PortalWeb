@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 import { InsuranceDetail } from "../types";
 import { documentosService } from "../services/documentosService";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Calendar, DollarSign, User, Mail, Phone, Car } from "lucide-react";
+import { Shield, Calendar, Building, Car, FileText, CreditCard } from "lucide-react";
 
 interface Props {
   insurance: InsuranceDetail | null;
@@ -29,26 +29,28 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
 
   // Form state
   const [formData, setFormData] = useState({
+    insuranceCompanyName: "",
+    policyNumber: "",
+    vehiclePlate: "",
+    startDate: "",
     expirationDate: "",
     coverage: "",
-    premiumAmount: "",
-    ownerPhone: "",
-    ownerEmail: "",
-    vehiclePlate: "",
-    certificateUrl: "",
+    licenseId: "",
+    ownerDni: "",
   });
 
   // Initialize form data when insurance changes
   useEffect(() => {
     if (insurance && open) {
       setFormData({
-        expirationDate: insurance.fechas.vencimiento.split('T')[0] || "",
-        coverage: insurance.seguro?.cobertura || "",
-        premiumAmount: insurance.seguro?.montoPrima?.toString() || "",
-        ownerPhone: insurance.propietario?.telefono || "",
-        ownerEmail: insurance.propietario?.email || "",
+        insuranceCompanyName: insurance.seguro?.empresaAseguradora || "",
+        policyNumber: insurance.seguro?.numeroPoliza || "",
         vehiclePlate: insurance.vehiculo?.placa || "",
-        certificateUrl: insurance.seguro?.urlCertificado || "",
+        startDate: insurance.fechas.emision?.split('T')[0] || "",
+        expirationDate: insurance.fechas.vencimiento?.split('T')[0] || "",
+        coverage: insurance.seguro?.cobertura || "",
+        licenseId: insurance.seguro?.licenseId?.toString() || "",
+        ownerDni: insurance.propietario?.dni || "",
       });
     }
   }, [insurance, open]);
@@ -61,13 +63,14 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
     setLoading(true);
     try {
       const updateData = {
+        insuranceCompanyName: formData.insuranceCompanyName || undefined,
+        policyNumber: formData.policyNumber || undefined,
+        vehiclePlate: formData.vehiclePlate || undefined,
+        startDate: formData.startDate || undefined,
         expirationDate: formData.expirationDate || undefined,
         coverage: formData.coverage || undefined,
-        premiumAmount: formData.premiumAmount ? parseFloat(formData.premiumAmount) : undefined,
-        ownerPhone: formData.ownerPhone || undefined,
-        ownerEmail: formData.ownerEmail || undefined,
-        vehiclePlate: formData.vehiclePlate || undefined,
-        certificateUrl: formData.certificateUrl || undefined,
+        licenseId: formData.licenseId ? parseInt(formData.licenseId) : undefined,
+        ownerDni: formData.ownerDni || undefined,
       };
 
       // Remove undefined values
@@ -148,6 +151,66 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
 
             {/* Campos Editables */}
 
+            {/* Empresa Aseguradora */}
+            <div className="space-y-2">
+              <Label htmlFor="insuranceCompanyName" className="flex items-center gap-2">
+                <Building className="w-4 h-4" />
+                Empresa Aseguradora
+              </Label>
+              <Input
+                id="insuranceCompanyName"
+                placeholder="Nombre de la aseguradora"
+                value={formData.insuranceCompanyName}
+                onChange={(e) => handleInputChange("insuranceCompanyName", e.target.value)}
+                className="border-gray-200 dark:border-gray-700"
+              />
+            </div>
+
+            {/* Número de Póliza */}
+            <div className="space-y-2">
+              <Label htmlFor="policyNumber" className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Número de Póliza
+              </Label>
+              <Input
+                id="policyNumber"
+                placeholder="POL-123456"
+                value={formData.policyNumber}
+                onChange={(e) => handleInputChange("policyNumber", e.target.value)}
+                className="border-gray-200 dark:border-gray-700"
+              />
+            </div>
+
+            {/* Placa Vehículo */}
+            <div className="space-y-2">
+              <Label htmlFor="vehiclePlate" className="flex items-center gap-2">
+                <Car className="w-4 h-4" />
+                Placa Vehículo
+              </Label>
+              <Input
+                id="vehiclePlate"
+                placeholder="ABC123"
+                value={formData.vehiclePlate}
+                onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
+                className="border-gray-200 dark:border-gray-700"
+              />
+            </div>
+
+            {/* Fecha de Inicio */}
+            <div className="space-y-2">
+              <Label htmlFor="startDate" className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Fecha Inicio
+              </Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => handleInputChange("startDate", e.target.value)}
+                className="border-gray-200 dark:border-gray-700"
+              />
+            </div>
+
             {/* Fecha de Vencimiento */}
             <div className="space-y-2">
               <Label htmlFor="expirationDate" className="flex items-center gap-2">
@@ -181,83 +244,33 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
               </Select>
             </div>
 
-            {/* Monto Prima */}
+            {/* ID Licencia */}
             <div className="space-y-2">
-              <Label htmlFor="premiumAmount" className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                Monto Prima
+              <Label htmlFor="licenseId" className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                ID Licencia
               </Label>
               <Input
-                id="premiumAmount"
+                id="licenseId"
                 type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                value={formData.premiumAmount}
-                onChange={(e) => handleInputChange("premiumAmount", e.target.value)}
+                placeholder="12345"
+                value={formData.licenseId}
+                onChange={(e) => handleInputChange("licenseId", e.target.value)}
                 className="border-gray-200 dark:border-gray-700"
               />
             </div>
 
-            {/* Teléfono Propietario */}
+            {/* DNI Propietario */}
             <div className="space-y-2">
-              <Label htmlFor="ownerPhone" className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                Teléfono Propietario
+              <Label htmlFor="ownerDni" className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                DNI Propietario
               </Label>
               <Input
-                id="ownerPhone"
-                type="tel"
-                placeholder="999888777"
-                value={formData.ownerPhone}
-                onChange={(e) => handleInputChange("ownerPhone", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
-            </div>
-
-            {/* Email Propietario */}
-            <div className="space-y-2">
-              <Label htmlFor="ownerEmail" className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                Email Propietario
-              </Label>
-              <Input
-                id="ownerEmail"
-                type="email"
-                placeholder="email@ejemplo.com"
-                value={formData.ownerEmail}
-                onChange={(e) => handleInputChange("ownerEmail", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
-            </div>
-
-            {/* Placa Vehículo */}
-            <div className="space-y-2">
-              <Label htmlFor="vehiclePlate" className="flex items-center gap-2">
-                <Car className="w-4 h-4" />
-                Placa Vehículo
-              </Label>
-              <Input
-                id="vehiclePlate"
-                placeholder="ABC123"
-                value={formData.vehiclePlate}
-                onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
-                className="border-gray-200 dark:border-gray-700"
-              />
-            </div>
-
-            {/* URL Certificado */}
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="certificateUrl" className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                URL Certificado Digital
-              </Label>
-              <Input
-                id="certificateUrl"
-                type="url"
-                placeholder="https://ejemplo.com/certificado.pdf"
-                value={formData.certificateUrl}
-                onChange={(e) => handleInputChange("certificateUrl", e.target.value)}
+                id="ownerDni"
+                placeholder="12345678"
+                value={formData.ownerDni}
+                onChange={(e) => handleInputChange("ownerDni", e.target.value)}
                 className="border-gray-200 dark:border-gray-700"
               />
             </div>

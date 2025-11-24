@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import { useDocumentos } from './hooks/useDocumentos';
-import { usePlacas } from './hooks/usePlacas';
-import { useEmpresas } from './hooks/useEmpresas';
+// import { usePlacas } from './hooks/usePlacas'; // Eliminado - hooks complejos no usados
+// import { useEmpresas } from './hooks/useEmpresas'; // Eliminado - hooks complejos no usados
 import { DocumentosTable } from './components/DocumentosTable';
-import { AddDocumentoDialog } from './components/AddDocumentoDialog';
+// import { AddDocumentoDialog } from './components/AddDocumentoDialog'; // Eliminado - componente de creación
 import { InsuranceDetailDialog } from './components/InsuranceDetailDialog';
 import { TechnicalReviewDetailDialog } from './components/TechnicalReviewDetailDialog';
 import { EditInsuranceDialog } from './components/EditInsuranceDialog';
 import { EditTechnicalReviewDialog } from './components/EditTechnicalReviewDialog';
+import { CreateTechnicalReviewDialog } from './components/CreateTechnicalReviewDialog';
+import { CreateInsuranceDialog } from './components/CreateInsuranceDialog';
 import { PaginationControls } from './components/PaginationControls';
 import { useInsuranceDetail } from './hooks/useInsuranceDetail';
 import { useTechnicalReviewDetail } from './hooks/useTechnicalReviewDetail';
@@ -36,14 +38,16 @@ const DocumentosView = () => {
   );
 
   const { toast } = useToast();
-  const [showAddDialog, setShowAddDialog] = useState(false);
   const [showInsuranceDetailDialog, setShowInsuranceDetailDialog] = useState(false);
   const [showTechnicalReviewDetailDialog, setShowTechnicalReviewDetailDialog] = useState(false);
   const [showEditInsuranceDialog, setShowEditInsuranceDialog] = useState(false);
   const [showEditTechnicalReviewDialog, setShowEditTechnicalReviewDialog] = useState(false);
+  const [showCreateTechnicalReviewDialog, setShowCreateTechnicalReviewDialog] = useState(false);
+  const [showCreateInsuranceDialog, setShowCreateInsuranceDialog] = useState(false);
 
-  const { fetchPlacas } = usePlacas();
-  const { fetchEmpresas } = useEmpresas();
+  // Eliminados hooks complejos y estado de creación
+  // const { fetchPlacas } = usePlacas();
+  // const { fetchEmpresas } = useEmpresas();
   const { insuranceDetail, loadingDetail: loadingInsurance, fetchInsuranceDetail, clearInsuranceDetail } = useInsuranceDetail();
   const { technicalReviewDetail, loadingDetail: loadingTechnical, fetchTechnicalReviewDetail, clearTechnicalReviewDetail } = useTechnicalReviewDetail();
 
@@ -242,12 +246,19 @@ const DocumentosView = () => {
                 </CardDescription>
               </div>
               <div className="flex gap-3 items-center">
-                <Button 
-                  onClick={() => setShowAddDialog(true)}
-                  className="bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0"
+                <Button
+                  onClick={() => setShowCreateTechnicalReviewDialog(true)}
+                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Nuevo Documento
+                  Nueva Revisión
+                </Button>
+                <Button
+                  onClick={() => setShowCreateInsuranceDialog(true)}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nuevo Seguro
                 </Button>
               </div>
             </div>
@@ -348,16 +359,17 @@ const DocumentosView = () => {
           onSuccess={() => handlePageChange(page)}
         />
 
-        {/* Diálogo para agregar documentos */}
-        <AddDocumentoDialog
-          open={showAddDialog}
-          onOpenChange={(open) => {
-            setShowAddDialog(open);
-            if (!open) {
-              fetchPlacas();
-              fetchEmpresas();
-            }
-          }}
+        {/* Diálogo para crear revisión técnica */}
+        <CreateTechnicalReviewDialog
+          open={showCreateTechnicalReviewDialog}
+          onOpenChange={setShowCreateTechnicalReviewDialog}
+          onSuccess={() => handlePageChange(1)}
+        />
+
+        {/* Diálogo para crear seguro */}
+        <CreateInsuranceDialog
+          open={showCreateInsuranceDialog}
+          onOpenChange={setShowCreateInsuranceDialog}
           onSuccess={() => handlePageChange(1)}
         />
       </div>

@@ -20,11 +20,14 @@ export interface UsuarioDetallado extends Usuario {
 }
 
 export interface PaginationData {
-  current_page: number;
-  total_pages: number;
-  total_records: number;
-  has_next: boolean;
-  has_previous: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  offset: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  nextPage: number | null;
 }
 
 export interface EstadisticasUsuarios {

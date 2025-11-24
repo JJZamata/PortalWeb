@@ -31,10 +31,10 @@ export interface PaginationData {
   totalPages: number;
   totalItems: number;
   itemsPerPage: number;
+  offset: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
   nextPage: number | null;
-  previousPage: number | null;
 }
 
 export interface Stats {

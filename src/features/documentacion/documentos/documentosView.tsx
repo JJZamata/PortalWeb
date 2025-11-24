@@ -5,55 +5,199 @@ import { usePlacas } from './hooks/usePlacas';
 import { useEmpresas } from './hooks/useEmpresas';
 import { DocumentosTable } from './components/DocumentosTable';
 import { AddDocumentoDialog } from './components/AddDocumentoDialog';
+import { InsuranceDetailDialog } from './components/InsuranceDetailDialog';
+import { TechnicalReviewDetailDialog } from './components/TechnicalReviewDetailDialog';
+import { EditInsuranceDialog } from './components/EditInsuranceDialog';
+import { EditTechnicalReviewDialog } from './components/EditTechnicalReviewDialog';
 import { PaginationControls } from './components/PaginationControls';
+import { useInsuranceDetail } from './hooks/useInsuranceDetail';
+import { useTechnicalReviewDetail } from './hooks/useTechnicalReviewDetail';
 import { documentosService } from './services/documentosService';
 import { useToast } from '@/hooks/use-toast';
 import { Documento } from './types';
-import { RefreshCw, XCircle, Plus, Search } from 'lucide-react';
+import { RefreshCw, XCircle, Plus, Search, FileBarChart, TrendingUp, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 const DocumentosView = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [tipoFiltro, setTipoFiltro] = useState('ALL');
-  const { documentos, pagination, loading, error, page, handlePageChange } = useDocumentos(searchTerm, tipoFiltro);
+  const [tipoFiltro, setTipoFiltro] = useState('all');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('DESC');
+
+  const { documentos, pagination, loading, error, page, handlePageChange } = useDocumentos(
+    searchTerm,
+    tipoFiltro,
+    sortBy,
+    sortOrder
+  );
+
   const { toast } = useToast();
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showInsuranceDetailDialog, setShowInsuranceDetailDialog] = useState(false);
+  const [showTechnicalReviewDetailDialog, setShowTechnicalReviewDetailDialog] = useState(false);
+  const [showEditInsuranceDialog, setShowEditInsuranceDialog] = useState(false);
+  const [showEditTechnicalReviewDialog, setShowEditTechnicalReviewDialog] = useState(false);
+
   const { fetchPlacas } = usePlacas();
   const { fetchEmpresas } = useEmpresas();
+  const { insuranceDetail, loadingDetail: loadingInsurance, fetchInsuranceDetail, clearInsuranceDetail } = useInsuranceDetail();
+  const { technicalReviewDetail, loadingDetail: loadingTechnical, fetchTechnicalReviewDetail, clearTechnicalReviewDetail } = useTechnicalReviewDetail();
 
   const handleRefresh = () => {
     handlePageChange(1);
   };
 
+  const handleViewInsuranceDetail = async (policyNumber: string) => {
+    try {
+      await fetchInsuranceDetail(policyNumber);
+      setShowInsuranceDetailDialog(true);
+    } catch (error: any) {
+      toast({
+        title: "Error al cargar detalles",
+        description: error?.message || "No se pudieron cargar los detalles del seguro.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCloseInsuranceDetail = () => {
+    setShowInsuranceDetailDialog(false);
+    clearInsuranceDetail();
+  };
+
+  const handleViewTechnicalReviewDetail = async (reviewCode: string) => {
+    try {
+      await fetchTechnicalReviewDetail(reviewCode);
+      setShowTechnicalReviewDetailDialog(true);
+    } catch (error: any) {
+      toast({
+        title: "Error al cargar detalles",
+        description: error?.message || "No se pudieron cargar los detalles de la revisión técnica.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCloseTechnicalReviewDetail = () => {
+    setShowTechnicalReviewDetailDialog(false);
+    clearTechnicalReviewDetail();
+  };
+
   const handleDelete = async (documento: any) => {
     try {
-      await documentosService.deleteDocumento(documento);
-      toast({
-        title: "Documento eliminado",
-        description: `El documento ${documento.tipo} número ${documento.numero} ha sido eliminado exitosamente.`,
-      });
+      // Usar los nuevos endpoints específicos según el tipo
+      if (documento.tipo === 'AFOCAT') {
+        await documentosService.deleteInsurance(documento.numero);
+        toast({
+          title: "Seguro eliminado",
+          description: `El seguro ${documento.tipo} número ${documento.numero} ha sido eliminado exitosamente.`,
+        });
+      } else if (documento.tipo === 'REVISION') {
+        await documentosService.deleteTechnicalReview(documento.numero);
+        toast({
+          title: "Revisión técnica eliminada",
+          description: `La revisión ${documento.tipo} número ${documento.numero} ha sido eliminada exitosamente.`,
+        });
+      } else {
+        // Fallback al método antiguo para otros tipos
+        await documentosService.deleteDocumento(documento);
+        toast({
+          title: "Documento eliminado",
+          description: `El documento ${documento.tipo} número ${documento.numero} ha sido eliminado exitosamente.`,
+        });
+      }
       // Refrescar la lista de documentos
       handlePageChange(page);
     } catch (error: any) {
       console.error('Error al eliminar documento:', error);
       toast({
         title: "Error al eliminar",
-        description: error.response?.data?.message || "No se pudo eliminar el documento. Inténtalo nuevamente.",
+        description: error?.message || error.response?.data?.message || "No se pudo eliminar el documento. Inténtalo nuevamente.",
         variant: "destructive",
       });
     }
   };
 
+  const handleEditInsurance = async (policyNumber: string) => {
+    try {
+      await fetchInsuranceDetail(policyNumber);
+      setShowEditInsuranceDialog(true);
+    } catch (error: any) {
+      toast({
+        title: "Error al cargar datos",
+        description: error?.message || "No se pudieron cargar los datos del seguro para edición.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCloseEditInsurance = () => {
+    setShowEditInsuranceDialog(false);
+    clearInsuranceDetail();
+  };
+
+  const handleEditTechnicalReview = async (reviewId: string) => {
+    try {
+      await fetchTechnicalReviewDetail(reviewId);
+      setShowEditTechnicalReviewDialog(true);
+    } catch (error: any) {
+      toast({
+        title: "Error al cargar datos",
+        description: error?.message || "No se pudieron cargar los datos de la revisión técnica para edición.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCloseEditTechnicalReview = () => {
+    setShowEditTechnicalReviewDialog(false);
+    clearTechnicalReviewDetail();
+  };
+
+  // Función para mostrar errores de validación del backend
+  const getErrorMessage = (error: any) => {
+    if (error?.isValidationError) {
+      // Error específico del backend con estructura {success: false, message, errors}
+      return error.backendMessage || 'Error de validación';
+    }
+    return error?.message || 'Error desconocido';
+  };
+
+  // Función para mostrar errores detallados
+  const getErrorDetails = (error: any) => {
+    if (error?.isValidationError && error?.validationErrors) {
+      return error.validationErrors.map((err: any) =>
+        `• ${err.field || err.location}: ${err.message}`
+      ).join('\n');
+    }
+    return null;
+  };
+
   if (error) {
+    const errorDetails = getErrorDetails(error);
     return (
       <AdminLayout>
-        <div className="flex flex-col items-center justify-center h-64">
+        <div className="flex flex-col items-center justify-center h-64 max-w-2xl mx-auto">
           <XCircle className="w-12 h-12 text-red-500 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error al cargar datos</h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">No se pudieron cargar los documentos</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Error al cargar documentos
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-2 text-center">
+            {getErrorMessage(error)}
+          </p>
+
+          {/* Mostrar errores de validación detallados si existen */}
+          {errorDetails && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300 text-left">
+              <p className="font-semibold mb-2">Detalles del error:</p>
+              <pre className="whitespace-pre-wrap text-xs">{errorDetails}</pre>
+            </div>
+          )}
+
           <Button onClick={handleRefresh} variant="outline">
             <RefreshCw className="w-4 h-4 mr-2" />
             Reintentar
@@ -76,7 +220,7 @@ const DocumentosView = () => {
             </div>
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">
+                <p className="text-4xl font-bold text-emerald-700 dark:text-emerald-400">
                   {loading ? '-' : pagination.total_records}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Documentos</p>
@@ -102,20 +246,9 @@ const DocumentosView = () => {
                   onClick={() => setShowAddDialog(true)}
                   className="bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0"
                 >
-                  <Plus className="w-4 h-4 mr-2" /> 
+                  <Plus className="w-4 h-4 mr-2" />
                   Nuevo Documento
                 </Button>
-                <AddDocumentoDialog
-                  open={showAddDialog}
-                  onOpenChange={(open) => {
-                    setShowAddDialog(open);
-                    if (!open) {
-                      fetchPlacas();
-                      fetchEmpresas();
-                    }
-                  }}
-                  onSuccess={() => handlePageChange(1)}
-                />
               </div>
             </div>
           </CardHeader>
@@ -130,26 +263,103 @@ const DocumentosView = () => {
                   className="pl-12 h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-cyan-500 focus:ring-cyan-500/20 bg-white dark:bg-gray-800 dark:text-white text-base"
                 />
               </div>
-              <div className="flex gap-2 min-w-[200px]">
-                <Select
-                  value={tipoFiltro}
-                  onValueChange={setTipoFiltro}
-                >
-                  <SelectTrigger className="h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-cyan-500 focus:ring-cyan-500/20 bg-white dark:bg-gray-800 dark:text-white">
-                    <SelectValue placeholder="Filtrar por tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Todos</SelectItem>
-                    <SelectItem value="REVISION">Revisión</SelectItem>
-                    <SelectItem value="AFOCAT">Afocat</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              <div className="flex gap-2 items-center">
+                <div className="min-w-[180px]">
+                  <Select value={tipoFiltro} onValueChange={setTipoFiltro}>
+                    <SelectTrigger className="h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-cyan-500 focus:ring-cyan-500/20 bg-white dark:bg-gray-800 dark:text-white">
+                      <SelectValue placeholder="Tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los tipos</SelectItem>
+                      <SelectItem value="insurance">Seguros (AFOCAT)</SelectItem>
+                      <SelectItem value="technicalReview">Revisiones Técnicas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="min-w-[140px]">
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-cyan-500 focus:ring-cyan-500/20 bg-white dark:bg-gray-800 dark:text-white">
+                      <SelectValue placeholder="Ordenar por" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="createdAt">Fecha creación</SelectItem>
+                      <SelectItem value="expirationDate">Fecha vencimiento</SelectItem>
+                      <SelectItem value="vehiclePlate">Placa vehicular</SelectItem>
+                      <SelectItem value="type">Tipo de documento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="min-w-[120px]">
+                  <Select value={sortOrder} onValueChange={setSortOrder}>
+                    <SelectTrigger className="h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-cyan-500 focus:ring-cyan-500/20 bg-white dark:bg-gray-800 dark:text-white">
+                      <SelectValue placeholder="Orden" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DESC">Descendente</SelectItem>
+                      <SelectItem value="ASC">Ascendente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
-            <DocumentosTable documentos={documentos} loading={loading} onDelete={handleDelete} />
+            <DocumentosTable
+          documentos={documentos}
+          loading={loading}
+          onDelete={handleDelete}
+          onViewInsuranceDetail={handleViewInsuranceDetail}
+          onViewTechnicalReviewDetail={handleViewTechnicalReviewDetail}
+          onEditInsurance={handleEditInsurance}
+          onEditTechnicalReview={handleEditTechnicalReview}
+        />
             {pagination && <PaginationControls pagination={pagination} onPageChange={handlePageChange} searchTerm={searchTerm} tipoFiltro={tipoFiltro} />}
           </CardContent>
         </Card>
+
+        {/* Diálogo de detalles del seguro */}
+        <InsuranceDetailDialog
+          insurance={insuranceDetail}
+          open={showInsuranceDetailDialog}
+          onOpenChange={handleCloseInsuranceDetail}
+        />
+
+        {/* Diálogo de detalles de revisión técnica */}
+        <TechnicalReviewDetailDialog
+          technicalReview={technicalReviewDetail}
+          open={showTechnicalReviewDetailDialog}
+          onOpenChange={handleCloseTechnicalReviewDetail}
+        />
+
+        {/* Diálogo para editar seguro */}
+        <EditInsuranceDialog
+          insurance={insuranceDetail}
+          open={showEditInsuranceDialog}
+          onOpenChange={handleCloseEditInsurance}
+          onSuccess={() => handlePageChange(page)}
+        />
+
+        {/* Diálogo para editar revisión técnica */}
+        <EditTechnicalReviewDialog
+          technicalReview={technicalReviewDetail}
+          open={showEditTechnicalReviewDialog}
+          onOpenChange={handleCloseEditTechnicalReview}
+          onSuccess={() => handlePageChange(page)}
+        />
+
+        {/* Diálogo para agregar documentos */}
+        <AddDocumentoDialog
+          open={showAddDialog}
+          onOpenChange={(open) => {
+            setShowAddDialog(open);
+            if (!open) {
+              fetchPlacas();
+              fetchEmpresas();
+            }
+          }}
+          onSuccess={() => handlePageChange(1)}
+        />
       </div>
     </AdminLayout>
   );

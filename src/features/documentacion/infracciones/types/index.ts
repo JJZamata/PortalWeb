@@ -54,7 +54,6 @@ export interface PaginationData {
   hasNextPage: boolean;
   hasPreviousPage: boolean;
   nextPage: number | null;
-  previousPage: number | null;
 }
 
 // Meta información de filtros aplicados

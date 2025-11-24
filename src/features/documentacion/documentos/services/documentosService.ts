@@ -1,74 +1,169 @@
 import axiosInstance from '@/lib/axios';
 
+// Función para manejar errores específicos del endpoint /documents
+const handleDocumentosError = (error: any) => {
+  // Error específico del backend con formato {success: false, message, errors}
+  if (error.response?.data?.success === false && error.response?.data?.errors) {
+    const responseData = error.response.data;
+
+    // Extraer todos los mensajes de error
+    const errorMessages = responseData.errors.map((err: any) =>
+      `${err.field || err.location}: ${err.message}`
+    );
+
+    // Crear error con mensaje combinado
+    const combinedMessage = responseData.message + ': ' + errorMessages.join('; ');
+    const enhancedError = new Error(combinedMessage);
+
+    // Agregar información detallada para el frontend
+    (enhancedError as any).backendMessage = responseData.message;
+    (enhancedError as any).validationErrors = responseData.errors;
+    (enhancedError as any).status = error.response.status;
+    (enhancedError as any).isValidationError = true;
+
+    return enhancedError;
+  }
+
+  // Para otros errores, devolver el error original sin modificar
+  return error;
+};
+
 export const documentosService = {
-  getDocumentos: async (page: number, tipoFiltro: string, searchTerm: string) => {
-    let response;
-    
-    // Si hay término de búsqueda (>= 2 caracteres) - BÚSQUEDA GLOBAL
-    if (searchTerm && searchTerm.trim().length >= 2) {
-      let allDocuments: any[] = [];
-      let currentPage = 1;
-      let hasMorePages = true;
-      
-      // Obtener TODOS los documentos de TODAS las páginas
-      while (hasMorePages) {
-        if (tipoFiltro && tipoFiltro !== 'ALL') {
-          response = await axiosInstance.get(`/documents/type/${tipoFiltro.toLowerCase()}?page=${currentPage}`);
-        } else {
-          response = await axiosInstance.get(`/documents?page=${currentPage}`);
-        }
-        
-        const documentsData = response.data?.data?.documents || [];
-        const paginationData = response.data?.data?.pagination || {};
-        
-        allDocuments = [...allDocuments, ...documentsData];
-        
-        // Verificar si hay más páginas
-        hasMorePages = paginationData.has_next || false;
-        currentPage++;
-        
-        // Límite de seguridad para evitar bucles infinitos
-        if (currentPage > 100) break;
-      }
-      
-      // Filtrar en TODOS los documentos obtenidos
-      const filtered = allDocuments.filter((doc: any) =>
-        (doc.placa || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (doc.numero || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (doc.tipo || '').toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      
-      // Crear paginación artificial para los resultados filtrados
-      const itemsPerPage = 6;
-      const totalFiltered = filtered.length;
-      const totalPages = Math.ceil(totalFiltered / itemsPerPage);
-      const startIndex = (page - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      const paginatedResults = filtered.slice(startIndex, endIndex);
-      
-      return {
-        documents: paginatedResults,
-        pagination: {
-          current_page: page,
-          total_pages: totalPages,
-          total_records: totalFiltered,
-          records_per_page: itemsPerPage,
-          has_next: page < totalPages,
-          has_previous: page > 1
-        },
+  // Método unificado para obtener documentos usando el nuevo endpoint V2
+  getDocumentos: async (
+    page: number = 1,
+    tipoFiltro: string = 'all',
+    searchTerm: string = '',
+    sortBy: string = 'createdAt',
+    sortOrder: string = 'DESC'
+  ) => {
+    try {
+      // Construir parámetros según la especificación V2 del backend
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', '6'); // Límite según especificación
+
+      const hasSearch = searchTerm && searchTerm.trim().length >= 3; // Cambiado a 3 según backend
+      // Normalizar el tipo: convertir 'all' y otros valores a los correctos
+      let normalizedType = tipoFiltro.toLowerCase();
+
+      // Mapear valores del frontend a valores del backend
+      const typeMapping: { [key: string]: string } = {
+        'all': 'all',
+        'revision': 'technicalReview',
+        'afocat': 'insurance',
+        'insurance': 'insurance',
+        'technicalreview': 'technicalReview',
+        'technicalReview': 'technicalReview'
       };
-    } 
-    // Si no hay búsqueda, endpoint directo (paginación normal)
-    else if (tipoFiltro && tipoFiltro !== 'ALL') {
-      response = await axiosInstance.get(`/documents/type/${tipoFiltro.toLowerCase()}?page=${page}`);
-    } else {
-      response = await axiosInstance.get(`/documents?page=${page}`);
+
+      normalizedType = typeMapping[normalizedType] || 'all';
+
+      // Agregar parámetros de filtrado (solo si son válidos)
+      if (hasSearch) params.append('search', searchTerm.trim());
+      if (normalizedType && normalizedType !== 'all') {
+        params.append('type', normalizedType);
+      }
+
+      // Agregar parámetros de ordenamiento
+      params.append('sortBy', sortBy);
+      params.append('sortOrder', sortOrder);
+
+      // Usar endpoint unificado V2
+      const response = await axiosInstance.get(`/documents?${params.toString()}`);
+
+      if (response.data.success) {
+        const responseData = response.data.data;
+
+        // Los datos están en responseData.data según la estructura del backend
+        const documentsList = responseData.data || [];
+
+        // Transformar documentos al formato esperado por el frontend
+        const documentsTransformed = documentsList.map((doc: any, index: number) => {
+          // Extraer información del vehículo anidado
+          const vehicle = doc.vehicle || {};
+
+          // Lógica simplificada: si hay filtro, usar ese tipo. Si no, usar el campo type del documento
+          let tipoFinal;
+          if (normalizedType === 'insurance') {
+            tipoFinal = 'AFOCAT';  // Filtro de seguros → tipo fijo
+          } else if (normalizedType === 'technicalReview') {
+            tipoFinal = 'REVISION'; // Filtro de revisiones → tipo fijo
+          } else if (doc.type === 'INSURANCE') {
+            tipoFinal = 'AFOCAT';  // Sin filtro, usar campo type del backend
+          } else if (doc.type === 'TECHNICALREVIEW') {
+            tipoFinal = 'REVISION'; // Sin filtro, usar campo type del backend
+          } else {
+            // Último recurso: inferir por campos específicos
+            if (doc.policyNumber || doc.insuranceCompanyName || doc.coverage) {
+              tipoFinal = 'AFOCAT';
+            } else if (doc.reviewCode || doc.certifyingCompany || doc.inspectionResult) {
+              tipoFinal = 'REVISION';
+            } else {
+              tipoFinal = 'DESCONOCIDO';
+            }
+          }
+
+          const transformedDoc = {
+            tipo: tipoFinal,
+            numero: doc.policyNumber || doc.reviewCode || doc.reviewId || doc.numero || '',
+            placa: vehicle?.plate || doc.vehiclePlate || doc.placa || '',
+            entidad_empresa: doc.insuranceCompanyName || doc.certifyingCompany || doc.entidad_empresa || '',
+            fecha_emision: doc.startDate || doc.issueDate || doc.reviewDate || doc.fecha_emision || '',
+            fecha_vencimiento:
+              doc.type === 'INSURANCE' ? (doc.endDate || doc.expirationDate || doc.fecha_vencimiento || '') :
+              doc.type === 'TECHNICALREVIEW' ? (doc.nextReviewDate || doc.fecha_vencimiento || '') :
+              doc.fecha_vencimiento || '',
+            estado: doc.status || 'ACTIVE',
+            detalles: {
+              inspection_result: doc.inspectionResult || doc.resultado_inspeccion,
+              resultado_inspeccion: doc.inspectionResult || doc.resultado_inspeccion,
+              cobertura: doc.type === 'INSURANCE' ? (doc.coverage || '') : '',
+              clase_vehiculo: vehicle?.brand || doc.vehicleClass || doc.clase_vehiculo,
+              marca: vehicle?.brand || '',
+              modelo: vehicle?.model || '',
+              anio: vehicle?.year || '',
+              inspector: doc.inspector?.name || '',
+              driver: doc.driver?.name || '',
+              resultado: doc.type === 'TECHNICALREVIEW' ? (doc.inspectionResult || '') : ''
+            },
+            // Mantener campos adicionales para compatibilidad
+            id: doc.id,
+            type: doc.type,
+            createdAt: doc.createdAt,
+            // Información anidada
+            vehicle: vehicle,
+            driver: doc.driver,
+            inspector: doc.inspector
+          };
+
+          return transformedDoc;
+        });
+
+        // Transformar estructura de paginación
+        const paginationTransformed = {
+          current_page: responseData.pagination?.currentPage || page,
+          total_pages: responseData.pagination?.totalPages || 1,
+          total_records: responseData.pagination?.totalItems || 0,
+          records_per_page: responseData.pagination?.itemsPerPage || 6,
+          has_next: responseData.pagination?.hasNextPage || false,
+          has_previous: responseData.pagination?.hasPrevPage || false
+        };
+
+        return {
+          documents: documentsTransformed,
+          pagination: paginationTransformed,
+          appliedFilters: responseData.appliedFilters,
+          sorting: responseData.sorting
+        };
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en documentosService.getDocumentos:', error);
+      // Manejar errores específicos del endpoint
+      throw handleDocumentosError(error);
     }
-    
-    return {
-      documents: response.data?.data?.documents || [],
-      pagination: response.data?.data?.pagination || {},
-    };
   },
   getPlacas: async () => {
     const response = await axiosInstance.get('/vehicles');
@@ -100,8 +195,126 @@ export const documentosService = {
         console.warn('Error en endpoint alternativo de empresas');
         return { companies: [] };
       }
+      }
+  },
+
+  // Método para obtener un seguro específico por número de póliza
+  getInsuranceByNumber: async (insuranceNumber: string) => {
+    try {
+      const response = await axiosInstance.get(`/insurance/${insuranceNumber}`);
+
+      if (response.data.success) {
+        return response.data.data;
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en documentosService.getInsuranceByNumber:', error);
+      // Manejar errores específicos del endpoint
+      throw handleDocumentosError(error);
     }
   },
+
+  // Método para obtener una revisión técnica específica por código
+  getTechnicalReviewByCode: async (reviewCode: string) => {
+    try {
+      const response = await axiosInstance.get(`/technicalReviews/${reviewCode}`);
+
+      if (response.data.success) {
+        return response.data.data;
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en documentosService.getTechnicalReviewByCode:', error);
+      // Manejar errores específicos del endpoint
+      throw handleDocumentosError(error);
+    }
+  },
+
+  // Método para actualizar un seguro específico
+  updateInsurance: async (insuranceNumber: string, updateData: {
+    expirationDate?: string;
+    coverage?: string;
+    premiumAmount?: number;
+    ownerPhone?: string;
+    ownerEmail?: string;
+    certificateUrl?: string;
+    vehiclePlate?: string;
+  }) => {
+    try {
+      const response = await axiosInstance.put(`/insurance/${insuranceNumber}`, updateData);
+
+      if (response.data.success) {
+        return response.data;
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en documentosService.updateInsurance:', error);
+      // Manejar errores específicos del endpoint
+      throw handleDocumentosError(error);
+    }
+  },
+
+  // Método para eliminar un seguro específico
+  deleteInsurance: async (insuranceNumber: string) => {
+    try {
+      const response = await axiosInstance.delete(`/insurance/${insuranceNumber}`);
+
+      if (response.data.success) {
+        return response.data;
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en documentosService.deleteInsurance:', error);
+      // Manejar errores específicos del endpoint
+      throw handleDocumentosError(error);
+    }
+  },
+
+  // Método para actualizar una revisión técnica específica
+  updateTechnicalReview: async (reviewId: string, updateData: {
+    nextReviewDate?: string;
+    certifyingCompany?: string;
+    inspectionResult?: string;
+    observations?: string;
+    reviewCertificateUrl?: string;
+    vehiclePlate?: string;
+  }) => {
+    try {
+      const response = await axiosInstance.put(`/technical-reviews/${reviewId}`, updateData);
+
+      if (response.data.success) {
+        return response.data;
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en documentosService.updateTechnicalReview:', error);
+      // Manejar errores específicos del endpoint
+      throw handleDocumentosError(error);
+    }
+  },
+
+  // Método para eliminar una revisión técnica específica
+  deleteTechnicalReview: async (reviewId: string) => {
+    try {
+      const response = await axiosInstance.delete(`/technical-reviews/${reviewId}`);
+
+      if (response.data.success) {
+        return response.data;
+      }
+
+      throw new Error('Error en la respuesta del servidor');
+    } catch (error) {
+      console.error('Error en documentosService.deleteTechnicalReview:', error);
+      // Manejar errores específicos del endpoint
+      throw handleDocumentosError(error);
+    }
+  },
+
   addDocumento: async (data: any) => {
     if (data.tipo === 'REVISION') {
       const payload = {
@@ -134,7 +347,7 @@ export const documentosService = {
             owner_dni: data.owner_dni
           };
           
-          console.log('🎯 Usando estructura exacta que solicita el servidor:', exactPayload);
+          console.log('Usando estructura exacta que solicita el servidor:', exactPayload);
           return await axiosInstance.post('/documents/insurance', exactPayload);
         }
       ];
@@ -154,20 +367,17 @@ export const documentosService = {
           const status = error.response?.status;
           const message = error.response?.data?.message || error.message;
           
-          console.warn(`❌ Estrategia ${attemptCount} falló: ${status} - ${message}`);
+          console.warn(`Estrategia ${attemptCount} falló: ${status} - ${message}`);
           
           // Si tenemos solo una estrategia y falla, mostrar error detallado
           if (strategies.length === 1) {
-            console.error('💔 La estructura exacta del servidor también falló:', error.response?.data);
+            console.error('La estructura exacta del servidor también falló:', error.response?.data);
           }
           
           continue;
         }
       }
-      
-      // Si todas las estrategias fallaron
-      console.error('💥 Todas las estrategias de creación AFOCAT fallaron');
-      console.error('🔧 Último error:', lastError);
+
       
       // Crear un error más descriptivo para el usuario
       const userFriendlyError = new Error(

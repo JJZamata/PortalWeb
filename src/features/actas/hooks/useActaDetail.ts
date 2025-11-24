@@ -12,10 +12,11 @@ export const useActaDetail = () => {
     queryFn: async () => {
       if (!queryParams) return null;
       const response = await actasService.getActaDetail(queryParams.id, queryParams.type);
-      setRecordDetailed(response.data);
-      return response.data;
+      setRecordDetailed(response);
+      return response;
     },
     enabled: !!queryParams,
+    staleTime: 5 * 60 * 1000, // 5 minutos de cache
   });
 
   const fetchRecordDetail = async (id: number, type: 'conforme' | 'noconforme') => {

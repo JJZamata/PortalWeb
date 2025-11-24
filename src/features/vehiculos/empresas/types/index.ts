@@ -26,10 +26,12 @@ export interface EmpresaDetallada {
 export interface PaginationData {
   currentPage: number;
   totalPages: number;
-  totalCompanies: number;
+  totalItems: number;
+  itemsPerPage: number;
+  offset: number;
   hasNextPage: boolean;
-  hasPrevPage: boolean;
-  limit: number;
+  hasPreviousPage: boolean;
+  nextPage: number | null;
 }
 
 export interface Stats {

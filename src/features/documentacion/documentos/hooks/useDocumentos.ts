@@ -3,13 +3,18 @@ import { useQuery } from '@tanstack/react-query';
 import { documentosService } from '../services/documentosService';
 import { useScrollPreservation } from '@/hooks/useScrollPreservation';
 
-export const useDocumentos = (searchTerm: string, tipoFiltro: string) => {
+export const useDocumentos = (
+  searchTerm: string,
+  tipoFiltro: string,
+  sortBy: string = 'createdAt',
+  sortOrder: string = 'DESC'
+) => {
   const [page, setPage] = useState(1);
   const lastPageChangeRef = useRef<number>(0);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['documentos', page, searchTerm, tipoFiltro],
-    queryFn: () => documentosService.getDocumentos(page, tipoFiltro, searchTerm),
+    queryKey: ['documentos', page, searchTerm, tipoFiltro, sortBy, sortOrder],
+    queryFn: () => documentosService.getDocumentos(page, tipoFiltro, searchTerm, sortBy, sortOrder),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -20,7 +25,7 @@ export const useDocumentos = (searchTerm: string, tipoFiltro: string) => {
       setPage(1);
     }, 500);
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, tipoFiltro]);
+  }, [searchTerm, tipoFiltro, sortBy, sortOrder]);
 
   const handlePageChange = (newPage: number) => {
     const now = Date.now();

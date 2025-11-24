@@ -97,9 +97,14 @@ export const actasService = {
     }
   },
 
-  getActaDetail: async (id: number) => {
+  getActaDetail: async (id: number, type: 'conforme' | 'noconforme' = 'conforme') => {
     try {
-      const response = await axiosInstance.get(`/records/${id}`);
+      // Determinar el endpoint según el tipo de acta (Backend V2 API)
+      const endpoint = type === 'conforme'
+        ? `/compliant-records/${id}`
+        : `/non-compliant-records/${id}`;
+
+      const response = await axiosInstance.get(endpoint);
 
       if (response.data.success) {
         return response.data.data;
@@ -107,7 +112,7 @@ export const actasService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en actasService.getActaDetail:', error);
+      console.error(`Error en actasService.getActaDetail (${type}):`, error);
       throw error;
     }
   },

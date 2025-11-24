@@ -84,13 +84,42 @@ export const vehiculosService = {
   },
 
   // Método para obtener estadísticas usando endpoint específico del backend
-  getStats: async () => {
+  getStats: async (dateFrom?: string, dateTo?: string, groupBy: string = 'all') => {
     try {
-      const response = await axiosInstance.get('/vehicles/stats');
-      // Backend devuelve estructura: data.data.general o data.message (verificar según backend)
-      return response.data.data.data || response.data.data.general || response.data.data.message;
-    } catch (error) {
+      // Construir parámetros query
+      const params = new URLSearchParams();
+      if (dateFrom) params.append('dateFrom', dateFrom);
+      if (dateTo) params.append('dateTo', dateTo);
+      if (groupBy && groupBy !== 'all') params.append('groupBy', groupBy);
+
+      const url = params.toString()
+        ? `/vehicles/stats?${params.toString()}`
+        : '/vehicles/stats';
+
+      const response = await axiosInstance.get(url);
+
+      // Validar respuesta según nueva estructura del endpoint
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || 'Error en la respuesta del servidor');
+      }
+    } catch (error: any) {
       console.error('Error en vehiculosService.getStats:', error);
+
+      // Manejar errores específicos de la nueva API
+      if (error.response?.data?.success === false) {
+        const errorMessage = error.response.data.message || 'Error desconocido';
+        const enhancedError = new Error(errorMessage);
+
+        // Adjuntar detalles de validación si existen
+        if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
+          (enhancedError as any).validationErrors = error.response.data.errors;
+        }
+
+        throw enhancedError;
+      }
+
       throw error;
     }
   },

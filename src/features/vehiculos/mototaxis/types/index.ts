@@ -38,6 +38,14 @@ export interface PaginationData {
 }
 
 export interface Stats {
-  total: number;
-  byStatus?: { [key: string]: number };
+  totalVehicles: number;
+  byStatus: { [key: string]: number };
+  byType?: { [key: string]: number };
+  byBrand?: { [key: string]: number };
+  byYear?: { [key: string]: number };
+  dateRange: {
+    from: string | null;
+    to: string | null;
+  };
+  groupBy: string;
 }

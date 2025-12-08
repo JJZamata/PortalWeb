@@ -46,6 +46,9 @@ export const conductoresService = {
           nombreCompleto: c.datosPersonales?.nombreCompleto ?? '',
           telefono: c.datosPersonales?.phoneNumber ?? '',
           direccion: c.datosPersonales?.address ?? '',
+          // Campos normalizados para la tabla
+          phoneNumber: c.datosPersonales?.phoneNumber ?? '',
+          address: c.datosPersonales?.address ?? '',
           firstName: c.datosPersonales?.firstName ?? '',
           lastName: c.datosPersonales?.lastName ?? '',
           photoUrl: c.photoUrl ?? '',
@@ -123,17 +126,21 @@ export const conductoresService = {
   // Actualizar conductor
   updateConductor: async (dni: string, data: any) => {
     try {
-      const payload: any = {
-        firstName: data.firstName ?? '',
-        lastName: data.lastName ?? '',
-        nombreCompleto: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim(),
-        phoneNumber: data.phoneNumber ?? data.telefono ?? '',
-        address: data.address ?? data.direccion ?? '',
-        estado: data.estado ?? 'ACTIVO'
-      };
+      const payload: any = {};
 
-      if (data.photoUrl) {
-        payload.photoUrl = data.photoUrl;
+      // Solo incluir campos presentes para permitir actualizaciones parciales
+      if (data.firstName) payload.firstName = data.firstName;
+      if (data.lastName) payload.lastName = data.lastName;
+      if (data.firstName || data.lastName) {
+        payload.nombreCompleto = `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim();
+      }
+      if (data.phoneNumber ?? data.telefono) payload.phoneNumber = data.phoneNumber ?? data.telefono;
+      if (data.address ?? data.direccion) payload.address = data.address ?? data.direccion;
+      if (data.photoUrl) payload.photoUrl = data.photoUrl;
+      if (data.estado) payload.estado = data.estado;
+
+      if (Object.keys(payload).length === 0) {
+        throw new Error('No hay campos para actualizar');
       }
 
       const response = await axiosInstance.put(`/drivers/${dni}`, payload, {

@@ -37,7 +37,7 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }
     },
     onError: (error: any) => {
       // Manejo mejorado de errores
-      let errorMessage = error.response?.data?.message || 'Error desconocido al actualizar los datos';
+      let errorMessage = error.response?.data?.message || error.message || 'Error desconocido al actualizar los datos';
 
       // Si hay errores específicos de validación, mostrar el primer error
       if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
@@ -54,14 +54,14 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }
   });
 
   const validatePhone = (phone: string) => {
-    if (!phone.trim()) return "El teléfono es obligatorio";
+    if (!phone.trim()) return true; // opcional
     if (phone.length !== 9) return "El teléfono debe tener exactamente 9 dígitos";
     if (!/^9\d{8}$/.test(phone)) return "El teléfono debe empezar con 9 y tener 9 dígitos";
     return true;
   };
 
   const validateAddress = (address: string) => {
-    if (!address.trim()) return "La dirección es obligatoria";
+    if (!address.trim()) return true; // opcional
     if (address.length < 10) return "La dirección debe ser más específica (mín. 10 caracteres)";
     return true;
   };
@@ -86,18 +86,42 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
             {conductor && (
-              <div className="flex items-center gap-2 mt-2">
+              <span className="flex items-center gap-2 mt-2">
                 <User className="w-4 h-4 text-gray-500" />
                 <span className="font-medium">{conductor.nombreCompleto}</span>
                 <span className="text-sm text-gray-500">({conductor.dni})</span>
-              </div>
+              </span>
             )}
-            Actualiza los datos de contacto y información personal
+            <span className="block">Actualiza los datos de contacto y información personal</span>
           </DialogDescription>
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-6 pt-4">
+          <form
+            onSubmit={form.handleSubmit((values) => {
+              const payload: any = {};
+
+              const phone = values.phoneNumber.trim();
+              const addr = values.address.trim();
+              const photo = values.photoUrl.trim();
+
+              if (phone) payload.phoneNumber = phone;
+              if (addr) payload.address = addr;
+              if (photo) payload.photoUrl = photo;
+
+              if (Object.keys(payload).length === 0) {
+                toast({
+                  title: "Sin cambios",
+                  description: "Ingresa al menos un campo para actualizar (teléfono, dirección o foto).",
+                  variant: "destructive"
+                });
+                return;
+              }
+
+              mutation.mutate(payload);
+            })}
+            className="space-y-6 pt-4"
+          >
             <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
               <CardContent className="p-6 space-y-5">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
@@ -108,12 +132,12 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }
                 <FormField 
                   name="phoneNumber" 
                   control={form.control} 
-                  rules={{ required: "El teléfono es obligatorio", validate: validatePhone }} 
+                  rules={{ validate: validatePhone }} 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
                         <Phone className="w-4 h-4" />
-                        Número de Teléfono *
+                        Número de Teléfono
                       </FormLabel>
                       <FormControl>
                         <Input 
@@ -131,12 +155,12 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }
                 <FormField 
                   name="address" 
                   control={form.control} 
-                  rules={{ required: "La dirección es obligatoria", validate: validateAddress }} 
+                  rules={{ validate: validateAddress }} 
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
-                        Dirección Completa *
+                        Dirección Completa
                       </FormLabel>
                       <FormControl>
                         <Input 

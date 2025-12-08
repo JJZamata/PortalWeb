@@ -42,15 +42,18 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
       onSuccess();
     },
     onError: (error: any) => {
-      // Manejo mejorado de errores
-      let errorMessage = error.response?.data?.message || 'Error desconocido al registrar el conductor';
+      // Usar mensaje detallado si viene del backend o del helper handleApiError
+      let errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Error desconocido al registrar el conductor';
 
-      // Si hay errores específicos de validación, mostrar el primer error
-      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
-        const firstError = error.response.data.errors[0];
+      const details = error.response?.data?.errors || error.details;
+      if (Array.isArray(details) && details.length > 0) {
+        const firstError = details[0];
         errorMessage = firstError.message || errorMessage;
+        console.error('Detalles validación driver:', details);
       }
-
       toast({
         title: "❌ Error al registrar conductor",
         description: errorMessage,
@@ -106,7 +109,21 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-6 pt-4">
+          <form
+            onSubmit={form.handleSubmit((values) => {
+              // Armar payload para que todos los campos lleguen correctamente
+              const payload = {
+                dni: values.dni,
+                firstName: values.firstName,
+                lastName: values.lastName,
+                phoneNumber: values.phoneNumber,
+                address: values.address,
+                photoUrl: values.photoUrl
+              };
+              mutation.mutate(payload);
+            })}
+            className="space-y-6 pt-4"
+          >
             <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
               <CardContent className="p-6 space-y-5">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">

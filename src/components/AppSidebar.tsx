@@ -40,7 +40,6 @@ const menuItems = [
     title: "Personal",
     icon: Users,
     items: [
-      { title: "Fiscalizadores", url: "/fiscalizadores", icon: Shield },
       { title: "Conductores", url: "/conductores", icon: User },
     ],
   },

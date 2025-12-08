@@ -2,62 +2,61 @@ import axiosInstance from '@/lib/axios';
 
 // Función reutilizable para manejo de errores específicos
 const handleApiError = (error: any) => {
-  // Mejorar manejo de errores con estructura específica
-  if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
-    const firstError = error.response.data.errors[0];
-    const enhancedError = new Error(firstError.message || 'Error de validación');
+  const apiData = error.response?.data;
+
+  // Caso con lista de errores detallados
+  if (apiData?.errors && Array.isArray(apiData.errors)) {
+    const firstError = apiData.errors[0];
+    const enhancedError = new Error(firstError.message || apiData.message || 'Error de validación');
     (enhancedError as any).field = firstError.field;
     (enhancedError as any).value = firstError.value;
-    (enhancedError as any).details = error.response.data.errors;
+    (enhancedError as any).details = apiData.errors;
     throw enhancedError;
   }
+
+  // Caso con mensaje simple del backend
+  if (apiData?.message) {
+    const enhancedError = new Error(apiData.message);
+    (enhancedError as any).details = apiData;
+    throw enhancedError;
+  }
+
   throw error;
 };
 
 export const conductoresService = {
-  // Método principal unificado que maneja búsqueda y paginación
+  // Listado con búsqueda y paginación
   getConductores: async (page: number, searchTerm: string = '') => {
     try {
-      // Validaciones según backend FISCAMOTO para drivers
-      const SEARCH_MIN_LENGTH = 2;  // Diferente a empresas (que usa 3)
-
-      // Construir parámetros query según documentación
+      const SEARCH_MIN_LENGTH = 2;
       const params = new URLSearchParams();
       params.append('page', page.toString());
 
-      const hasSearch = searchTerm && searchTerm.length >= SEARCH_MIN_LENGTH;
-
-      // Agregar parámetro de búsqueda si aplica
-      if (hasSearch) {
+      if (searchTerm && searchTerm.length >= SEARCH_MIN_LENGTH) {
         params.append('search', searchTerm);
       }
 
-      // Usar endpoint único /drivers/list con parámetros query
       const response = await axiosInstance.get(`/drivers/list?${params.toString()}`);
 
       if (response.data.success) {
-        // Acceder a estructura real: data.data (como en empresas)
         const conductores = response.data.data.data || [];
 
-        // Transform conductores para mantener compatibilidad con tipos existentes
-        const conductoresTransformados = conductores.map((conductor: any) => ({
-          dni: conductor.identificacion?.dni || '',
-          nombreCompleto: conductor.datosPersonales?.nombreCompleto || '',
-          telefono: conductor.datosPersonales?.phoneNumber || '',
-          direccion: conductor.datosPersonales?.address || '',
-          firstName: conductor.datosPersonales?.firstName || '',
-          lastName: conductor.datosPersonales?.lastName || '',
-          phoneNumber: conductor.datosPersonales?.phoneNumber || '',
-          address: conductor.datosPersonales?.address || '',
-          photoUrl: conductor.photoUrl || '',
-          estado: conductor.estado || '',
-          fechas: conductor.fechas || null
+        const conductoresTransformados = conductores.map((c: any) => ({
+          dni: c.identificacion?.dni ?? '',
+          nombreCompleto: c.datosPersonales?.nombreCompleto ?? '',
+          telefono: c.datosPersonales?.phoneNumber ?? '',
+          direccion: c.datosPersonales?.address ?? '',
+          firstName: c.datosPersonales?.firstName ?? '',
+          lastName: c.datosPersonales?.lastName ?? '',
+          photoUrl: c.photoUrl ?? '',
+          estado: c.estado ?? '',
+          fechas: c.fechas ?? null
         }));
 
         return {
           conductores: conductoresTransformados,
-          summary: response.data.data.summary || null,
-          pagination: response.data.data.pagination || null
+          summary: response.data.data.summary ?? null,
+          pagination: response.data.data.pagination ?? null
         };
       }
 
@@ -68,20 +67,17 @@ export const conductoresService = {
     }
   },
 
-  // Método legado para compatibilidad (deprecado)
+  // Compatibilidad legacy
   searchConductores: async (query: string, page: number = 1) => {
-    // Redirigir al método principal unificado
-    return this.getConductores(page, query);
+    return conductoresService.getConductores(page, query);
   },
 
+
+  // Detalle de un conductor
   getConductorDetail: async (dni: string) => {
     try {
       const response = await axiosInstance.get(`/drivers/${dni}`);
-
-      if (response.data.success) {
-        return response.data.data;  // Mantener estructura para detalles
-      }
-
+      if (response.data.success) return response.data.data;
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
       console.error('Error en conductoresService.getConductorDetail:', error);
@@ -89,28 +85,68 @@ export const conductoresService = {
     }
   },
 
+  // Crear conductor
   addConductor: async (data: any) => {
     try {
-      const response = await axiosInstance.post('/drivers/', data, {
-        headers: { "Content-Type": "application/json" },
+      // El backend valida campos planos; evitamos anidar para que no rechace los campos
+      const payload: any = {
+        dni: data.dni ?? '',
+        tipoDocumento: 'DNI',
+        firstName: data.firstName ?? '',
+        lastName: data.lastName ?? '',
+        nombreCompleto: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim(),
+        phoneNumber: data.phoneNumber ?? data.telefono ?? '',
+        address: data.address ?? data.direccion ?? '',
+        estado: data.estado ?? 'ACTIVO'
+      };
+
+      // Solo incluir photoUrl si viene, para no disparar la validación de URL con vacío
+      if (data.photoUrl) {
+        payload.photoUrl = data.photoUrl;
+      }
+
+      console.log('📤 Payload enviado al backend:', payload);
+
+      const response = await axiosInstance.post('/drivers/', payload, {
+        headers: { 'Content-Type': 'application/json' }
       });
+
       return response.data;
     } catch (error: any) {
+      if (error.response?.data) {
+        console.error('Error backend addConductor:', error.response.data);
+      }
       handleApiError(error);
     }
   },
 
+  // Actualizar conductor
   updateConductor: async (dni: string, data: any) => {
     try {
-      const response = await axiosInstance.put(`/drivers/${dni}`, data, {
-        headers: { "Content-Type": "application/json" },
+      const payload: any = {
+        firstName: data.firstName ?? '',
+        lastName: data.lastName ?? '',
+        nombreCompleto: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim(),
+        phoneNumber: data.phoneNumber ?? data.telefono ?? '',
+        address: data.address ?? data.direccion ?? '',
+        estado: data.estado ?? 'ACTIVO'
+      };
+
+      if (data.photoUrl) {
+        payload.photoUrl = data.photoUrl;
+      }
+
+      const response = await axiosInstance.put(`/drivers/${dni}`, payload, {
+        headers: { 'Content-Type': 'application/json' }
       });
+
       return response.data;
     } catch (error: any) {
       handleApiError(error);
     }
   },
 
+  // Eliminar conductor
   deleteConductor: async (dni: string) => {
     try {
       const response = await axiosInstance.delete(`/drivers/${dni}`);
@@ -120,14 +156,14 @@ export const conductoresService = {
     }
   },
 
+  // Estadísticas de conductores
   getStats: async () => {
     try {
       const response = await axiosInstance.get('/drivers/stats');
-      // Backend devuelve estructura: data.message.{estadísticas}
       return response.data.message;
     } catch (error) {
       console.error('Error en conductoresService.getStats:', error);
       throw error;
     }
-  },
+  }
 };

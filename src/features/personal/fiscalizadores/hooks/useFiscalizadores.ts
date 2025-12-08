@@ -1,54 +1,56 @@
 // src/features/gestion/fiscalizadores/hooks/useFiscalizadores.ts
-import { useState, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { fetchFiscalizadores } from '../services/fiscalizadoresService';
-import { Fiscalizador } from '../types';
-import { useScrollPreservation } from '@/hooks/useScrollPreservation';
+
+import { useState, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fiscalizadoresService } from "@/features/personal/fiscalizadores/services/fiscalizadoresService";
+import { useScrollPreservation } from "@/hooks/useScrollPreservation";
 
 export const useFiscalizadores = (searchTerm: string, currentPage: number) => {
   const [page, setPage] = useState(currentPage);
   const lastPageChangeRef = useRef<number>(0);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['fiscalizadores', page, searchTerm],
-    queryFn: () => fetchFiscalizadores(page),
-    staleTime: 5 * 60 * 1000, // 5 minutos de caché
-    enabled: !!page, // Solo ejecuta si page es válido
+    queryKey: ["fiscalizadores", page, searchTerm],
+    queryFn: () => fiscalizadoresService.getFiscalizadores(page),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!page
   });
 
   const { preparePageChange } = useScrollPreservation({ isLoading });
 
-  const handlePageChange = (newPage: number) => {
-    const now = Date.now();
-    
-    // Prevenir múltiples clicks rápidos (menos de 500ms)
-    if (now - lastPageChangeRef.current < 500) {
-      return;
-    }
-    
-    lastPageChangeRef.current = now;
-    preparePageChange(); // Guardar posición antes del cambio
-    setPage(newPage);
-  };
+  // ✅ ESTA ES LA RUTA CORRECTA DEL ARRAY
+  const allUsers = data?.data?.data ?? [];
 
-  const filteredFiscalizadores = data?.data?.fiscalizadores?.filter(fiscalizador => {
+  // ✅ SOLO FILTRAR LOS FISCALIZADORES
+  const fiscalizadores = allUsers.filter((u: any) =>
+    u.rol?.toLowerCase() === "fiscalizador"
+  );
+
+  // ✅ FILTRO DE BÚSQUEDA
+  const filteredFiscalizadores = fiscalizadores.filter((f: any) => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      fiscalizador.usuario.toLowerCase().includes(searchLower) ||
-      fiscalizador.email.toLowerCase().includes(searchLower) ||
-      fiscalizador.idUsuario.toString().includes(searchTerm) ||
-      (fiscalizador.nombreCompleto && fiscalizador.nombreCompleto.toLowerCase().includes(searchLower)) ||
-      (fiscalizador.dni && fiscalizador.dni.includes(searchTerm))
+      f.usuario?.toLowerCase().includes(searchLower) ||
+      f.email?.toLowerCase().includes(searchLower) ||
+      f.id?.toString().includes(searchTerm)
     );
-  }) || [];
+  });
+
+  function handlePageChange(newPage: number) {
+    const now = Date.now();
+    if (now - lastPageChangeRef.current < 500) return;
+
+    lastPageChangeRef.current = now;
+    preparePageChange();
+    setPage(newPage);
+  }
 
   return {
     fiscalizadores: filteredFiscalizadores,
-    pagination: data?.data?.pagination || null,
-    summary: data?.data?.summary || null,
+    pagination: data?.data?.pagination ?? null,
     loading: isLoading,
-    error: error?.message || null,
+    error: (error as Error)?.message ?? null,
     page,
-    handlePageChange,
+    handlePageChange
   };
 };

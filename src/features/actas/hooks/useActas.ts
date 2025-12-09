@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axiosInstance from '@/lib/axios';
-import axios from 'axios';
+import { actasService } from '../services/actasService';
 import { useScrollPreservation } from '@/hooks/useScrollPreservation';
 
 interface Record {
@@ -72,95 +71,77 @@ interface SummaryData {
   totalRecords: number;
 }
 
-const fetchRecords = async (
-  currentPage: number,
-  limit: number,
-  searchTerm: string,
-  recordType: string,
-  sortBy: string,
-  sortOrder: string
-) => {
-  const params = new URLSearchParams({
-    page: currentPage.toString(),
-    limit: limit.toString(),
-    search: searchTerm,
-    type: recordType,
-    sortBy: sortBy,
-    sortOrder: sortOrder
-  });
+// Eliminado - ahora usa actasService.getActas() directamente
 
-  const response = await axiosInstance.get(`/records?${params.toString()}`);
-
-  if (response.data.success) {
-    return {
-      records: response.data.data,
-      pagination: {
-        currentPage: response.data.currentPage,
-        totalPages: response.data.pages,
-        totalItems: response.data.total,
-        itemsPerPage: limit,
-        hasNextPage: response.data.currentPage < response.data.pages,
-        hasPrevPage: response.data.currentPage > 1,
-        nextPage: response.data.currentPage < response.data.pages ? response.data.currentPage + 1 : null,
-        prevPage: response.data.currentPage > 1 ? response.data.currentPage - 1 : null
-      },
-      summary: response.data.summary
-    };
-  }
-  
-  throw new Error('Failed to fetch records');
-};
-
-export const useActas = (
-  currentPage: number,
-  limit: number,
-  searchTerm: string,
-  recordType: string,
-  sortBy: string,
-  sortOrder: string
-) => {
+export const useActas = (page: number, searchTerm: string = '', recordType: string = 'all', sortBy: string = 'inspectionDateTime', sortOrder: string = 'DESC') => {
   const lastPageChangeRef = useRef<number>(0);
-  
-  // Hook para preservar scroll position
-  const { preparePageChange } = useScrollPreservation({ 
-    isLoading: false 
+
+  // Debug: Log parameters being passed to the hook
+  console.log('🎯 useActas llamado con parámetros:', {
+    page,
+    searchTerm: searchTerm.length >= 2 ? searchTerm : `(demasiado corto: ${searchTerm.length} chars)`,
+    recordType,
+    sortBy,
+    sortOrder
   });
 
-  // Usar React Query para cache y optimización
+  // Validaciones según backend FISCAMOTO para records
+  const SEARCH_MIN_LENGTH = 2;
+
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['actas', currentPage, limit, searchTerm, recordType, sortBy, sortOrder],
-    queryFn: () => fetchRecords(currentPage, limit, searchTerm, recordType, sortBy, sortOrder),
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos (antes era cacheTime)
-    refetchOnWindowFocus: false,
-    retry: 2,
+    queryKey: ['actas', page, searchTerm, recordType, sortBy, sortOrder],
+    queryFn: () => actasService.getActas(page, searchTerm, recordType, sortBy, sortOrder),
+    staleTime: 5 * 60 * 1000,
+    onSuccess: (data) => {
+      console.log('✅ React Query data received:', {
+        recordsCount: data?.records?.length || 0,
+        currentPage: data?.pagination?.currentPage,
+        totalPages: data?.pagination?.totalPages,
+        totalItems: data?.pagination?.totalItems
+      });
+    }
   });
+
+  // Separate query for stats (similar a otros módulos)
+  const { data: statsData } = useQuery({
+    queryKey: ['actas-stats'],
+    queryFn: () => actasService.getStats(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { preparePageChange } = useScrollPreservation({ isLoading });
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      // Resetear a página 1 cuando cambia el término de búsqueda
+      if (searchTerm.length >= SEARCH_MIN_LENGTH || searchTerm.length === 0) {
+        // Esto se manejará en el componente principal que controla la página
+      }
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const handlePageChange = (newPage: number) => {
     const now = Date.now();
-    
+
     // Prevenir múltiples clicks rápidos (menos de 500ms)
     if (now - lastPageChangeRef.current < 500) {
       return;
     }
-    
+
     lastPageChangeRef.current = now;
     preparePageChange(); // Guardar posición antes del cambio
   };
 
-  const refreshRecords = () => {
-    refetch();
-  };
-
   return {
-    records: data?.records || [],
-    loading: isLoading,
-    error: error ? (axios.isAxiosError(error)
-      ? error.response?.data?.message || 'Error al cargar las actas'
-      : 'Error al cargar las actas') : null,
+    records: data?.records || [],         // Actas listadas
     pagination: data?.pagination || null,
-    summary: data?.summary || null,
-    refreshRecords,
-    handlePageChange
+    summary: data?.summary || null,        // Summary del listado (si existe)
+    stats: statsData || null,             // Estadísticas del endpoint /api/records/stats
+    loading: isLoading,
+    error: error?.message || null,
+    page,
+    handlePageChange,
+    refreshRecords: refetch,              // Función para refrescar los datos
   };
 };

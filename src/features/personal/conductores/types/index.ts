@@ -48,10 +48,10 @@ export interface Conductor {
     totalPages: number;
     totalItems: number;
     itemsPerPage: number;
+    offset: number;
     hasNextPage: boolean;
-    hasPrevPage: boolean;
+    hasPreviousPage: boolean;
     nextPage: number | null;
-    prevPage: number | null;
   }
   
   export interface SummaryData {

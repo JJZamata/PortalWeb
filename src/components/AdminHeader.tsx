@@ -64,34 +64,6 @@ export function AdminHeader() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Notificaciones */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
-                <Bell className="w-5 h-5" />
-                <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center">
-                  3
-                </Badge>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 sm:w-80">
-              <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="flex flex-col items-start p-3 sm:p-4">
-                <span className="font-medium text-sm">Documentos por vencer</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">15 CITV vencen en los próximos 30 días</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start p-3 sm:p-4">
-                <span className="font-medium text-sm">Nueva infracción registrada</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Placa ABC-123 - Hace 2 horas</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start p-3 sm:p-4">
-                <span className="font-medium text-sm">Control técnico pendiente</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">5 vehículos requieren inspección</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           {/* Configuración */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

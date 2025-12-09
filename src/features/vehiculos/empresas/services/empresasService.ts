@@ -6,20 +6,24 @@ export const empresasService = {
     try {
       let response;
       
+      // Validaciones según backend FISCAMOTO
+      const VALID_STATUSES = ['ACTIVO', 'BAJA PROV.', 'SUSPENDIDO'];
+      const SEARCH_MIN_LENGTH = 3;
+
       // Determinar qué endpoint usar basado en los parámetros
-      const hasSearch = searchTerm && searchTerm.length >= 2;
-      const hasStatusFilter = statusFilter && statusFilter !== 'ALL';
+      const hasSearch = searchTerm && searchTerm.length >= SEARCH_MIN_LENGTH;
+      const hasStatusFilter = statusFilter && statusFilter !== 'ALL' && VALID_STATUSES.includes(statusFilter);
 
       if (hasSearch && hasStatusFilter) {
-        // Búsqueda + filtro: usar endpoint de búsqueda y filtrar en frontend
-        response = await axiosInstance.get(`/companies/search?query=${encodeURIComponent(searchTerm)}&page=${page}`);
+        // Búsqueda + filtro: usar endpoint con parámetros query según documentación
+        response = await axiosInstance.get(`/companies?search=${encodeURIComponent(searchTerm)}&status=${statusFilter}&page=${page}`);
         
         if (response.data.success) {
-          const companies = response.data.data.companies || [];
+          const companies = response.data.data.data || [];
           const pagination = response.data.data.pagination || {};
-          
+
           // Filtrar por estado en frontend
-          const filteredCompanies = companies.filter((company: any) => 
+          const filteredCompanies = companies.filter((company: any) =>
             company.rucStatus === statusFilter
           );
 
@@ -32,7 +36,7 @@ export const empresasService = {
             fecha_vencimiento: company.expirationDate || '',
             entidad_emisora: "Municipalidad Distrital La Joya",
             estado: company.rucStatus || 'Sin Estado',
-            vehiculos_asociados: company.vehicleCount || 0
+            vehiculos_asociados: company.vehicleCount || company.vehicle_count || 0
           }));
 
           return {
@@ -46,10 +50,10 @@ export const empresasService = {
         }
       } else if (hasSearch) {
         // Solo búsqueda
-        response = await axiosInstance.get(`/companies/search?query=${encodeURIComponent(searchTerm)}&page=${page}`);
+        response = await axiosInstance.get(`/companies?search=${encodeURIComponent(searchTerm)}&page=${page}`);
       } else if (hasStatusFilter) {
         // Solo filtro por estado
-        response = await axiosInstance.get(`/companies/filter?status=${statusFilter}&page=${page}`);
+        response = await axiosInstance.get(`/companies?status=${statusFilter}&page=${page}`);
       } else {
         // Sin filtros
         response = await axiosInstance.get(`/companies?page=${page}`);
@@ -57,7 +61,8 @@ export const empresasService = {
 
       if (response.data.success) {
         const data = response.data.data;
-        const companies = data.companies || [];
+        // Corrección: Backend devuelve "data" anidado en lugar de "companies" o "vehicles"
+        const companies = data.data || [];
         
         // Transform companies to match expected structure
         const empresasTransformadas = companies.map((company: any) => ({
@@ -69,7 +74,7 @@ export const empresasService = {
           fecha_vencimiento: company.expirationDate || '',
           entidad_emisora: "Municipalidad Distrital La Joya",
           estado: company.rucStatus || 'Sin Estado',
-          vehiculos_asociados: company.vehicleCount || 0
+          vehiculos_asociados: company.vehicleCount || company.vehicle_count || 0
         }));
 
         return {
@@ -87,12 +92,11 @@ export const empresasService = {
 
   // Método específico para búsqueda
   searchEmpresas: async (query: string, page: number = 1) => {
-    const response = await axiosInstance.get(`/companies/search?query=${encodeURIComponent(query)}&page=${page}`);
-    
+    const response = await axiosInstance.get(`/companies?search=${encodeURIComponent(query)}&page=${page}`);
+
     if (response.data.success) {
-      const data = response.data.data;
-      const companies = data.companies || [];
-      
+      const companies = response.data.data.data || [];
+
       const empresasTransformadas = companies.map((company: any) => ({
         ruc: company.ruc || '',
         nombre: company.name || '',
@@ -102,7 +106,7 @@ export const empresasService = {
         fecha_vencimiento: company.expirationDate || '',
         entidad_emisora: "Municipalidad Distrital La Joya",
         estado: company.rucStatus || 'Sin Estado',
-        vehiculos_asociados: company.vehicleCount || 0
+        vehiculos_asociados: company.vehicleCount || company.vehicle_count || 0
       }));
 
       return {
@@ -116,12 +120,11 @@ export const empresasService = {
 
   // Método específico para filtrado por estado
   filterByStatus: async (status: string, page: number = 1) => {
-    const response = await axiosInstance.get(`/companies/filter?status=${status}&page=${page}`);
-    
+    const response = await axiosInstance.get(`/companies?status=${status}&page=${page}`);
+
     if (response.data.success) {
-      const data = response.data.data;
-      const companies = data.companies || [];
-      
+      const companies = response.data.data.data || [];
+
       const empresasTransformadas = companies.map((company: any) => ({
         ruc: company.ruc || '',
         nombre: company.name || '',
@@ -131,7 +134,7 @@ export const empresasService = {
         fecha_vencimiento: company.expirationDate || '',
         entidad_emisora: "Municipalidad Distrital La Joya",
         estado: company.rucStatus || 'Sin Estado',
-        vehiculos_asociados: company.vehicleCount || 0
+        vehiculos_asociados: company.vehicleCount || company.vehicle_count || 0
       }));
 
       return {
@@ -148,10 +151,14 @@ export const empresasService = {
     return response.data.data;
   },
   addEmpresa: async (data: any) => {
-    const response = await axiosInstance.post('/companies', data, {
-      headers: { "Content-Type": "application/json" },
-    });
-    return response.data;
+    try {
+      const response = await axiosInstance.post('/companies', data, {
+        headers: { "Content-Type": "application/json" },
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
   },
   updateEmpresa: async (ruc: string, data: any) => {
     const response = await axiosInstance.put(`/companies/${ruc}`, data, {
@@ -187,7 +194,8 @@ export const empresasService = {
     throw lastError;
   },
   getStats: async () => {
-    const response = await axiosInstance.get('/companies/admin/stats');
-    return response.data.data;
+    const response = await axiosInstance.get('/companies/stats');
+    // Backend devuelve estructura: data.general.{estadísticas}
+    return response.data.data.general;
   },
 };

@@ -7,7 +7,7 @@ export const useUsuarioDetail = () => {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['usuarioDetail', selectedUsuarioId],
-    queryFn: () => selectedUsuarioId ? usuariosService.getUsuarioDetail(selectedUsuarioId) : null,
+    queryFn: () => selectedUsuarioId ? usuariosService.getUsuarioDetail(selectedUsuarioId) : Promise.resolve(null),
     enabled: !!selectedUsuarioId,
     staleTime: 5 * 60 * 1000,
   });

@@ -83,10 +83,19 @@ export const AddEmpresaDialog = ({ onSuccess }: Props) => {
       onSuccess();
     },
     onError: (error: any) => {
-      toast({ 
-        title: "❌ Error al registrar empresa", 
-        description: error.response?.data?.message || 'Error desconocido al registrar la empresa', 
-        variant: "destructive" 
+      // Manejo mejorado de errores
+      let errorMessage = error.response?.data?.message || 'Error desconocido al registrar la empresa';
+
+      // Si hay errores específicos de validación, mostrar el primer error
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const firstError = error.response.data.errors[0];
+        errorMessage = firstError.message || errorMessage;
+      }
+
+      toast({
+        title: "❌ Error al registrar empresa",
+        description: errorMessage,
+        variant: "destructive"
       });
     },
   });

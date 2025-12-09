@@ -19,8 +19,25 @@ export const DeleteConductorDialog = ({ open, onOpenChange, dni, onConfirm }: Pr
     try {
       await onConfirm();
       toast({ title: "Conductor eliminado", description: "El conductor fue eliminado exitosamente.", variant: "success" });
-    } catch (error) {
-      toast({ title: "Error al eliminar conductor", description: "Error desconocido", variant: "destructive" });
+    } catch (error: any) {
+      // Manejo mejorado de errores
+      let errorMessage = 'Error desconocido al eliminar el conductor';
+
+      // Extraer mensaje específico de validación
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const firstError = error.response.data.errors[0];
+        errorMessage = firstError.message || errorMessage;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast({
+        title: "Error al eliminar conductor",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setSubmitting(false);
     }

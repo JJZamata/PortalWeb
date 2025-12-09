@@ -12,16 +12,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { RefreshCw, Search, Trash2 } from "lucide-react";
+import { RefreshCw, Search, Trash2, Eye, Edit } from "lucide-react";
 import { Documento } from "../types";
 
 interface Props {
   documentos: Documento[];
   loading: boolean;
   onDelete: (documento: Documento) => void;
+  onViewInsuranceDetail?: (policyNumber: string) => void;
+  onViewTechnicalReviewDetail?: (reviewCode: string) => void;
+  onEditInsurance?: (policyNumber: string) => void;
+  onEditTechnicalReview?: (reviewId: string) => void;
 }
 
-export const DocumentosTable = ({ documentos, loading, onDelete }: Props) => {
+export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsuranceDetail, onViewTechnicalReviewDetail, onEditInsurance, onEditTechnicalReview }: Props) => {
   const getBadgeVariant = (estado: string) => {
     const estadoLower = estado.toLowerCase();
     switch (estadoLower) {
@@ -53,14 +57,13 @@ export const DocumentosTable = ({ documentos, loading, onDelete }: Props) => {
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Fecha Emisión</TableHead>
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Vencimiento</TableHead>
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Estado</TableHead>
-            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Detalles</TableHead>
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {documentos.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="h-32 text-center">
+              <TableCell colSpan={8} className="h-32 text-center">
                 <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                   <Search className="w-8 h-8 mb-2" />
                   <p>No hay documentos disponibles</p>
@@ -84,23 +87,63 @@ export const DocumentosTable = ({ documentos, loading, onDelete }: Props) => {
                     {documento.estado}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-gray-600 dark:text-gray-400 text-sm">
-                  {documento.detalles ? (
-                    documento.tipo === 'REVISION'
-                      ? `Resultado: ${documento.detalles.inspection_result}`
-                      : documento.tipo === 'AFOCAT'
-                        ? `Cobertura: ${documento.detalles.cobertura}`
-                        : 'Sin detalles'
-                  ) : 'Sin detalles'}
-                </TableCell>
                 <TableCell>
-                  <div className="flex justify-center gap-2">
+                  <div className="flex justify-center gap-1">
+                    {/* Botón de editar seguros AFOCAT */}
+                    {documento.tipo === 'AFOCAT' && onEditInsurance && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                        onClick={() => onEditInsurance(documento.numero)}
+                        title="Editar seguro"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {/* Botón de editar revisiones REVISION */}
+                    {documento.tipo === 'REVISION' && onEditTechnicalReview && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
+                        onClick={() => onEditTechnicalReview(documento.numero)}
+                        title="Editar revisión técnica"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {/* Botón de ver detalles solo para seguros AFOCAT */}
+                    {documento.tipo === 'AFOCAT' && onViewInsuranceDetail && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                        onClick={() => onViewInsuranceDetail(documento.numero)}
+                        title="Ver detalles"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {/* Botón de ver detalles solo para revisiones REVISION */}
+                    {documento.tipo === 'REVISION' && onViewTechnicalReviewDetail && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
+                        onClick={() => onViewTechnicalReviewDetail(documento.numero)}
+                        title="Ver detalles"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    )}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
                           variant="ghost"
                           size="sm"
                           className="hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                          title="Eliminar documento"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

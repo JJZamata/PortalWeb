@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, RefreshCw, Search } from "lucide-react";
+import { Eye, Edit, RefreshCw, Search, Trash2, Key, Smartphone } from "lucide-react";
 import { Usuario } from "../types";
 
 interface Props {
@@ -9,10 +9,13 @@ interface Props {
   loading: boolean;
   onView: (id: number) => void;
   onEdit: (usuario: Usuario) => void;
+  onChangePassword: (usuario: Usuario) => void;
+  onResetDevice: (usuario: Usuario) => void;
+  onDelete: (usuario: Usuario) => void;
   searchTerm: string;
 }
 
-export const UsuariosTable = ({ usuarios, loading, onView, onEdit, searchTerm }: Props) => {
+export const UsuariosTable = ({ usuarios, loading, onView, onEdit, onChangePassword, onResetDevice, onDelete, searchTerm }: Props) => {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'admin':
@@ -36,6 +39,37 @@ export const UsuariosTable = ({ usuarios, loading, onView, onEdit, searchTerm }:
       'web_operator': 'Operador Web'
     };
     return roleNames[role as keyof typeof roleNames] || 'Sin Rol';
+  };
+
+  const renderRoles = (rolesString: string) => {
+    if (!rolesString) return <span className="text-gray-500">Sin roles</span>;
+
+    const roles = rolesString.split(',').map(role => role.trim()).filter(role => role);
+
+    if (roles.length === 0) return <span className="text-gray-500">Sin roles</span>;
+
+    if (roles.length === 1) {
+      const role = roles[0];
+      return (
+        <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getRoleBadge(role)}`}>
+          {getRoleDisplayName(role)}
+        </Badge>
+      );
+    }
+
+    return (
+      <div className="flex flex-wrap gap-1">
+        {roles.map((role, index) => (
+          <Badge
+            key={index}
+            variant="secondary"
+            className={`border font-semibold rounded-full px-2 py-1 text-xs ${getRoleBadge(role)}`}
+          >
+            {getRoleDisplayName(role)}
+          </Badge>
+        ))}
+      </div>
+    );
   };
 
   const getStatusBadge = (estado: string) => {
@@ -95,9 +129,7 @@ export const UsuariosTable = ({ usuarios, loading, onView, onEdit, searchTerm }:
                 <TableCell className="font-semibold text-gray-900 dark:text-gray-300 py-4">{usuario.usuario}</TableCell>
                 <TableCell className="text-gray-700 dark:text-gray-300 py-4">{usuario.email}</TableCell>
                 <TableCell className="py-4">
-                  <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getRoleBadge(usuario.rol)}`}>
-                    {getRoleDisplayName(usuario.rol)}
-                  </Badge>
+                  {renderRoles(usuario.rol)}
                 </TableCell>
                 <TableCell className="py-4">
                   <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getStatusBadge(usuario.estado)}`}>
@@ -107,22 +139,51 @@ export const UsuariosTable = ({ usuarios, loading, onView, onEdit, searchTerm }:
                 <TableCell className="text-gray-700 dark:text-gray-300 py-4">{usuario.ultimo_acceso}</TableCell>
                 <TableCell className="text-gray-700 dark:text-gray-300 py-4">{usuario.dispositivo}</TableCell>
                 <TableCell className="text-center py-4">
-                  <div className="flex justify-center gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="hover:bg-purple-100 dark:hover:bg-purple-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-purple-700 dark:hover:text-purple-300"
+                  <div className="flex justify-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-purple-100 dark:hover:bg-purple-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-purple-700 dark:hover:text-purple-300 p-2"
                       onClick={() => onView(usuario.id)}
+                      title="Ver detalles"
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="hover:bg-purple-100 dark:hover:bg-purple-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-purple-700 dark:hover:text-purple-300"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-300 p-2"
                       onClick={() => onEdit(usuario)}
+                      title="Editar usuario"
                     >
                       <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-orange-100 dark:hover:bg-orange-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-orange-700 dark:hover:text-orange-300 p-2"
+                      onClick={() => onChangePassword(usuario)}
+                      title="Cambiar contraseña"
+                    >
+                      <Key className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-cyan-100 dark:hover:bg-cyan-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-cyan-700 dark:hover:text-cyan-300 p-2"
+                      onClick={() => onResetDevice(usuario)}
+                      title="Resetear dispositivo"
+                    >
+                      <Smartphone className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-red-700 dark:hover:text-red-300 p-2"
+                      onClick={() => onDelete(usuario)}
+                      title="Eliminar usuario"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </TableCell>

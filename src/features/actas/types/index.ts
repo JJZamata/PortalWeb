@@ -1,6 +1,7 @@
 export interface Record {
   id: number;
-  recordType: 'conforme' | 'noconforme';
+  recordType: 'conforme' | 'noconforme'; // Mantener compatibilidad
+  type: 'CONFORME' | 'NOCONFORME'; // Campo principal para separación
   vehiclePlate: string;
   location: string;
   observations: string;
@@ -16,6 +17,7 @@ export interface Record {
     name: string;
     dni: string;
     phone: string;
+    address: string;
     licenseNumber: string;
     category: string;
   } | null;
@@ -63,10 +65,10 @@ export interface PaginationData {
   totalPages: number;
   totalItems: number;
   itemsPerPage: number;
+  offset: number;
   hasNextPage: boolean;
-  hasPrevPage: boolean;
+  hasPreviousPage: boolean;
   nextPage: number | null;
-  prevPage: number | null;
 }
 
 export interface SummaryData {

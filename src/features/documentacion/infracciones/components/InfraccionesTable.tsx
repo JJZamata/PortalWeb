@@ -1,19 +1,21 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, RefreshCw, Search } from "lucide-react";
+import { Eye, Edit, Trash2, RefreshCw, Search } from "lucide-react";
 import { Violation } from "../types";
 
 interface Props {
   violations: Violation[];
   loading: boolean;
-  fetchViolationDetail: (id: number) => void;
+  fetchViolationDetail: (code: string) => void;
+  onEditViolation: (violation: Violation) => void;
+  onDeleteViolation: (violation: Violation) => void;
 }
 
-export const InfraccionesTable = ({ violations, loading, fetchViolationDetail }: Props) => {
-  const getSeverityBadge = (severity: Violation['severity']) => {
+export const InfraccionesTable = ({ violations, loading, fetchViolationDetail, onEditViolation, onDeleteViolation }: Props) => {
+  const getSeverityBadge = (severity: Violation['clasificacion']['gravedad']) => {
     switch (severity) {
-      case 'mild':
+      case 'minor':
         return 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700';
       case 'serious':
         return 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700';
@@ -24,7 +26,7 @@ export const InfraccionesTable = ({ violations, loading, fetchViolationDetail }:
     }
   };
 
-  const getTargetBadge = (target: Violation['target']) => {
+  const getTargetBadge = (target: Violation['clasificacion']['objetivo']) => {
     switch (target) {
       case 'driver-owner':
         return 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700';
@@ -35,12 +37,12 @@ export const InfraccionesTable = ({ violations, loading, fetchViolationDetail }:
     }
   };
 
-  const translateSeverity = (severity: Violation['severity']) => {
-    const map = { mild: 'Leve', serious: 'Grave', very_serious: 'Muy Grave' };
+  const translateSeverity = (severity: Violation['clasificacion']['gravedad']) => {
+    const map = { minor: 'Leve', serious: 'Grave', very_serious: 'Muy Grave' };
     return map[severity] || 'Desconocida';
   };
 
-  const translateTarget = (target: Violation['target']) => {
+  const translateTarget = (target: Violation['clasificacion']['objetivo']) => {
     const map = { 'driver-owner': 'Conductor/Propietario', company: 'Empresa' };
     return map[target] || 'Desconocido';
   };
@@ -80,30 +82,58 @@ export const InfraccionesTable = ({ violations, loading, fetchViolationDetail }:
             </TableRow>
           ) : (
             violations.map((v) => (
-              <TableRow key={v.id} className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 transition-colors">
-                <TableCell className="font-mono font-bold text-[#812020] dark:text-[#fca5a5]">{v.code}</TableCell>
-                <TableCell className="max-w-md text-gray-900 dark:text-gray-100">{v.description}</TableCell>
+              <TableRow key={v.identificacion.id} className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 transition-colors">
+                <TableCell className="font-mono font-bold text-[#812020] dark:text-[#fca5a5]">{v.identificacion.codigo}</TableCell>
+                <TableCell className="max-w-md text-gray-900 dark:text-gray-100">
+                  <div className="max-w-md">
+                    <p className="text-sm">{v.descripcion.resumen}</p>
+                    {v.descripcion.resumen !== v.descripcion.texto && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{v.descripcion.texto}</p>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className={`border font-semibold rounded-full ${getSeverityBadge(v.severity)}`}>
-                    {translateSeverity(v.severity)}
+                  <Badge variant="secondary" className={`border font-semibold rounded-full ${getSeverityBadge(v.clasificacion.gravedad)}`}>
+                    {translateSeverity(v.clasificacion.gravedad)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-gray-900 dark:text-gray-100">{v.administrativeMeasure}</TableCell>
+                <TableCell className="text-gray-900 dark:text-gray-100">{v.sancion.medidaAdministrativa}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className={`border font-semibold rounded-full ${getTargetBadge(v.target)}`}>
-                    {translateTarget(v.target)}
+                  <Badge variant="secondary" className={`border font-semibold rounded-full ${getTargetBadge(v.clasificacion.objetivo)}`}>
+                    {translateTarget(v.clasificacion.objetivo)}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right font-semibold text-[#812020] dark:text-[#fca5a5]">{v.uitPercentage}</TableCell>
+                <TableCell className="text-right font-semibold text-[#812020] dark:text-[#fca5a5]">{v.sancion.porcentajeUIT}</TableCell>
                 <TableCell className="text-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 rounded-lg"
-                    onClick={() => fetchViolationDetail(v.id)}
-                  >
-                    <Eye className="w-4 h-4 text-[#812020] dark:text-[#fca5a5]" />
-                  </Button>
+                  <div className="flex items-center justify-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg"
+                      onClick={() => fetchViolationDetail(v.identificacion.codigo)}
+                      title="Ver detalles"
+                    >
+                      <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg"
+                      onClick={() => onEditViolation(v)}
+                      title="Editar infracción"
+                    >
+                      <Edit className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                      onClick={() => onDeleteViolation(v)}
+                      title="Eliminar infracción"
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))

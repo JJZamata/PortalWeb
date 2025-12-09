@@ -1,12 +1,17 @@
 import { useState, useRef } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-import { useInfracciones } from './hooks/useInfracciones';
-import { useInfraccionDetail } from './hooks/useInfraccionDetail';
+import { useInfraccionesLegacyQuery } from './queries/useInfraccionesQuery';
+import { useInfraccionDetailQuery } from './queries/useInfraccionDetailQuery';
+import { useInfraccionesStatsQuery } from './queries/useInfraccionDetailQuery';
 import { InfraccionesFilters } from './components/InfraccionesFilters';
+import { InfraccionesSorting } from './components/InfraccionesSorting';
 import { InfraccionesTable } from './components/InfraccionesTable';
 import { InfraccionDetailDialog } from './components/InfraccionDetailDialog';
+import { CreateInfraccionDialog } from './components/CreateInfraccionDialog';
+import { EditInfraccionDialog } from './components/EditInfraccionDialog';
+import { DeleteInfraccionDialog } from './components/DeleteInfraccionDialog';
 import { PaginationControls } from './components/PaginationControls';
-import { RefreshCw, XCircle } from 'lucide-react';
+import { RefreshCw, XCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
@@ -14,14 +19,32 @@ const InfraccionesView = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [severityFilter, setSeverityFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('code');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [selectedViolationCode, setSelectedViolationCode] = useState<string | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedViolation, setSelectedViolation] = useState<any>(null);
   const lastPageChangeRef = useRef<number>(0);
   const limit = 6;
 
-  const { violations, loading, error, paginationData, stats, loadingStats, refreshViolations } = useInfracciones(currentPage, limit, severityFilter, searchTerm);
-  const { selectedViolation, loadingDetail, errorDetail, fetchViolationDetail, setSelectedViolation } = useInfraccionDetail();
+  // Queries
+  const { data: violationsData, isLoading: loading, error, refetch: refreshViolations } = useInfraccionesLegacyQuery(currentPage, limit, severityFilter, searchTerm, sortBy, sortOrder);
+  const { data: statsData, isLoading: loadingStats } = useInfraccionesStatsQuery();
+  const { data: violationDetailData, isLoading: loadingDetail, error: detailError } = useInfraccionDetailQuery(selectedViolationCode || '', showDetailDialog);
+
+  const violations = violationsData?.data || [];
+  const paginationData = violationsData?.pagination;
+  const stats = statsData?.data;
+
+  // Debug para paginación
+  console.log('Pagination Data:', paginationData);
+  console.log('Current Page:', currentPage);
 
   const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= (paginationData?.totalPages || 1)) {
+    if (newPage >= 1 && newPage <= (paginationData?.totalPages || 1)) {
       const now = Date.now();
       if (now - lastPageChangeRef.current < 500) return;
       lastPageChangeRef.current = now;
@@ -35,13 +58,47 @@ const InfraccionesView = () => {
     setCurrentPage(1);
   };
 
+  const handleSortChange = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setCurrentPage(1); // Resetear a la primera página cuando se cambia el ordenamiento
+  };
+
+  const fetchViolationDetail = (code: string) => {
+    setSelectedViolationCode(code);
+    setShowDetailDialog(true);
+  };
+
+  const closeDetailDialog = () => {
+    setShowDetailDialog(false);
+    setSelectedViolationCode(null);
+  };
+
+  const handleEditViolation = (violation: any) => {
+    setSelectedViolation(violation);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteViolation = (violation: any) => {
+    setSelectedViolation(violation);
+    setShowDeleteDialog(true);
+  };
+
+  const handleCRUDSuccess = () => {
+    refreshViolations();
+    // Resetear a la primera página después de CRUD
+    setCurrentPage(1);
+  };
+
+  const selectedViolationDetail = violationDetailData?.data || null;
+
   if (error) {
     return (
       <AdminLayout>
         <div className="flex flex-col items-center justify-center h-64">
           <XCircle className="w-12 h-12 text-red-500 dark:text-red-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error al cargar datos</h3>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">{error?.message || 'Error desconocido'}</p>
           <Button onClick={refreshViolations} variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
             <RefreshCw className="w-4 h-4 mr-2" />
             Reintentar
@@ -70,25 +127,25 @@ const InfraccionesView = () => {
               <div className="flex items-center gap-6">
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                    {loadingStats ? '-' : stats.minor}
+                    {loadingStats ? '-' : stats?.resumenGeneral?.distribucionPorGravedad?.leves || 0}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Leves</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-orange-700 dark:text-orange-400">
-                    {loadingStats ? '-' : stats.serious}
+                    {loadingStats ? '-' : stats?.resumenGeneral?.distribucionPorGravedad?.graves || 0}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Graves</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-red-700 dark:text-red-400">
-                    {loadingStats ? '-' : stats.verySerious}
+                    {loadingStats ? '-' : stats?.resumenGeneral?.distribucionPorGravedad?.muyGraves || 0}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Muy Graves</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl md:text-3xl font-bold text-[#74140B] dark:text-red-400">
-                    {loadingStats ? '-' : stats.totalViolations}
+                    {loadingStats ? '-' : stats?.resumenGeneral?.totalViolaciones || 0}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">Total</p>
                 </div>
@@ -107,8 +164,21 @@ const InfraccionesView = () => {
                 </CardTitle>
                 <CardDescription className="text-gray-600 dark:text-gray-400">
                   Catálogo completo de infracciones de tránsito
+                  {paginationData && (
+                    <span className="ml-2 text-sm">
+                      ({paginationData.totalItems} infracciones encontradas)
+                    </span>
+                  )}
                 </CardDescription>
               </div>
+              <Button
+                onClick={() => setShowCreateDialog(true)}
+                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                disabled={loading}
+              >
+                <Plus className="w-4 h-4" />
+                Nueva Infracción
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -120,26 +190,56 @@ const InfraccionesView = () => {
               clearFilters={clearFilters}
               loading={loading}
             />
-            <InfraccionesTable 
-              violations={violations} 
-              loading={loading} 
-              fetchViolationDetail={fetchViolationDetail} 
+
+            <InfraccionesSorting
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
+              disabled={loading}
+            />
+
+            <InfraccionesTable
+              violations={violations}
+              loading={loading}
+              fetchViolationDetail={fetchViolationDetail}
+              onEditViolation={handleEditViolation}
+              onDeleteViolation={handleDeleteViolation}
             />
             {paginationData && (
-              <PaginationControls 
-                pagination={paginationData} 
-                onPageChange={handlePageChange} 
+              <PaginationControls
+                pagination={paginationData}
+                onPageChange={handlePageChange}
               />
             )}
           </CardContent>
         </Card>
 
         <InfraccionDetailDialog
-          open={!!selectedViolation}
-          onOpenChange={(open) => !open && setSelectedViolation(null)}
-          selectedViolation={selectedViolation}
+          open={showDetailDialog}
+          onOpenChange={closeDetailDialog}
+          selectedViolation={selectedViolationDetail}
           loadingDetail={loadingDetail}
-          errorDetail={errorDetail}
+          errorDetail={detailError?.message || null}
+        />
+
+        <CreateInfraccionDialog
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+          onSuccess={handleCRUDSuccess}
+        />
+
+        <EditInfraccionDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          violation={selectedViolation}
+          onSuccess={handleCRUDSuccess}
+        />
+
+        <DeleteInfraccionDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          violation={selectedViolation}
+          onSuccess={handleCRUDSuccess}
         />
       </div>
     </AdminLayout>

@@ -185,11 +185,10 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
       
       {/* Sidebar */}
       <div className={cn(
-        "fixed left-0 top-0 z-50 bg-background border-r border-border transform transition-transform duration-300 ease-in-out",
+        // Fixed on mobile/tablet, sticky on desktop so it never scrolls away
+        "fixed left-0 top-0 z-50 bg-background border-r border-border transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:left-0",
         // Responsive widths
-        "w-80 sm:w-80 md:w-80 lg:relative lg:translate-x-0 lg:w-64 xl:w-72",
-        // Mobile/tablet behavior
-        "lg:static",
+        "w-80 sm:w-80 md:w-80 lg:w-64 xl:w-72",
         // Altura completa siempre
         "h-screen min-h-screen lg:h-screen lg:min-h-screen",
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"

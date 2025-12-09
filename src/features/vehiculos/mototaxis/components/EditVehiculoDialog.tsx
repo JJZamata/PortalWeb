@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit, Car, User, Building2, Settings, Calendar, Hash } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -110,14 +111,39 @@ export const EditVehiculoDialog = ({ open, onOpenChange, vehiculo, onSuccess }: 
                       <Settings className="w-4 h-4" />
                       Estado del Vehículo
                     </FormLabel>
-                    <FormControl>
-                      <select {...field} className="w-full border border-gray-300 dark:border-gray-600 rounded-md h-10 px-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400">
-                        <option value="OPERATIVO">🟢 Operativo</option>
-                        <option value="REPARACIÓN">⚙️ Reparación</option>
-                        <option value="FUERA DE SERVICIO">🔴 Fuera de Servicio</option>
-                        <option value="INSPECCIÓN">✅ Inspección</option>
-                      </select>
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500">
+                          <SelectValue placeholder="Selecciona el estado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
+                        <SelectItem value="OPERATIVO">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span>Operativo</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="REPARACIÓN">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            <span>En Reparación</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="FUERA DE SERVICIO">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            <span>Fuera de Servicio</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="INSPECCIÓN">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <span>En Inspección</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -157,10 +183,23 @@ export const EditVehiculoDialog = ({ open, onOpenChange, vehiculo, onSuccess }: 
 
                 <FormField name="typeId" control={form.control} render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">ID Tipo de Vehículo</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="number" placeholder="Ej: 1" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" min="1" />
-                    </FormControl>
+                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                      <Settings className="w-4 h-4" />
+                      Tipo de Vehículo
+                    </FormLabel>
+                    <Select onValueChange={value => field.onChange(Number(value))} value={String(field.value)}>
+                      <FormControl>
+                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500">
+                          <SelectValue placeholder="Selecciona el tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <SelectItem value="1">Mototaxi</SelectItem>
+                        <SelectItem value="2">Taxi</SelectItem>
+                        <SelectItem value="3">Otro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Selecciona el tipo de vehículo. Mototaxi es la opción más común.</p>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -184,6 +223,7 @@ export const EditVehiculoDialog = ({ open, onOpenChange, vehiculo, onSuccess }: 
                       <FormControl>
                         <Input {...field} placeholder="Ej: 12345678" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-green-500 dark:focus:border-green-400" maxLength={8} />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground">El propietario debe estar registrado previamente.</p>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -205,6 +245,7 @@ export const EditVehiculoDialog = ({ open, onOpenChange, vehiculo, onSuccess }: 
                       <FormControl>
                         <Input {...field} placeholder="Ej: 20123456789" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-purple-500 dark:focus:border-purple-400" maxLength={11} />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground">La empresa debe estar registrada en el sistema.</p>
                       <FormMessage />
                     </FormItem>
                   )} />

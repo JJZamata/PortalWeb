@@ -131,11 +131,25 @@ export const vehiculosService = {
   
   addVehiculo: async (data: any) => {
     try {
-      const response = await axiosInstance.post('/vehicles/', data, {
+      // Normalizar y limpiar datos antes de enviar
+      const payload = {
+        plateNumber: data.plateNumber?.toUpperCase().trim(),
+        companyRuc: data.companyRuc?.trim(),
+        ownerDni: data.ownerDni?.trim(),
+        typeId: data.typeId,
+        vehicleStatus: data.vehicleStatus,
+        brand: data.brand?.trim(),
+        model: data.model?.trim(),
+        manufacturingYear: data.manufacturingYear
+      };
+      
+      console.log('📤 Payload enviado a /vehicles/:', payload);
+      const response = await axiosInstance.post('/vehicles/', payload, {
         headers: { "Content-Type": "application/json" },
       });
       return response.data;
     } catch (error: any) {
+      console.error('❌ Error al crear vehículo:', error.response?.data);
       handleApiError(error);
     }
   },

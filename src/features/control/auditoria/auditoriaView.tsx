@@ -76,24 +76,24 @@ const AuditoriaView = () => {
             <div className="flex items-center gap-6">
               <div className="text-center">
                 <p className="text-2xl md:text-3xl font-bold text-emerald-700 dark:text-emerald-400">
-                  {loading ? '-' : estadisticas?.total_inserts || 0}
+                  {loading ? '-' : estadisticas?.total_registros || 0}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Creaciones</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
-                  {loading ? '-' : estadisticas?.total_updates || 0}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Actualizaciones</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Total Operaciones</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl md:text-3xl font-bold text-red-700 dark:text-red-400">
-                  {loading ? '-' : estadisticas?.total_deletes || 0}
+                  {loading ? '-' : estadisticas?.error_logs || 0}
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Eliminaciones</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Errores</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-indigo-700 dark:text-indigo-400">{loading ? '-' : estadisticas?.total_registros || 0}</p>
+                <p className="text-2xl md:text-3xl font-bold text-blue-700 dark:text-blue-400">
+                  {loading ? '-' : estadisticas?.avg_duration_ms || '0'}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Duración Promedio (ms)</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-indigo-700 dark:text-indigo-400">{loading ? '-' : pagination?.total_records || 0}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Total Registros</p>
               </div>
             </div>
@@ -134,13 +134,15 @@ const AuditoriaView = () => {
                   <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                   <Select value={actionFilter} onValueChange={setActionFilter}>
                     <SelectTrigger className="h-12 pl-10 border-gray-200 dark:border-gray-700 rounded-xl focus:border-indigo-500 focus:ring-indigo-500/20 bg-white dark:bg-gray-800 dark:text-white">
-                      <SelectValue placeholder="Tipo de operación" />
+                      <SelectValue placeholder="Método HTTP" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todas las operaciones</SelectItem>
-                      <SelectItem value="INSERT">Creaciones</SelectItem>
-                      <SelectItem value="UPDATE">Actualizaciones</SelectItem>
-                      <SelectItem value="DELETE">Eliminaciones</SelectItem>
+                      <SelectItem value="all">Todos los métodos</SelectItem>
+                      <SelectItem value="GET">GET (Lectura)</SelectItem>
+                      <SelectItem value="POST">POST (Creación)</SelectItem>
+                      <SelectItem value="PUT">PUT (Actualización)</SelectItem>
+                      <SelectItem value="DELETE">DELETE (Eliminación)</SelectItem>
+                      <SelectItem value="PATCH">PATCH (Modificación)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

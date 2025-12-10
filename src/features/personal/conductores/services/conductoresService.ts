@@ -65,7 +65,6 @@ export const conductoresService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en conductoresService.getConductores:', error);
       throw error;
     }
   },
@@ -83,7 +82,6 @@ export const conductoresService = {
       if (response.data.success) return response.data.data;
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en conductoresService.getConductorDetail:', error);
       throw error;
     }
   },
@@ -108,17 +106,12 @@ export const conductoresService = {
         payload.photoUrl = data.photoUrl;
       }
 
-      console.log('📤 Payload enviado al backend:', payload);
-
       const response = await axiosInstance.post('/drivers/', payload, {
         headers: { 'Content-Type': 'application/json' }
       });
 
       return response.data;
     } catch (error: any) {
-      if (error.response?.data) {
-        console.error('Error backend addConductor:', error.response.data);
-      }
       handleApiError(error);
     }
   },
@@ -169,7 +162,6 @@ export const conductoresService = {
       const response = await axiosInstance.get('/drivers/stats');
       return response.data.message;
     } catch (error) {
-      console.error('Error en conductoresService.getStats:', error);
       throw error;
     }
   }

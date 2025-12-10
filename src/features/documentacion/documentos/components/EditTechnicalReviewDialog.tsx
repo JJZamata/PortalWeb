@@ -31,9 +31,7 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
   // Form state
   const [formData, setFormData] = useState({
     vehiclePlate: "",
-    issueDate: "",
-    expirationDate: "",
-    inspectionResult: "",
+    inspectionResult: "" as '' | 'APROBADO' | 'OBSERVADO',
     certifyingCompany: "",
   });
 
@@ -42,9 +40,7 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
     if (technicalReview && open) {
       setFormData({
         vehiclePlate: technicalReview.vehiculo.placa || "",
-        issueDate: technicalReview.fechas.emision?.split('T')[0] || "",
-        expirationDate: technicalReview.fechas.vencimiento?.split('T')[0] || "",
-        inspectionResult: technicalReview.revision.inspectionResult || "",
+        inspectionResult: (technicalReview.revision.inspectionResult as 'APROBADO' | 'OBSERVADO' | '') || "",
         certifyingCompany: technicalReview.revision.certifyingCompany || "",
       });
     }
@@ -57,20 +53,25 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
 
     setLoading(true);
     try {
-      const updateData = {
-        vehiclePlate: formData.vehiclePlate || undefined,
-        issueDate: formData.issueDate || undefined,
-        expirationDate: formData.expirationDate || undefined,
-        inspectionResult: formData.inspectionResult || undefined,
-        certifyingCompany: formData.certifyingCompany || undefined,
-      };
+      // Enviar solo los campos editables sin reviewId ni vehiclePlate (ya están en la URL)
+      const updateData: {
+        inspectionResult?: 'APROBADO' | 'OBSERVADO';
+        certifyingCompany?: string;
+      } = {};
 
-      // Remove undefined values
-      Object.keys(updateData).forEach(key => {
-        if (updateData[key as keyof typeof updateData] === undefined) {
-          delete updateData[key as keyof typeof updateData];
-        }
-      });
+      // Solo incluir campos que realmente cambiaron
+      if (formData.inspectionResult && formData.inspectionResult !== technicalReview.revision.inspectionResult) {
+        updateData.inspectionResult = formData.inspectionResult;
+      }
+      if (formData.certifyingCompany && formData.certifyingCompany !== technicalReview.revision.certifyingCompany) {
+        updateData.certifyingCompany = formData.certifyingCompany;
+      }
+
+      // Si no hay cambios, enviar al menos los valores actuales
+      if (Object.keys(updateData).length === 0) {
+        updateData.inspectionResult = technicalReview.revision.inspectionResult as 'APROBADO' | 'OBSERVADO';
+        updateData.certifyingCompany = technicalReview.revision.certifyingCompany;
+      }
 
       await documentosService.updateTechnicalReview(technicalReview.revision.reviewId, updateData);
 
@@ -92,21 +93,19 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: 'vehiclePlate' | 'inspectionResult' | 'certifyingCompany', value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value,
+      [field]: field === 'inspectionResult' ? (value as 'APROBADO' | 'OBSERVADO') : value,
     }));
   };
 
   const getResultColor = (result: string) => {
     switch (result?.toUpperCase()) {
-      case 'APPROVED':
+      case 'APROBADO':
         return 'text-green-600 bg-green-100 border-green-200 dark:text-green-400 dark:bg-green-900/30 dark:border-green-700';
-      case 'REJECTED':
-        return 'text-red-600 bg-red-100 border-red-200 dark:text-red-400 dark:bg-red-900/30 dark:border-red-700';
-      case 'PENDING':
-        return 'text-yellow-600 bg-yellow-100 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/30 dark:border-yellow-700';
+      case 'OBSERVADO':
+        return 'text-yellow-700 bg-yellow-100 border-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700';
       default:
         return 'text-gray-600 bg-gray-100 border-gray-200 dark:text-gray-400 dark:bg-gray-900/30 dark:border-gray-700';
     }
@@ -114,9 +113,9 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
 
   const getIconForResult = (result: string) => {
     switch (result?.toUpperCase()) {
-      case 'APPROVED':
+      case 'APROBADO':
         return <CheckCircle className="w-4 h-4" />;
-      case 'REJECTED':
+      case 'OBSERVADO':
         return <XCircle className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
@@ -171,45 +170,43 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
             <div className="space-y-2">
               <Label htmlFor="vehiclePlate" className="flex items-center gap-2">
                 <Car className="w-4 h-4" />
-                Placa Vehículo
+                Placa Vehículo (no editable)
               </Label>
               <Input
                 id="vehiclePlate"
                 placeholder="ABC123"
                 value={formData.vehiclePlate}
-                onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
-                className="border-gray-200 dark:border-gray-700"
+                disabled
+                className="border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 cursor-not-allowed"
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400">Para cambiar la placa crea una nueva revisión técnica.</p>
             </div>
 
-            {/* Fecha de Emisión */}
-            <div className="space-y-2">
-              <Label htmlFor="issueDate" className="flex items-center gap-2">
+            {/* Fechas (solo lectura, gestionadas por el sistema) */}
+            <div className="space-y-2 md:col-span-2">
+              <Label className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                Fecha Emisión
+                Fechas de la Revisión (solo lectura)
               </Label>
-              <Input
-                id="issueDate"
-                type="date"
-                value={formData.issueDate}
-                onChange={(e) => handleInputChange("issueDate", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
-            </div>
-
-            {/* Fecha de Vencimiento */}
-            <div className="space-y-2">
-              <Label htmlFor="expirationDate" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Fecha Vencimiento
-              </Label>
-              <Input
-                id="expirationDate"
-                type="date"
-                value={formData.expirationDate}
-                onChange={(e) => handleInputChange("expirationDate", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
+                  <p className="text-gray-600 dark:text-gray-400">Emisión</p>
+                  <p className="font-medium">
+                    {technicalReview.fechas.emision
+                      ? new Date(technicalReview.fechas.emision).toLocaleDateString('es-PE')
+                      : 'No disponible'}
+                  </p>
+                </div>
+                <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
+                  <p className="text-gray-600 dark:text-gray-400">Vencimiento</p>
+                  <p className="font-medium">
+                    {technicalReview.fechas.vencimiento
+                      ? new Date(technicalReview.fechas.vencimiento).toLocaleDateString('es-PE')
+                      : 'No disponible'}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Las fechas las calcula y actualiza el sistema automáticamente.</p>
             </div>
 
             {/* Empresa Certificadora */}
@@ -233,7 +230,10 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
                 <CheckCircle className="w-4 h-4" />
                 Resultado Inspección
               </Label>
-              <Select value={formData.inspectionResult} onValueChange={(value) => handleInputChange("inspectionResult", value)}>
+              <Select
+                value={formData.inspectionResult}
+                onValueChange={(value: 'APROBADO' | 'OBSERVADO') => handleInputChange("inspectionResult", value)}
+              >
                 <SelectTrigger className="border-gray-200 dark:border-gray-700">
                   <SelectValue placeholder="Seleccionar resultado" />
                 </SelectTrigger>

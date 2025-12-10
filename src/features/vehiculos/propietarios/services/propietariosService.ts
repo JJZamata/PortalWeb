@@ -33,7 +33,6 @@ export const propietariosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en propietariosService.getPropietarios:', error);
       throw error;
     }
   },
@@ -44,7 +43,6 @@ export const propietariosService = {
       if (response.data.success) return response.data.data;
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en propietariosService.getPropietarioDetail:', error);
       throw error;
     }
   },
@@ -68,17 +66,12 @@ export const propietariosService = {
         payload.photoUrl = String(data.photoUrl).trim();
       }
 
-      console.log('📤 Payload enviado al backend:', payload);
-
       const response = await axiosInstance.post('/owners/', payload, {
         headers: { 'Content-Type': 'application/json' }
       });
       
       return response.data;
     } catch (error: any) {
-      if (error.response?.data) {
-        console.error('Error backend addPropietario:', error.response.data);
-      }
       handleApiError(error);
     }
   },

@@ -52,7 +52,6 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
       if (Array.isArray(details) && details.length > 0) {
         const firstError = details[0];
         errorMessage = firstError.message || errorMessage;
-        console.error('Detalles validación driver:', details);
       }
       toast({
         title: "❌ Error al registrar conductor",

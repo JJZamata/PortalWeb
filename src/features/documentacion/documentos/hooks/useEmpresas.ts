@@ -34,7 +34,6 @@ export const useEmpresas = () => {
       setEmpresas(empresasUnicas as { ruc: string; name: string }[]);
     } else if (error) {
       if ((error as any)?.response?.status === 403) {
-        console.warn('Sin permisos para acceder a empresas. El formulario funcionará sin el listado de empresas.');
       }
       setEmpresas([]);
     }

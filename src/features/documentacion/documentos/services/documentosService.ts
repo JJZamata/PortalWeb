@@ -208,7 +208,6 @@ export const documentosService = {
       const response = await axiosInstance.get('/companies?page=1');
       return response.data.data;
     } catch (error: any) {
-      console.warn('Error al obtener empresas:', error.response?.status);
       // Si es 403, devolver array vacío para evitar errores
       if (error.response?.status === 403) {
         return { companies: [] };
@@ -218,7 +217,6 @@ export const documentosService = {
         const fallbackResponse = await axiosInstance.get('/companies');
         return fallbackResponse.data.data;
       } catch (fallbackError) {
-        console.warn('Error en endpoint alternativo de empresas');
         return { companies: [] };
       }
       }
@@ -244,7 +242,6 @@ export const documentosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en documentosService.createInsurance:', error);
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);
     }
@@ -254,13 +251,12 @@ export const documentosService = {
   createTechnicalReview: async (data: {
     reviewId: string;
     vehiclePlate: string;
-    issueDate: string;
-    expirationDate: string;
     inspectionResult: 'APROBADO' | 'OBSERVADO';
     certifyingCompany: string;
   }) => {
     try {
-      const response = await axiosInstance.post(`/technical-reviews`, data);
+      // Backend expone ruta en minúsculas y sin guion: /technicalreviews
+      const response = await axiosInstance.post(`/technicalreviews`, data);
 
       if (response.data.success) {
         return response.data;
@@ -268,7 +264,6 @@ export const documentosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en documentosService.createTechnicalReview:', error);
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);
     }
@@ -285,7 +280,6 @@ export const documentosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en documentosService.getInsuranceByNumber:', error);
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);
     }
@@ -294,7 +288,8 @@ export const documentosService = {
   // Método para obtener una revisión técnica específica por código
   getTechnicalReviewByCode: async (reviewCode: string) => {
     try {
-      const response = await axiosInstance.get(`/technicalReviews/${reviewCode}`);
+      // Backend expone ruta en minúsculas y sin guion: /technicalreviews/:id
+      const response = await axiosInstance.get(`/technicalreviews/${reviewCode}`);
 
       if (response.data.success) {
         return response.data.data;
@@ -302,7 +297,6 @@ export const documentosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en documentosService.getTechnicalReviewByCode:', error);
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);
     }
@@ -311,15 +305,11 @@ export const documentosService = {
   // Método para actualizar un seguro específico
   updateInsurance: async (insuranceNumber: string, updateData: {
     insuranceCompanyName?: string;    // Nombre de la compañía de seguros
-    policyNumber?: string;           // Número de póliza
-    vehiclePlate?: string;           // Placa del vehículo
-    startDate?: string;              // Fecha de inicio (YYYY-MM-DD)
     expirationDate?: string;         // Fecha de vencimiento (YYYY-MM-DD)
-    coverage?: string;               // Cobertura del seguro
-    licenseId?: number;              // ID de licencia
-    ownerDni?: string;               // DNI del propietario
+    coverage?: string;               // Cobertura del seguro (texto descriptivo)
   }) => {
     try {
+      // El backend espera camelCase según la documentación
       const response = await axiosInstance.put(`/insurance/${insuranceNumber}`, updateData);
 
       if (response.data.success) {
@@ -328,7 +318,6 @@ export const documentosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en documentosService.updateInsurance:', error);
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);
     }
@@ -345,7 +334,6 @@ export const documentosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en documentosService.deleteInsurance:', error);
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);
     }
@@ -353,14 +341,16 @@ export const documentosService = {
 
   // Método para actualizar una revisión técnica específica
   updateTechnicalReview: async (reviewId: string, updateData: {
+    reviewId?: string;                    // ID de la revisión (algunos endpoints lo exigen en el body)
     vehiclePlate?: string;                // Placa del vehículo
-    issueDate?: string;                   // Fecha de emisión (YYYY-MM-DD)
-    expirationDate?: string;              // Fecha de vencimiento (YYYY-MM-DD)
     inspectionResult?: 'APROBADO' | 'OBSERVADO';  // Resultado de inspección
     certifyingCompany?: string;           // Empresa certificadora
+    issueDate?: string;                   // Fecha de emisión (YYYY-MM-DD)
+    expirationDate?: string;              // Fecha de vencimiento (YYYY-MM-DD)
   }) => {
     try {
-      const response = await axiosInstance.put(`/technical-reviews/${reviewId}`, updateData);
+      // Backend expone ruta en minúsculas y sin guion: /technicalreviews/:id
+      const response = await axiosInstance.put(`/technicalreviews/${reviewId}`, updateData);
 
       if (response.data.success) {
         return response.data;
@@ -368,7 +358,6 @@ export const documentosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en documentosService.updateTechnicalReview:', error);
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);
     }
@@ -377,7 +366,8 @@ export const documentosService = {
   // Método para eliminar una revisión técnica específica
   deleteTechnicalReview: async (reviewId: string) => {
     try {
-      const response = await axiosInstance.delete(`/technical-reviews/${reviewId}`);
+      // Backend expone ruta en minúsculas y sin guion: /technicalreviews/:id
+      const response = await axiosInstance.delete(`/technicalreviews/${reviewId}`);
 
       if (response.data.success) {
         return response.data;
@@ -385,7 +375,6 @@ export const documentosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en documentosService.deleteTechnicalReview:', error);
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);
     }
@@ -441,8 +430,6 @@ export const documentosService = {
             coverage: data.cobertura,
             owner_dni: data.owner_dni
           };
-          
-          console.log('Usando estructura exacta que solicita el servidor:', exactPayload);
           return await axiosInstance.post('/documents/insurance', exactPayload);
         }
       ];
@@ -453,22 +440,13 @@ export const documentosService = {
       for (const strategy of strategies) {
         attemptCount++;
         try {
-          console.info(`🔄 Intentando crear AFOCAT - Estrategia ${attemptCount}/${strategies.length}`);
           const result = await strategy();
-          console.info(`✅ ¡AFOCAT CREADO EXITOSAMENTE! 🎉`);
           return result;
         } catch (error: any) {
           lastError = error;
           const status = error.response?.status;
           const message = error.response?.data?.message || error.message;
-          
-          console.warn(`Estrategia ${attemptCount} falló: ${status} - ${message}`);
-          
-          // Si tenemos solo una estrategia y falla, mostrar error detallado
-          if (strategies.length === 1) {
-            console.error('La estructura exacta del servidor también falló:', error.response?.data);
-          }
-          
+
           continue;
         }
       }
@@ -548,9 +526,6 @@ export const documentosService = {
       // Estrategia 5: Simulación temporal (para desarrollo)
       async () => {
         // Solo mostrar en modo desarrollo
-        if (process.env.NODE_ENV === 'development') {
-          console.info('🔧 Modo desarrollo: Simulando eliminación de documento');
-        }
         return { 
           data: { 
             success: true, 
@@ -568,15 +543,6 @@ export const documentosService = {
         const result = await strategies[i]();
         
         // Si llegamos aquí, la estrategia funcionó
-        if (i === strategies.length - 1) {
-          // Si es la última estrategia (simulación), mostrar advertencia
-          console.info('⚠️ Eliminación simulada - el documento no fue eliminado del servidor');
-        } else if (i === 0) {
-          console.info('✅ Documento desactivado exitosamente');
-        } else {
-          console.info('✅ Documento eliminado exitosamente');
-        }
-        
         return result;
       } catch (error: any) {
         lastError = error;
@@ -584,16 +550,6 @@ export const documentosService = {
         // Si no es 404, 405 o 501, es un error real que debemos reportar
         if (error.response?.status && ![404, 405, 501].includes(error.response.status)) {
           realErrors.push({ strategy: i + 1, error });
-        }
-        
-        // Solo mostrar errores reales, no los 404 esperados
-        if (realErrors.length > 0 && i === strategies.length - 1) {
-          console.warn('⚠️ Errores encontrados durante eliminación:', realErrors);
-        }
-        
-        // Si es la penúltima estrategia y falló, mostrar mensaje informativo
-        if (i === strategies.length - 2) {
-          console.info('💡 API no soporta eliminación de documentos - usando modo simulado');
         }
       }
     }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '@/components/AdminLayout';
 import { useDocumentos } from './hooks/useDocumentos';
 // import { usePlacas } from './hooks/usePlacas'; // Eliminado - hooks complejos no usados
@@ -25,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 
 const DocumentosView = () => {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('all');
   const [sortBy, setSortBy] = useState('createdAt');
@@ -53,6 +55,11 @@ const DocumentosView = () => {
 
   const handleRefresh = () => {
     handlePageChange(1);
+  };
+
+  const handleUpdateSuccess = () => {
+    // Invalidar la cache de React Query para refrescar la tabla
+    queryClient.invalidateQueries({ queryKey: ['documentos'] });
   };
 
   const handleViewInsuranceDetail = async (policyNumber: string) => {
@@ -117,7 +124,6 @@ const DocumentosView = () => {
       // Refrescar la lista de documentos
       handlePageChange(page);
     } catch (error: any) {
-      console.error('Error al eliminar documento:', error);
       toast({
         title: "Error al eliminar",
         description: error?.message || error.response?.data?.message || "No se pudo eliminar el documento. Inténtalo nuevamente.",
@@ -352,7 +358,7 @@ const DocumentosView = () => {
           insurance={insuranceDetail}
           open={showEditInsuranceDialog}
           onOpenChange={handleCloseEditInsurance}
-          onSuccess={() => handlePageChange(page)}
+          onSuccess={handleUpdateSuccess}
         />
 
         {/* Diálogo para editar revisión técnica */}
@@ -360,7 +366,7 @@ const DocumentosView = () => {
           technicalReview={technicalReviewDetail}
           open={showEditTechnicalReviewDialog}
           onOpenChange={handleCloseEditTechnicalReview}
-          onSuccess={() => handlePageChange(page)}
+          onSuccess={handleUpdateSuccess}
         />
 
         {/* Diálogo para crear revisión técnica */}

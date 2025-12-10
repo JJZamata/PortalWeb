@@ -15,6 +15,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import axiosInstance from '@/lib/axios';
 import { useToast } from "@/hooks/use-toast";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export function AdminHeader() {
   const getInitialTheme = () => {
@@ -27,6 +28,31 @@ export function AdminHeader() {
   const [theme, setTheme] = useState<'light' | 'dark'>(getInitialTheme());
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: userLoading } = useCurrentUser();
+
+  // Obtener las iniciales del nombre de usuario
+  const getInitials = () => {
+    const name = user?.username || (user as any)?.name || '';
+    if (name) return name.substring(0, 2).toUpperCase();
+    if (user?.email) return user.email.substring(0, 2).toUpperCase();
+    return 'U';
+  };
+
+  // Obtener el nombre del usuario
+  const getDisplayName = () => {
+    if (userLoading) return 'Cargando...';
+    return user?.username || (user as any)?.name || 'Usuario';
+  };
+
+  // Obtener el rol del usuario
+  const getUserRole = () => {
+    if (userLoading) return 'Cargando...';
+    if (user?.roles && user.roles.length > 0) {
+      const first = user.roles[0] as any;
+      return typeof first === 'string' ? first : first.name || 'Usuario';
+    }
+    return 'Usuario';
+  };
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -46,7 +72,6 @@ export function AdminHeader() {
       });
       navigate('/');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
       navigate('/');
     }
   };
@@ -95,23 +120,41 @@ export function AdminHeader() {
                 <Avatar className="w-7 h-7 sm:w-8 sm:h-8 border-2 border-gray-200 dark:border-gray-700">
                   <AvatarImage src="" />
                   <AvatarFallback className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 font-semibold text-xs">
-                    AD
+                    {getInitials()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Administrador</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">admin@fiscamoto.pe</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {getDisplayName()}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {userLoading ? 'Cargando...' : (user?.email || 'Sin email')}
+                  </p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 sm:w-56">
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="px-2 py-2 text-sm">
+                <p className="font-medium text-gray-900 dark:text-gray-100">{getDisplayName()}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 break-all">
+                  {userLoading ? 'Cargando...' : (user?.email || 'Sin email')}
+                </p>
+                <Badge variant="secondary" className="mt-2 text-xs capitalize">
+                  {getUserRole()}
+                </Badge>
+              </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <User className="w-4 h-4 mr-2" />
                 Perfil
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Cerrar Sesión
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

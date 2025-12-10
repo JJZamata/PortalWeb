@@ -85,7 +85,6 @@ export const empresasService = {
       
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en empresasService.getEmpresas:', error);
       throw error;
     }
   },

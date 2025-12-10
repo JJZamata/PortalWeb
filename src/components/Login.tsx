@@ -49,7 +49,21 @@ const Login = () => {
         // Guardar el token en localStorage
         if (response.data.token) {
           localStorage.setItem('token', response.data.token);
-          console.log('Token guardado:', response.data.token);
+        }
+        
+        // Guardar el ID del usuario en localStorage
+        if (response.data.user?.id) {
+          localStorage.setItem('userId', response.data.user.id.toString());
+        }
+
+        // Guardar el username del usuario en localStorage
+        if (response.data.user?.username) {
+          localStorage.setItem('username', response.data.user.username);
+        }
+
+        // Guardar el email del usuario en localStorage
+        if (response.data.user?.email) {
+          localStorage.setItem('userEmail', response.data.user.email);
         }
         
         toast({

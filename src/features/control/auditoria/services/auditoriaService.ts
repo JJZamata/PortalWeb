@@ -42,7 +42,6 @@ export const auditoriaService = {
       
       return response.data;
     } catch (error) {
-      console.error('Error al obtener logs de auditoría:', error);
       throw error;
     }
   },
@@ -55,7 +54,6 @@ export const auditoriaService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Error al exportar logs de auditoría:', error);
       throw error;
     }
   },
@@ -65,8 +63,6 @@ export const auditoriaService = {
       const response = await axiosInstance.get('/audit-logs/stats');
       return response.data;
     } catch (error) {
-      console.error('Error al obtener estadísticas de auditoría:', error);
-      
       // Retornar estadísticas mock
       return {
         success: true,

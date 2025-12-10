@@ -23,7 +23,6 @@ export const DeleteVehiculoDialog = ({ open, onOpenChange, plate, onConfirm, onS
       onOpenChange(false); // Cerrar dialog después
       onSuccess(); // Invalidar queries para refrescar tabla
     } catch (error: any) {
-      console.error('Error eliminando vehículo:', error);
       toast({ 
         title: "Error al eliminar vehículo", 
         description: error.response?.data?.message || error.message || 'Error desconocido', 

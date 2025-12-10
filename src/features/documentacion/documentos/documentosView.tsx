@@ -48,8 +48,8 @@ const DocumentosView = () => {
   // Eliminados hooks complejos y estado de creación
   // const { fetchPlacas } = usePlacas();
   // const { fetchEmpresas } = useEmpresas();
-  const { insuranceDetail, loadingDetail: loadingInsurance, fetchInsuranceDetail, clearInsuranceDetail } = useInsuranceDetail();
-  const { technicalReviewDetail, loadingDetail: loadingTechnical, fetchTechnicalReviewDetail, clearTechnicalReviewDetail } = useTechnicalReviewDetail();
+  const { insuranceDetail, loadingDetail: loadingInsurance, errorDetail: errorInsurance, fetchInsuranceDetail, clearInsuranceDetail } = useInsuranceDetail();
+  const { technicalReviewDetail, loadingDetail: loadingTechnical, errorDetail: errorTechnical, fetchTechnicalReviewDetail, clearTechnicalReviewDetail } = useTechnicalReviewDetail();
 
   const handleRefresh = () => {
     handlePageChange(1);
@@ -225,7 +225,7 @@ const DocumentosView = () => {
             <div className="flex items-center gap-6">
               <div className="text-center">
                 <p className="text-4xl font-bold text-emerald-700 dark:text-emerald-400">
-                  {loading ? '-' : pagination.total_records}
+                  {loading ? '-' : pagination.totalItems}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Documentos</p>
               </div>
@@ -334,6 +334,8 @@ const DocumentosView = () => {
           insurance={insuranceDetail}
           open={showInsuranceDetailDialog}
           onOpenChange={handleCloseInsuranceDetail}
+          loading={loadingInsurance}
+          error={errorInsurance}
         />
 
         {/* Diálogo de detalles de revisión técnica */}
@@ -341,6 +343,8 @@ const DocumentosView = () => {
           technicalReview={technicalReviewDetail}
           open={showTechnicalReviewDetailDialog}
           onOpenChange={handleCloseTechnicalReviewDetail}
+          loading={loadingTechnical}
+          error={errorTechnical}
         />
 
         {/* Diálogo para editar seguro */}

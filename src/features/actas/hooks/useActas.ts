@@ -76,15 +76,6 @@ interface SummaryData {
 export const useActas = (page: number, searchTerm: string = '', recordType: string = 'all', sortBy: string = 'inspectionDateTime', sortOrder: string = 'DESC') => {
   const lastPageChangeRef = useRef<number>(0);
 
-  // Debug: Log parameters being passed to the hook
-  console.log('🎯 useActas llamado con parámetros:', {
-    page,
-    searchTerm: searchTerm.length >= 2 ? searchTerm : `(demasiado corto: ${searchTerm.length} chars)`,
-    recordType,
-    sortBy,
-    sortOrder
-  });
-
   // Validaciones según backend FISCAMOTO para records
   const SEARCH_MIN_LENGTH = 2;
 
@@ -92,14 +83,6 @@ export const useActas = (page: number, searchTerm: string = '', recordType: stri
     queryKey: ['actas', page, searchTerm, recordType, sortBy, sortOrder],
     queryFn: () => actasService.getActas(page, searchTerm, recordType, sortBy, sortOrder),
     staleTime: 5 * 60 * 1000,
-    onSuccess: (data) => {
-      console.log('✅ React Query data received:', {
-        recordsCount: data?.records?.length || 0,
-        currentPage: data?.pagination?.currentPage,
-        totalPages: data?.pagination?.totalPages,
-        totalItems: data?.pagination?.totalItems
-      });
-    }
   });
 
   // Separate query for stats (similar a otros módulos)

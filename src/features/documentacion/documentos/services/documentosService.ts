@@ -174,7 +174,7 @@ export const documentosService = {
           total_records: responseData.pagination?.totalItems || 0,
           records_per_page: responseData.pagination?.itemsPerPage || 6,
           has_next: responseData.pagination?.hasNextPage || false,
-          has_previous: responseData.pagination?.hasPrevPage || false
+          has_previous: responseData.pagination?.hasPreviousPage || responseData.pagination?.hasPrevPage || (page > 1)
         };
 
         return {
@@ -187,7 +187,6 @@ export const documentosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en documentosService.getDocumentos:', error);
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);
     }

@@ -39,10 +39,6 @@ const InfraccionesView = () => {
   const paginationData = violationsData?.pagination;
   const stats = statsData?.data;
 
-  // Debug para paginación
-  console.log('Pagination Data:', paginationData);
-  console.log('Current Page:', currentPage);
-
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= (paginationData?.totalPages || 1)) {
       const now = Date.now();
@@ -99,7 +95,7 @@ const InfraccionesView = () => {
           <XCircle className="w-12 h-12 text-red-500 dark:text-red-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Error al cargar datos</h3>
           <p className="text-gray-600 dark:text-gray-300 mb-4">{error?.message || 'Error desconocido'}</p>
-          <Button onClick={refreshViolations} variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+          <Button onClick={() => refreshViolations()} variant="outline" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
             <RefreshCw className="w-4 h-4 mr-2" />
             Reintentar
           </Button>

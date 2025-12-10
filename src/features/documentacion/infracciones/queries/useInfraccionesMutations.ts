@@ -15,9 +15,6 @@ export const useCreateInfraccionMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['violations', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['violations', 'stats'] });
     },
-    onError: (error) => {
-      console.error('Error al crear infracción:', error);
-    },
   });
 };
 
@@ -39,9 +36,6 @@ export const useUpdateInfraccionMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['violationDetail', code] });
       queryClient.invalidateQueries({ queryKey: ['violations', 'stats'] });
     },
-    onError: (error) => {
-      console.error('Error al actualizar infracción:', error);
-    },
   });
 };
 
@@ -61,9 +55,6 @@ export const useDeleteInfraccionMutation = () => {
       // Invalidar queries relevantes
       queryClient.invalidateQueries({ queryKey: ['violations', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['violations', 'stats'] });
-    },
-    onError: (error) => {
-      console.error('Error al eliminar infracción:', error);
     },
   });
 };

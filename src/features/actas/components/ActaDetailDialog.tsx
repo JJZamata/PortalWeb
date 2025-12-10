@@ -69,6 +69,10 @@ export const ActaDetailDialog = React.memo(({ open, onOpenChange, recordDetailed
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-md bg-white dark:bg-gray-900">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Error al cargar acta</DialogTitle>
+            <DialogDescription className="sr-only">No se pudo cargar la información del acta de inspección</DialogDescription>
+          </DialogHeader>
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
               <XCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
@@ -94,6 +98,10 @@ export const ActaDetailDialog = React.memo(({ open, onOpenChange, recordDetailed
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-md bg-white dark:bg-gray-900">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Cargando acta</DialogTitle>
+            <DialogDescription className="sr-only">Obteniendo información del acta de inspección</DialogDescription>
+          </DialogHeader>
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
               <RefreshCw className="w-8 h-8 animate-spin text-gray-500 dark:text-gray-400" />

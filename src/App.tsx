@@ -10,6 +10,7 @@ import AdminPanel from "./pages/AdminPanel";
 import FiscalizadoresPage from "./pages/personal/FiscalizadoresPage";
 import VehiculosPage from "./pages/vehiculos/VehiculosPage";
 import DocumentosPage from "./pages/documentacion/DocumentosPage";
+import TUCsPage from "./pages/documentacion/TUCsPage";
 import ConductoresPage from "./pages/personal/ConductoresPage";
 import EmpresasPage from "./pages/vehiculos/EmpresasPage";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,7 @@ const App: React.FC = () => {
             <Route path="/fiscalizadores" element={<FiscalizadoresPage />} />
             <Route path="/vehiculos" element={<VehiculosPage />} />
             <Route path="/documentos" element={<DocumentosPage />} />
+            <Route path="/tucs" element={<TUCsPage />} />
             <Route path="/conductores" element={<ConductoresPage />} />
             <Route path="/empresas" element={<EmpresasPage />} />
             <Route path="/usuarios" element={<UsuariosPage />} />
@@ -60,7 +62,6 @@ const App: React.FC = () => {
             {/*<Route path="/actas-no-conformes" element={<ActasNoConformesPage />} />*/}
             <Route path="/consulta-placa" element={<ConsultaPlacaPage />} />
             <Route path="/citv" element={<CitvPage />} />
-            <Route path="/tuc" element={<TucPage />} />
             <Route path="/habilitaciones" element={<HabilitacionesPage />} />
             <Route path="/afocat" element={<AfocatPage />} />
             <Route path="/controles-tecnicos" element={<ControlesTecnicosPage />} />

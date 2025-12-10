@@ -12,38 +12,43 @@ interface Props {
 }
 
 export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props) => {
-  const getOperationBadge = (operation: string) => {
-    switch (operation) {
-      case 'INSERT':
+  const getMethodBadge = (method: string) => {
+    switch (method) {
+      case 'GET':
+        return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800';
+      case 'POST':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800';
-      case 'UPDATE':
+      case 'PUT':
         return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800';
       case 'DELETE':
         return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800';
+      case 'PATCH':
+        return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700';
     }
   };
 
-  const getTableBadge = (tableName: string) => {
-    const colors = {
-      'vehiculos': 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800',
-      'conductores': 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800',
-      'usuarios': 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800',
-      'acta_control': 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border-cyan-800',
-      'empresas': 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-800'
-    };
-    return colors[tableName as keyof typeof colors] || 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700';
+  const getStatusBadge = (statusCode: number) => {
+    if (statusCode >= 200 && statusCode < 300) {
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800';
+    } else if (statusCode >= 300 && statusCode < 400) {
+      return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800';
+    } else if (statusCode >= 400 && statusCode < 500) {
+      return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800';
+    } else {
+      return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800';
+    }
   };
 
   const filteredLogs = auditLogs.filter(log => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
-      log.table_name.toLowerCase().includes(searchLower) ||
-      log.username.toLowerCase().includes(searchLower) ||
-      log.record_id.toLowerCase().includes(searchLower) ||
-      log.operation.toLowerCase().includes(searchLower)
+      (log.method && log.method.toLowerCase().includes(searchLower)) ||
+      (log.url && log.url.toLowerCase().includes(searchLower)) ||
+      (log.user?.username && log.user.username.toLowerCase().includes(searchLower)) ||
+      (log.ip && log.ip.toLowerCase().includes(searchLower))
     );
   });
 
@@ -63,9 +68,9 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
           <TableHeader className="bg-indigo-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <TableRow>
               <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Fecha/Hora</TableHead>
-              <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Tabla</TableHead>
-              <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Operación</TableHead>
-              <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Registro</TableHead>
+              <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Método</TableHead>
+              <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Endpoint</TableHead>
+              <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Estado</TableHead>
               <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Usuario</TableHead>
               <TableHead className="font-bold text-indigo-900 dark:text-white py-4">IP</TableHead>
               <TableHead className="font-bold text-indigo-900 dark:text-white text-center py-4">Detalles</TableHead>
@@ -100,28 +105,27 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
                   <TableCell className="py-4">
                     <Badge 
                       variant="secondary" 
-                      className={`${getTableBadge(log.table_name)} font-semibold rounded-full border`}
+                      className={`${getMethodBadge(log.method)} font-semibold rounded-full border`}
                     >
-                      <Database className="w-3 h-3 mr-1" />
-                      {log.table_name}
+                      {log.method}
                     </Badge>
                   </TableCell>
+                  <TableCell className="font-mono font-medium text-gray-900 dark:text-gray-300 py-4 max-w-xs truncate">{log.url}</TableCell>
                   <TableCell className="py-4">
                     <Badge 
                       variant="secondary" 
-                      className={`${getOperationBadge(log.operation)} font-semibold rounded-full border`}
+                      className={`${getStatusBadge(log.statusCode)} font-semibold rounded-full border`}
                     >
-                      {log.operation}
+                      {log.statusCode}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-mono font-medium text-gray-900 dark:text-gray-300 py-4">{log.record_id}</TableCell>
                   <TableCell className="py-4">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                      <span className="font-medium text-gray-900 dark:text-gray-300">{log.username}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-300">{log.user?.username || '-'}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-gray-700 dark:text-gray-300 py-4">{log.ip_address}</TableCell>
+                  <TableCell className="font-mono text-sm text-gray-700 dark:text-gray-300 py-4">{log.ip}</TableCell>
                   <TableCell className="text-center py-4">
                     <Button 
                       variant="ghost" 

@@ -11,7 +11,6 @@ const authService = {
       // Guardamos el token en localStorage
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
-        console.log(response.data.token);
       }
       
       return response.data;

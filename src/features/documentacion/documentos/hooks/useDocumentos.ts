@@ -40,9 +40,30 @@ export const useDocumentos = (
     setPage(newPage);
   };
 
+  // Transformar pagination de snake_case a camelCase
+  const paginationData = data?.pagination;
+  
   return {
     documentos: data?.documents || [],
-    pagination: data?.pagination || { current_page: 1, total_pages: 1, total_records: 0, records_per_page: 6, has_next: false, has_previous: false },
+    pagination: paginationData ? {
+      currentPage: paginationData.current_page || 1,
+      totalPages: paginationData.total_pages || 1,
+      totalItems: paginationData.total_records || 0,
+      itemsPerPage: paginationData.records_per_page || 6,
+      offset: ((paginationData.current_page || 1) - 1) * (paginationData.records_per_page || 6),
+      hasNextPage: Boolean(paginationData.has_next),
+      hasPreviousPage: Boolean(paginationData.has_previous),
+      nextPage: paginationData.has_next ? (paginationData.current_page || 1) + 1 : null,
+    } : {
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+      itemsPerPage: 6,
+      offset: 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+      nextPage: null,
+    },
     loading: isLoading,
     error: error?.message || null,
     page,

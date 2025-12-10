@@ -43,9 +43,7 @@ const VehiculosView = () => {
 
   const handleDeleteVehiculo = async () => {
     if (deletePlate) {
-      console.log('Eliminando vehículo con placa:', deletePlate);
       await vehiculosService.deleteVehiculo(deletePlate);
-      console.log('Vehículo eliminado exitosamente');
     }
   };
 

@@ -14,27 +14,25 @@ interface ApiError {
 }
 
 export const useTechnicalReviewDetail = () => {
-  const [technicalReviewDetail, setTechnicalReviewDetail] = useState<TechnicalReviewDetail | null>(null);
   const [queryParams, setQueryParams] = useState<{ reviewCode: string } | null>(null);
 
-  const { isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['technicalReviewDetail', queryParams?.reviewCode],
     queryFn: async () => {
       if (!queryParams) return null;
-      const response = await documentosService.getTechnicalReviewByCode(queryParams.reviewCode);
-      setTechnicalReviewDetail(response);
-      return response;
+      return documentosService.getTechnicalReviewByCode(queryParams.reviewCode);
     },
     enabled: !!queryParams,
-    staleTime: 5 * 60 * 1000, // 5 minutos de cache
+    staleTime: 0,
+    cacheTime: 5 * 60 * 1000,
+    keepPreviousData: true,
   });
 
-  const fetchTechnicalReviewDetail = async (reviewCode: string) => {
+  const fetchTechnicalReviewDetail = (reviewCode: string) => {
     setQueryParams({ reviewCode });
   };
 
   const clearTechnicalReviewDetail = () => {
-    setTechnicalReviewDetail(null);
     setQueryParams(null);
   };
 
@@ -66,7 +64,7 @@ export const useTechnicalReviewDetail = () => {
   };
 
   return {
-    technicalReviewDetail,
+    technicalReviewDetail: data,
     loadingDetail: isLoading,
     errorDetail: getErrorMessage(),
     fetchTechnicalReviewDetail,

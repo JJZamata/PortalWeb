@@ -80,7 +80,6 @@ export const EditEmpresaDialog = ({ open, onOpenChange, empresa, onSuccess }: Pr
           const date = new Date(dateString + 'T00:00:00'); // Agregar tiempo local para evitar zona horaria
           return date.toISOString().split('T')[0];
         } catch (error) {
-          console.warn('Error al parsear fecha:', dateString);
           return "";
         }
       };

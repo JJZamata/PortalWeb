@@ -89,30 +89,6 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-center gap-1">
-                    {/* Botón de editar seguros AFOCAT */}
-                    {documento.tipo === 'AFOCAT' && onEditInsurance && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                        onClick={() => onEditInsurance(documento.numero)}
-                        title="Editar seguro"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    )}
-                    {/* Botón de editar revisiones REVISION */}
-                    {documento.tipo === 'REVISION' && onEditTechnicalReview && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
-                        onClick={() => onEditTechnicalReview(documento.numero)}
-                        title="Editar revisión técnica"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    )}
                     {/* Botón de ver detalles solo para seguros AFOCAT */}
                     {documento.tipo === 'AFOCAT' && onViewInsuranceDetail && (
                       <Button
@@ -135,6 +111,30 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                         title="Ver detalles"
                       >
                         <Eye className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {/* Botón de editar seguros AFOCAT */}
+                    {documento.tipo === 'AFOCAT' && onEditInsurance && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                        onClick={() => onEditInsurance(documento.numero)}
+                        title="Editar seguro"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {/* Botón de editar revisiones REVISION */}
+                    {documento.tipo === 'REVISION' && onEditTechnicalReview && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
+                        onClick={() => onEditTechnicalReview(documento.numero)}
+                        title="Editar revisión técnica"
+                      >
+                        <Edit className="w-4 h-4" />
                       </Button>
                     )}
                     <AlertDialog>

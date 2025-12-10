@@ -46,21 +46,6 @@ export const actasService = {
         // Acceder a estructura real: data.data (como en otros módulos)
         const records = response.data.data.data || [];
 
-        // Debug: Ver estructura completa de la respuesta
-        console.log(`📊 Datos de paginación (Página ${page}):`, {
-          currentPage: response.data.data.pagination?.currentPage,
-          totalPages: response.data.data.pagination?.totalPages,
-          totalItems: response.data.data.pagination?.totalItems,
-          itemsPerPage: response.data.data.pagination?.itemsPerPage,
-          hasNextPage: response.data.data.pagination?.hasNextPage,
-          hasPrevPage: response.data.pagination?.hasPrevPage,
-          recordsCount: records.length,
-          searchParams: { searchTerm, recordType, sortBy, sortOrder }
-        });
-        console.log(`📋 Registros devueltos (Página ${page}):`, records);
-        console.log('🔍 Primer registro:', records[0]);
-        console.log('🔍 Último registro:', records[records.length - 1]);
-
         // Transform records para mantener compatibilidad con tipos existentes
         const recordsTransformados = records.map((record: any) => ({
           id: record.id || 0,
@@ -92,7 +77,6 @@ export const actasService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en actasService.getActas:', error);
       throw error;
     }
   },
@@ -112,7 +96,6 @@ export const actasService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error(`Error en actasService.getActaDetail (${type}):`, error);
       throw error;
     }
   },
@@ -124,7 +107,6 @@ export const actasService = {
       // Backend devuelve estructura: data.data.statusStats
       return response.data.data;
     } catch (error) {
-      console.error('Error en actasService.getStats:', error);
       throw error;
     }
   },

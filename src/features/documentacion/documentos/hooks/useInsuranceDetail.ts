@@ -14,27 +14,25 @@ interface ApiError {
 }
 
 export const useInsuranceDetail = () => {
-  const [insuranceDetail, setInsuranceDetail] = useState<InsuranceDetail | null>(null);
   const [queryParams, setQueryParams] = useState<{ insuranceNumber: string } | null>(null);
 
-  const { isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['insuranceDetail', queryParams?.insuranceNumber],
     queryFn: async () => {
       if (!queryParams) return null;
-      const response = await documentosService.getInsuranceByNumber(queryParams.insuranceNumber);
-      setInsuranceDetail(response);
-      return response;
+      return documentosService.getInsuranceByNumber(queryParams.insuranceNumber);
     },
     enabled: !!queryParams,
-    staleTime: 5 * 60 * 1000, // 5 minutos de cache
+    staleTime: 0, // forzar refetch al abrir cada vez
+    cacheTime: 5 * 60 * 1000,
+    keepPreviousData: true,
   });
 
-  const fetchInsuranceDetail = async (insuranceNumber: string) => {
+  const fetchInsuranceDetail = (insuranceNumber: string) => {
     setQueryParams({ insuranceNumber });
   };
 
   const clearInsuranceDetail = () => {
-    setInsuranceDetail(null);
     setQueryParams(null);
   };
 
@@ -66,7 +64,7 @@ export const useInsuranceDetail = () => {
   };
 
   return {
-    insuranceDetail,
+    insuranceDetail: data,
     loadingDetail: isLoading,
     errorDetail: getErrorMessage(),
     fetchInsuranceDetail,

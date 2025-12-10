@@ -27,30 +27,27 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  // Form state
+  // Form state - solo campos editables
   const [formData, setFormData] = useState({
     insuranceCompanyName: "",
-    policyNumber: "",
-    vehiclePlate: "",
-    startDate: "",
     expirationDate: "",
     coverage: "",
-    licenseId: "",
-    ownerDni: "",
   });
 
   // Initialize form data when insurance changes
   useEffect(() => {
     if (insurance && open) {
+      // Extraer solo la fecha (YYYY-MM-DD) de la fecha de vencimiento
+      const expirationDateValue = insurance.fechas?.vencimiento 
+        ? (insurance.fechas.vencimiento.includes('T') 
+            ? insurance.fechas.vencimiento.split('T')[0] 
+            : insurance.fechas.vencimiento.substring(0, 10))
+        : "";
+
       setFormData({
-        insuranceCompanyName: insurance.seguro?.empresaAseguradora || "",
-        policyNumber: insurance.seguro?.numeroPoliza || "",
-        vehiclePlate: insurance.vehiculo?.placa || "",
-        startDate: insurance.fechas.emision?.split('T')[0] || "",
-        expirationDate: insurance.fechas.vencimiento?.split('T')[0] || "",
-        coverage: insurance.seguro?.cobertura || "",
-        licenseId: insurance.seguro?.licenseId?.toString() || "",
-        ownerDni: insurance.propietario?.dni || "",
+        insuranceCompanyName: insurance.seguro?.insuranceCompanyName || "",
+        expirationDate: expirationDateValue,
+        coverage: insurance.seguro?.coverage || "",
       });
     }
   }, [insurance, open]);
@@ -64,13 +61,8 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
     try {
       const updateData = {
         insuranceCompanyName: formData.insuranceCompanyName || undefined,
-        policyNumber: formData.policyNumber || undefined,
-        vehiclePlate: formData.vehiclePlate || undefined,
-        startDate: formData.startDate || undefined,
         expirationDate: formData.expirationDate || undefined,
         coverage: formData.coverage || undefined,
-        licenseId: formData.licenseId ? parseInt(formData.licenseId) : undefined,
-        ownerDni: formData.ownerDni || undefined,
       };
 
       // Remove undefined values
@@ -80,7 +72,7 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
         }
       });
 
-      await documentosService.updateInsurance(insurance.seguro.numeroPoliza, updateData);
+      await documentosService.updateInsurance(insurance.seguro.policyNumber, updateData);
 
       toast({
         title: "Seguro actualizado",
@@ -141,6 +133,10 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
                   <p className="font-medium">{insurance.seguro.empresaAseguradora}</p>
                 </div>
                 <div>
+                  <span className="text-gray-600 dark:text-gray-400">Fecha de Emisión:</span>
+                  <p className="font-medium">{insurance.fechas.emision?.split('T')[0]}</p>
+                </div>
+                <div>
                   <span className="text-gray-600 dark:text-gray-400">Estado:</span>
                   <Badge variant="secondary" className={insurance.estado.color === 'green' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200'}>
                     {insurance.estado.descripcion}
@@ -171,29 +167,23 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
               <Label htmlFor="policyNumber" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Número de Póliza
+                <span className="text-xs text-gray-500 dark:text-gray-400">(No editable)</span>
               </Label>
-              <Input
-                id="policyNumber"
-                placeholder="POL-123456"
-                value={formData.policyNumber}
-                onChange={(e) => handleInputChange("policyNumber", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
+              <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-900 dark:text-gray-100">
+                {insurance?.seguro?.policyNumber || 'No disponible'}
+              </div>
             </div>
 
-            {/* Placa Vehículo */}
+            {/* Placa Vehículo - No editable */}
             <div className="space-y-2">
               <Label htmlFor="vehiclePlate" className="flex items-center gap-2">
                 <Car className="w-4 h-4" />
                 Placa Vehículo
+                <span className="text-xs text-gray-500 dark:text-gray-400">(No editable)</span>
               </Label>
-              <Input
-                id="vehiclePlate"
-                placeholder="ABC123"
-                value={formData.vehiclePlate}
-                onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
-                className="border-gray-200 dark:border-gray-700"
-              />
+              <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-900 dark:text-gray-100">
+                {insurance?.vehiculo?.placa || 'No disponible'}
+              </div>
             </div>
 
             {/* Fecha de Inicio */}
@@ -201,14 +191,11 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
               <Label htmlFor="startDate" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 Fecha Inicio
+                <span className="text-xs text-gray-500 dark:text-gray-400">(No editable)</span>
               </Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => handleInputChange("startDate", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
+              <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-900 dark:text-gray-100">
+                {insurance?.fechas?.inicio ? new Date(insurance.fechas.inicio).toLocaleDateString('es-PE') : 'No disponible'}
+              </div>
             </div>
 
             {/* Fecha de Vencimiento */}
@@ -237,42 +224,17 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
                   <SelectValue placeholder="Seleccionar cobertura" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="COMPREHENSIVE">COMPREHENSIVE</SelectItem>
-                  <SelectItem value="BASIC">BASIC</SelectItem>
-                  <SelectItem value="THIRD_PARTY">THIRD_PARTY</SelectItem>
+                  <SelectItem value="Cobertura completa contra accidentes de tránsito, daños a terceros, lesiones personales y daños materiales">
+                    COMPREHENSIVE - Cobertura Completa
+                  </SelectItem>
+                  <SelectItem value="Cobertura básica contra accidentes de tránsito y responsabilidad civil frente a terceros">
+                    BASIC - Cobertura Básica
+                  </SelectItem>
+                  <SelectItem value="Cobertura únicamente para responsabilidad civil frente a terceros según normativa vigente">
+                    THIRD PARTY - Solo Terceros
+                  </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            {/* ID Licencia */}
-            <div className="space-y-2">
-              <Label htmlFor="licenseId" className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
-                ID Licencia
-              </Label>
-              <Input
-                id="licenseId"
-                type="number"
-                placeholder="12345"
-                value={formData.licenseId}
-                onChange={(e) => handleInputChange("licenseId", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
-            </div>
-
-            {/* DNI Propietario */}
-            <div className="space-y-2">
-              <Label htmlFor="ownerDni" className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                DNI Propietario
-              </Label>
-              <Input
-                id="ownerDni"
-                placeholder="12345678"
-                value={formData.ownerDni}
-                onChange={(e) => handleInputChange("ownerDni", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
             </div>
           </div>
 

@@ -243,12 +243,6 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
             </div>
           )}
         </div>
-
-        <DialogFooter className="pt-4 border-t border-gray-200 dark:border-gray-700">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-            Cerrar
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

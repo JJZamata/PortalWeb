@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '@/components/AdminLayout';
 import { useDocumentos } from './hooks/useDocumentos';
 // import { usePlacas } from './hooks/usePlacas'; // Eliminado - hooks complejos no usados
@@ -25,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 
 const DocumentosView = () => {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('all');
   const [sortBy, setSortBy] = useState('createdAt');
@@ -48,11 +50,16 @@ const DocumentosView = () => {
   // Eliminados hooks complejos y estado de creación
   // const { fetchPlacas } = usePlacas();
   // const { fetchEmpresas } = useEmpresas();
-  const { insuranceDetail, loadingDetail: loadingInsurance, fetchInsuranceDetail, clearInsuranceDetail } = useInsuranceDetail();
-  const { technicalReviewDetail, loadingDetail: loadingTechnical, fetchTechnicalReviewDetail, clearTechnicalReviewDetail } = useTechnicalReviewDetail();
+  const { insuranceDetail, loadingDetail: loadingInsurance, errorDetail: errorInsurance, fetchInsuranceDetail, clearInsuranceDetail } = useInsuranceDetail();
+  const { technicalReviewDetail, loadingDetail: loadingTechnical, errorDetail: errorTechnical, fetchTechnicalReviewDetail, clearTechnicalReviewDetail } = useTechnicalReviewDetail();
 
   const handleRefresh = () => {
     handlePageChange(1);
+  };
+
+  const handleUpdateSuccess = () => {
+    // Invalidar la cache de React Query para refrescar la tabla
+    queryClient.invalidateQueries({ queryKey: ['documentos'] });
   };
 
   const handleViewInsuranceDetail = async (policyNumber: string) => {
@@ -117,7 +124,6 @@ const DocumentosView = () => {
       // Refrescar la lista de documentos
       handlePageChange(page);
     } catch (error: any) {
-      console.error('Error al eliminar documento:', error);
       toast({
         title: "Error al eliminar",
         description: error?.message || error.response?.data?.message || "No se pudo eliminar el documento. Inténtalo nuevamente.",
@@ -225,7 +231,7 @@ const DocumentosView = () => {
             <div className="flex items-center gap-6">
               <div className="text-center">
                 <p className="text-4xl font-bold text-emerald-700 dark:text-emerald-400">
-                  {loading ? '-' : pagination.total_records}
+                  {loading ? '-' : pagination.totalItems}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Documentos</p>
               </div>
@@ -334,6 +340,8 @@ const DocumentosView = () => {
           insurance={insuranceDetail}
           open={showInsuranceDetailDialog}
           onOpenChange={handleCloseInsuranceDetail}
+          loading={loadingInsurance}
+          error={errorInsurance}
         />
 
         {/* Diálogo de detalles de revisión técnica */}
@@ -341,6 +349,8 @@ const DocumentosView = () => {
           technicalReview={technicalReviewDetail}
           open={showTechnicalReviewDetailDialog}
           onOpenChange={handleCloseTechnicalReviewDetail}
+          loading={loadingTechnical}
+          error={errorTechnical}
         />
 
         {/* Diálogo para editar seguro */}
@@ -348,7 +358,7 @@ const DocumentosView = () => {
           insurance={insuranceDetail}
           open={showEditInsuranceDialog}
           onOpenChange={handleCloseEditInsurance}
-          onSuccess={() => handlePageChange(page)}
+          onSuccess={handleUpdateSuccess}
         />
 
         {/* Diálogo para editar revisión técnica */}
@@ -356,7 +366,7 @@ const DocumentosView = () => {
           technicalReview={technicalReviewDetail}
           open={showEditTechnicalReviewDialog}
           onOpenChange={handleCloseEditTechnicalReview}
-          onSuccess={() => handlePageChange(page)}
+          onSuccess={handleUpdateSuccess}
         />
 
         {/* Diálogo para crear revisión técnica */}

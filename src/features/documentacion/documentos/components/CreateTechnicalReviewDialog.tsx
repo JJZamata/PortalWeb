@@ -4,6 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
-import { documentosService } from '../services/documentosService';
+import { documentosService } from "../services/documentosService";
 import { useToast } from "@/hooks/use-toast";
-import { FileCheck, Calendar, Car, CheckCircle, Clock, Building2 } from "lucide-react";
+import { FileCheck, Car, CheckCircle, Clock, Building2, AlertCircle, Info } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -24,9 +25,7 @@ interface Props {
 interface FormData {
   reviewId: string;
   vehiclePlate: string;
-  issueDate: string;
-  expirationDate: string;
-  inspectionResult: 'APROBADO' | 'OBSERVADO';
+  inspectionResult: "APROBADO" | "OBSERVADO" | "";
   certifyingCompany: string;
 }
 
@@ -41,129 +40,66 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
 
-  // Form state
   const [formData, setFormData] = useState<FormData>({
-    reviewId: '',
-    vehiclePlate: '',
-    issueDate: '',
-    expirationDate: '',
-    inspectionResult: '',
-    certifyingCompany: '',
+    reviewId: "",
+    vehiclePlate: "",
+    inspectionResult: "",
+    certifyingCompany: "",
   });
 
-  // Reset form when dialog opens/closes
+  const generateReviewId = () => {
+    const year = new Date().getFullYear();
+    const randomNum = Math.floor(Math.random() * 999999).toString().padStart(6, "0");
+    return `REV-${year}-${randomNum}`;
+  };
+
   useEffect(() => {
     if (open) {
       setFormData({
         reviewId: generateReviewId(),
-        vehiclePlate: '',
-        issueDate: new Date().toISOString().split('T')[0], // Hoy
-        expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0], // 1 año después
-        inspectionResult: '',
-        certifyingCompany: '',
+        vehiclePlate: "",
+        inspectionResult: "",
+        certifyingCompany: "",
       });
       setErrors([]);
     }
   }, [open]);
 
-  // Generar ID único para reviewId
-  const generateReviewId = () => {
-    const year = new Date().getFullYear();
-    const randomNum = Math.floor(Math.random() * 999999).toString().padStart(6, '0');
-    return `RT-${year}-${randomNum}`;
-  };
-
   const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: field === "inspectionResult" ? (value as "APROBADO" | "OBSERVADO" | "") : value,
     }));
-    // Limpiar errores al cambiar el campo
     if (errors.length > 0) {
-      setErrors(errors.filter(error => error.field !== field));
+      setErrors(errors.filter((error) => error.field !== field));
     }
   };
 
   const validateForm = (): boolean => {
     const newErrors: ValidationError[] = [];
 
-    // Validación del reviewId
     if (!formData.reviewId.trim()) {
-      newErrors.push({
-        field: 'reviewId',
-        message: 'El ID de revisión es obligatorio'
-      });
+      newErrors.push({ field: "reviewId", message: "El ID de revisión es obligatorio" });
     } else if (formData.reviewId.length < 10 || formData.reviewId.length > 30) {
-      newErrors.push({
-        field: 'reviewId',
-        message: 'El ID de revisión debe tener entre 10 y 30 caracteres'
-      });
+      newErrors.push({ field: "reviewId", message: "El ID debe tener entre 10 y 30 caracteres" });
     }
 
-    // Validación de la placa
     if (!formData.vehiclePlate.trim()) {
-      newErrors.push({
-        field: 'vehiclePlate',
-        message: 'La placa del vehículo es obligatoria'
-      });
+      newErrors.push({ field: "vehiclePlate", message: "La placa es obligatoria" });
     } else if (formData.vehiclePlate.length < 6 || formData.vehiclePlate.length > 10) {
-      newErrors.push({
-        field: 'vehiclePlate',
-        message: 'La placa debe tener entre 6 y 10 caracteres'
-      });
+      newErrors.push({ field: "vehiclePlate", message: "La placa debe tener entre 6 y 10 caracteres" });
     } else if (!/^[A-Z0-9]+$/.test(formData.vehiclePlate)) {
-      newErrors.push({
-        field: 'vehiclePlate',
-        message: 'La placa solo puede contener letras mayúsculas y números'
-      });
+      newErrors.push({ field: "vehiclePlate", message: "Solo letras mayúsculas y números" });
     }
 
-    // Validación de la fecha de emisión
-    if (!formData.issueDate) {
-      newErrors.push({
-        field: 'issueDate',
-        message: 'La fecha de emisión es obligatoria'
-      });
-    } else {
-      const issueDate = new Date(formData.issueDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Solo comparar fechas sin horas
-
-      if (issueDate > today) {
-        newErrors.push({
-          field: 'issueDate',
-          message: 'La fecha de emisión no puede ser futura'
-        });
-      }
-    }
-
-    // Validación de la fecha de vencimiento
-    if (!formData.expirationDate) {
-      newErrors.push({
-        field: 'expirationDate',
-        message: 'La fecha de vencimiento es obligatoria'
-      });
-    } else if (formData.issueDate && new Date(formData.expirationDate) <= new Date(formData.issueDate)) {
-      newErrors.push({
-        field: 'expirationDate',
-        message: 'La fecha de vencimiento debe ser posterior a la fecha de emisión'
-      });
-    }
-
-    // Validación del resultado de inspección
     if (!formData.inspectionResult) {
-      newErrors.push({
-        field: 'inspectionResult',
-        message: 'El resultado de inspección es obligatorio'
-      });
+      newErrors.push({ field: "inspectionResult", message: "El resultado es obligatorio" });
     }
 
-    // Validación de la empresa certificadora
     if (!formData.certifyingCompany.trim()) {
-      newErrors.push({
-        field: 'certifyingCompany',
-        message: 'La empresa certificadora es obligatoria'
-      });
+      newErrors.push({ field: "certifyingCompany", message: "La empresa certificadora es obligatoria" });
+    } else if (formData.certifyingCompany.length > 500) {
+      newErrors.push({ field: "certifyingCompany", message: "Máximo 500 caracteres" });
     }
 
     setErrors(newErrors);
@@ -173,11 +109,10 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validar formulario antes de enviar
     if (!validateForm()) {
       toast({
         title: "Error de validación",
-        description: "Por favor, corrige los campos resaltados",
+        description: "Corrige los campos resaltados",
         variant: "destructive",
       });
       return;
@@ -188,9 +123,7 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
       const response = await documentosService.createTechnicalReview({
         reviewId: formData.reviewId,
         vehiclePlate: formData.vehiclePlate,
-        issueDate: formData.issueDate,
-        expirationDate: formData.expirationDate,
-        inspectionResult: formData.inspectionResult,
+        inspectionResult: formData.inspectionResult as "APROBADO" | "OBSERVADO",
         certifyingCompany: formData.certifyingCompany,
       });
 
@@ -199,18 +132,13 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
           title: "✅ Revisión técnica creada",
           description: response.message || "La revisión técnica ha sido creada exitosamente",
         });
-
         onOpenChange(false);
         onSuccess();
       }
     } catch (error: any) {
-      console.error('Error al crear revisión técnica:', error);
-
-      // Manejar errores específicos del backend
       if (error?.response?.data?.errors && Array.isArray(error.response.data.errors)) {
         setErrors(error.response.data.errors);
       }
-
       toast({
         title: "❌ Error al crear",
         description: error?.response?.data?.message || error?.message || "No se pudo crear la revisión técnica",
@@ -221,14 +149,8 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
     }
   };
 
-  const getFieldError = (field: string) => {
-    const error = errors.find(err => err.field === field);
-    return error?.message;
-  };
-
-  const hasError = (field: string) => {
-    return errors.some(err => err.field === field);
-  };
+  const getFieldError = (field: string) => errors.find((err) => err.field === field)?.message;
+  const hasError = (field: string) => errors.some((err) => err.field === field);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -238,9 +160,26 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
             <FileCheck className="w-6 h-6 text-green-600" />
             Crear Nueva Revisión Técnica
           </DialogTitle>
+          <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
+            Complete los datos solicitados. Las fechas de emisión y vencimiento las calcula el sistema automáticamente.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {errors.length > 0 && (
+            <div className="p-3 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-sm text-red-800 dark:text-red-200">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle className="w-4 h-4" />
+                Corrige los errores para continuar:
+              </div>
+              <ul className="list-disc list-inside space-y-1">
+                {errors.map((err, idx) => (
+                  <li key={idx}>{err.message}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* ID de Revisión */}
             <div className="space-y-2">
@@ -251,7 +190,7 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setFormData(prev => ({ ...prev, reviewId: generateReviewId() }))}
+                  onClick={() => setFormData((prev) => ({ ...prev, reviewId: generateReviewId() }))}
                   className="ml-2 h-6 px-2 text-xs text-cyan-600 hover:text-cyan-700"
                 >
                   🔄 Generar
@@ -260,13 +199,12 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
               <Input
                 id="reviewId"
                 value={formData.reviewId}
-                onChange={(e) => handleInputChange('reviewId', e.target.value)}
-                placeholder="Ej: RT-2024-123456"
-                className={`border-gray-200 dark:border-gray-700 ${hasError('reviewId') ? 'border-red-500 focus:border-red-500' : ''}`}
+                onChange={(e) => handleInputChange("reviewId", e.target.value)}
+                placeholder="Ej: REV-2025-000001"
+                className={`border-gray-200 dark:border-gray-700 ${hasError("reviewId") ? "border-red-500 focus:border-red-500" : ""}`}
               />
-              {getFieldError('reviewId') && (
-                <p className="text-sm text-red-600">{getFieldError('reviewId')}</p>
-              )}
+              {getFieldError("reviewId") && <p className="text-sm text-red-600">{getFieldError("reviewId")}</p>}
+              <p className="text-xs text-gray-500">10-30 caracteres. Debe ser único.</p>
             </div>
 
             {/* Placa del Vehículo */}
@@ -278,55 +216,16 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
               <Input
                 id="vehiclePlate"
                 value={formData.vehiclePlate}
-                onChange={(e) => handleInputChange('vehiclePlate', e.target.value.toUpperCase())}
+                onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
                 placeholder="Ej: ABC123"
-                className={`border-gray-200 dark:border-gray-700 ${hasError('vehiclePlate') ? 'border-red-500 focus:border-red-500' : ''}`}
+                className={`border-gray-200 dark:border-gray-700 ${hasError("vehiclePlate") ? "border-red-500 focus:border-red-500" : ""}`}
               />
-              {getFieldError('vehiclePlate') && (
-                <p className="text-sm text-red-600">{getFieldError('vehiclePlate')}</p>
-              )}
-            </div>
-
-            {/* Fecha de Emisión */}
-            <div className="space-y-2">
-              <Label htmlFor="issueDate" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Fecha de Emisión *
-              </Label>
-              <Input
-                id="issueDate"
-                type="date"
-                value={formData.issueDate}
-                onChange={(e) => handleInputChange('issueDate', e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-                className={`border-gray-200 dark:border-gray-700 ${hasError('issueDate') ? 'border-red-500 focus:border-red-500' : ''}`}
-              />
-              {getFieldError('issueDate') && (
-                <p className="text-sm text-red-600">{getFieldError('issueDate')}</p>
-              )}
-            </div>
-
-            {/* Fecha de Vencimiento */}
-            <div className="space-y-2">
-              <Label htmlFor="expirationDate" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Fecha de Vencimiento *
-              </Label>
-              <Input
-                id="expirationDate"
-                type="date"
-                value={formData.expirationDate}
-                onChange={(e) => handleInputChange('expirationDate', e.target.value)}
-                min={formData.issueDate || undefined}
-                className={`border-gray-200 dark:border-gray-700 ${hasError('expirationDate') ? 'border-red-500 focus:border-red-500' : ''}`}
-              />
-              {getFieldError('expirationDate') && (
-                <p className="text-sm text-red-600">{getFieldError('expirationDate')}</p>
-              )}
+              {getFieldError("vehiclePlate") && <p className="text-sm text-red-600">{getFieldError("vehiclePlate")}</p>}
+              <p className="text-xs text-gray-500">6-10 caracteres alfanuméricos.</p>
             </div>
 
             {/* Empresa Certificadora */}
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="certifyingCompany" className="flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
                 Empresa Certificadora *
@@ -334,26 +233,25 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
               <Input
                 id="certifyingCompany"
                 value={formData.certifyingCompany}
-                onChange={(e) => handleInputChange('certifyingCompany', e.target.value)}
-                placeholder="Ej: TECSUP S.A."
-                className={`border-gray-200 dark:border-gray-700 ${hasError('certifyingCompany') ? 'border-red-500 focus:border-red-500' : ''}`}
+                onChange={(e) => handleInputChange("certifyingCompany", e.target.value)}
+                placeholder="Ej: CERTITEC PERU S.A.C."
+                className={`border-gray-200 dark:border-gray-700 ${hasError("certifyingCompany") ? "border-red-500 focus:border-red-500" : ""}`}
               />
-              {getFieldError('certifyingCompany') && (
-                <p className="text-sm text-red-600">{getFieldError('certifyingCompany')}</p>
-              )}
+              {getFieldError("certifyingCompany") && <p className="text-sm text-red-600">{getFieldError("certifyingCompany")}</p>}
+              <p className="text-xs text-gray-500">1-500 caracteres.</p>
             </div>
 
             {/* Resultado de Inspección */}
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="inspectionResult" className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />
                 Resultado de Inspección *
               </Label>
               <Select
                 value={formData.inspectionResult}
-                onValueChange={(value: 'APROBADO' | 'OBSERVADO') => handleInputChange('inspectionResult', value)}
+                onValueChange={(value: "APROBADO" | "OBSERVADO") => handleInputChange("inspectionResult", value)}
               >
-                <SelectTrigger className={`border-gray-200 dark:border-gray-700 ${hasError('inspectionResult') ? 'border-red-500 focus:border-red-500' : ''}`}>
+                <SelectTrigger className={`border-gray-200 dark:border-gray-700 ${hasError("inspectionResult") ? "border-red-500 focus:border-red-500" : ""}`}>
                   <SelectValue placeholder="Seleccionar resultado" />
                 </SelectTrigger>
                 <SelectContent>
@@ -371,26 +269,21 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
                   </SelectItem>
                 </SelectContent>
               </Select>
-              {getFieldError('inspectionResult') && (
-                <p className="text-sm text-red-600">{getFieldError('inspectionResult')}</p>
-              )}
+              {getFieldError("inspectionResult") && <p className="text-sm text-red-600">{getFieldError("inspectionResult")}</p>}
+              <p className="text-xs text-gray-500">Valores permitidos: APROBADO u OBSERVADO.</p>
+            </div>
+
+            <div className="md:col-span-2 p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
+              <Info className="w-4 h-4 mt-0.5" />
+              <span>Las fechas de emisión y vencimiento las calcula el sistema automáticamente al crear la revisión.</span>
             </div>
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
+            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
               {loading ? "Creando..." : "Crear Revisión"}
             </Button>
           </DialogFooter>

@@ -65,7 +65,6 @@ export const usuariosService = {
       const response = await axiosInstance.get<UsuariosApiResponse>(`/users?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
-      console.error('Error al obtener usuarios:', error);
       throw error;
     }
   },
@@ -75,7 +74,6 @@ export const usuariosService = {
       const response = await axiosInstance.get<UsuarioDetailResponse>(`/users/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error al obtener detalle del usuario:', error);
       throw error;
     }
   },
@@ -94,8 +92,6 @@ export const usuariosService = {
       const response = await axiosInstance.post<CreateUserResponse>('/users', payload);
       return response.data;
     } catch (error: any) {
-      console.error('Error al crear usuario:', error);
-
       // Si el error tiene la estructura esperada de la API, lanzarlo como está
       if (error.response?.data) {
         const errorData = error.response.data as CreateUserError;
@@ -146,8 +142,6 @@ export const usuariosService = {
       const response = await axiosInstance.put<UpdateUserResponse>(`/users/${id}`, payload);
       return response.data;
     } catch (error: any) {
-      console.error('Error al actualizar usuario:', error);
-
       // Si el error tiene la estructura esperada de la API, lanzarlo como está
       if (error.response?.data) {
         const errorData = error.response.data as UpdateUserError;
@@ -172,8 +166,6 @@ export const usuariosService = {
       const response = await axiosInstance.delete<DeleteUserResponse>(`/users/${id}`);
       return response.data;
     } catch (error: any) {
-      console.error('Error al eliminar usuario:', error);
-
       // Si el error tiene la estructura esperada de la API, lanzarlo como está
       if (error.response?.data) {
         const errorData = error.response.data as DeleteUserError;
@@ -199,7 +191,6 @@ export const usuariosService = {
         ...additionalFilters
       });
     } catch (error) {
-      console.error('Error al buscar usuarios:', error);
       throw error;
     }
   },
@@ -213,8 +204,6 @@ export const usuariosService = {
       const response = await axiosInstance.patch<UpdatePasswordResponse>(`/users/${id}/password`, payload);
       return response.data;
     } catch (error: any) {
-      console.error('Error al actualizar contraseña:', error);
-
       // Si el error tiene la estructura esperada de la API, lanzarlo como está
       if (error.response?.data) {
         const errorData = error.response.data as UpdatePasswordError;
@@ -239,8 +228,6 @@ export const usuariosService = {
       const response = await axiosInstance.patch<ResetDeviceResponse>(`/users/${id}/reset-device`);
       return response.data;
     } catch (error: any) {
-      console.error('Error al resetear dispositivo:', error);
-
       // Si el error tiene la estructura esperada de la API, lanzarlo como está
       if (error.response?.data) {
         const errorData = error.response.data as ResetDeviceError;
@@ -273,7 +260,6 @@ export const usuariosService = {
       const response = await axiosInstance.get<UsuarioStatsResponse>(url);
       return response.data;
     } catch (error) {
-      console.error('Error al obtener estadísticas de usuarios:', error);
       throw error;
     }
   }

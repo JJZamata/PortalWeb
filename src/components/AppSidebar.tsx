@@ -63,6 +63,7 @@ const menuItems = [
     icon: FileText,
     items: [
       { title: "Documentos", url: "/documentos", icon: FileCheck },
+      { title: "TUCs", url: "/tucs", icon: FileText },
       { title: "Infracciones", url: "/infracciones", icon: AlertTriangle },
     ],
   },
@@ -159,7 +160,6 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
       });
       navigate('/');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
       navigate('/');
     }
   };

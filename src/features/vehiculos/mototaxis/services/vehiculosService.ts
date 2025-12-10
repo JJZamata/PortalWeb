@@ -78,7 +78,6 @@ export const vehiculosService = {
 
       throw new Error('Error en la respuesta del servidor');
     } catch (error) {
-      console.error('Error en vehiculosService.getVehiculos:', error);
       throw error;
     }
   },
@@ -105,8 +104,6 @@ export const vehiculosService = {
         throw new Error(response.data.message || 'Error en la respuesta del servidor');
       }
     } catch (error: any) {
-      console.error('Error en vehiculosService.getStats:', error);
-
       // Manejar errores específicos de la nueva API
       if (error.response?.data?.success === false) {
         const errorMessage = error.response.data.message || 'Error desconocido';
@@ -131,7 +128,19 @@ export const vehiculosService = {
   
   addVehiculo: async (data: any) => {
     try {
-      const response = await axiosInstance.post('/vehicles/', data, {
+      // Normalizar y limpiar datos antes de enviar
+      const payload = {
+        plateNumber: data.plateNumber?.toUpperCase().trim(),
+        companyRuc: data.companyRuc?.trim(),
+        ownerDni: data.ownerDni?.trim(),
+        typeId: data.typeId,
+        vehicleStatus: data.vehicleStatus,
+        brand: data.brand?.trim(),
+        model: data.model?.trim(),
+        manufacturingYear: data.manufacturingYear
+      };
+      
+      const response = await axiosInstance.post('/vehicles/', payload, {
         headers: { "Content-Type": "application/json" },
       });
       return response.data;

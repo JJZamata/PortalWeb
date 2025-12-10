@@ -3,9 +3,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { TechnicalReviewDetail } from "../types";
 import {
   Calendar,
@@ -15,16 +17,19 @@ import {
   UserCheck,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  RefreshCw
 } from "lucide-react";
 
 interface Props {
   technicalReview: TechnicalReviewDetail | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  loading?: boolean;
+  error?: string | null;
 }
 
-export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChange }: Props) => {
+export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChange, loading = false, error }: Props) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -57,7 +62,67 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
     }
   };
 
-  if (!technicalReview) return null;
+  if (error) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-md bg-white dark:bg-gray-900">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-red-600 dark:text-red-400">
+              Error al cargar detalles
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              No se pudo obtener la información de la revisión técnica
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+              <XCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+            >
+              Cerrar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if ((loading && !technicalReview) || (!technicalReview && !error)) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-md bg-white dark:bg-gray-900">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-green-600 dark:text-green-400">
+              Cargando Detalles
+            </DialogTitle>
+            <DialogDescription className="text-gray-600 dark:text-gray-400">
+              Obteniendo información detallada de la revisión técnica
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="relative w-20 h-20 mb-6">
+              <div className="absolute inset-0 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center justify-center animate-pulse">
+                <RefreshCw className="w-8 h-8 animate-spin text-green-600 dark:text-green-400" />
+              </div>
+              <div className="absolute inset-0 border-4 border-green-200 dark:border-green-800 rounded-full animate-pulse"></div>
+              <div className="absolute inset-2 border-2 border-green-300 dark:border-green-700 rounded-full animate-ping"></div>
+            </div>
+            <div className="flex items-center space-x-1 mb-4">
+              <div className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+              <div className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Cargando información...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

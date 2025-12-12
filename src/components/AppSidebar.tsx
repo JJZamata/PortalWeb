@@ -40,7 +40,10 @@ const menuItems = [
   {
     title: "GPS Tracking",
     icon: MapPin,
-    url: "/gps-tracking",
+    items: [
+      { title: "En vivo", url: "/gps-tracking", icon: MapPin },
+      { title: "Historial", url: "/gps-tracking/history", icon: Archive }
+    ],
   },
   {
     title: "Personal",

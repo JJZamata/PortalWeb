@@ -18,6 +18,7 @@ import UsuariosPage from "./pages/control/UsuariosPage";
 import AuditoriaPage from "./pages/control/AuditoriaPage";
 import InfraccionesPage from "./pages/documentacion/InfraccionesPage";
 import { GPSTrackingPage } from "./pages/GPSTrackingPage";
+import { GPSHistoryPage } from "./pages/GPSHistoryPage";
 
 // Importaciones de vistas no utilizadas (accesibles por URL directa)
 import ActasPage from "./pages/actas/ActasPage";
@@ -57,6 +58,7 @@ const App: React.FC = () => {
             <Route path="/auditoria" element={<AuditoriaPage />} />
             <Route path="/infracciones" element={<InfraccionesPage />} />
             <Route path="/gps-tracking" element={<GPSTrackingPage />} />
+            <Route path="/gps-tracking/history" element={<GPSHistoryPage />} />
             
             {/* Rutas para vistas no utilizadas (accesibles por URL directa) */}
             {/*<Route path="/actas" element={<ActasPage />} />*/}

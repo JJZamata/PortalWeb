@@ -12,13 +12,13 @@ class SocketService {
     return new Promise((resolve) => {
       // Evitar múltiples conexiones
       if (this.socket?.connected) {
-        console.log('✅ Socket ya conectado');
+        console.log('> Socket ya conectado');
         resolve({ connected: true, connecting: false, error: null });
         return;
       }
 
       if (this.isConnecting) {
-        console.log('⏳ Conexión en progreso...');
+        console.log('> Conexión en progreso...');
         return;
       }
 
@@ -59,7 +59,7 @@ class SocketService {
         console.log('👋 Welcome message:', data);
       });
 
-      // IMPORTANTE: Registrar los listeners principales UNA SOLA VEZ
+      // IMPORTANTE: Registrar los listeners principales UNA SOLA VEZ  ojito
       this.setupMainListeners();
     });
   }

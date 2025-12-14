@@ -93,9 +93,11 @@ export const useGPSTracking = () => {
     }
   }, []);
 
-  const disconnect = useCallback(() => {
+  const disconnect = useCallback((isReconnecting = false) => {
     socketService.disconnect();
-    setLocations([]);
+    if (!isReconnecting) {
+      setLocations([]);
+    }
     setConnectionStatus({ connected: false, connecting: false, error: null });
   }, []);
 
@@ -115,13 +117,14 @@ export const useGPSTracking = () => {
     };
   }, [handleAllLocations, handleRealtimeLocation, handleConnect, handleDisconnect]);
 
+  // Efecto separado para manejar la conexión inicial
   useEffect(() => {
     // Conectar automáticamente al montar el hook
     connect();
 
     // Desconectar al desmontar
     return () => {
-      disconnect();
+      socketService.disconnect();
     };
   }, []); // Solo en el primer montaje
 

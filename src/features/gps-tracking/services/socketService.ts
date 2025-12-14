@@ -35,6 +35,10 @@ class SocketService {
       this.socket.on('connect', () => {
         this.isConnecting = false;
         console.log('✅ Socket.IO connected');
+
+        // Registrar listeners después de conectar
+        this.setupMainListeners();
+
         resolve({ connected: true, connecting: false, error: null });
 
         // Solicitar todas las ubicaciones al conectar
@@ -58,14 +62,15 @@ class SocketService {
       this.socket.on('welcome', (data) => {
         console.log('👋 Welcome message:', data);
       });
-
-      // IMPORTANTE: Registrar los listeners principales UNA SOLA VEZ  ojito
-      this.setupMainListeners();
     });
   }
 
   private setupMainListeners() {
     if (!this.socket) return;
+
+    // Remover listeners existentes para evitar duplicados
+    this.socket.off('location:allLocations');
+    this.socket.off('location:realtime');
 
     // Listener para todas las ubicaciones
     this.socket.on('location:allLocations', (data) => {
@@ -111,7 +116,8 @@ class SocketService {
       this.socket.disconnect();
     }
     this.socket = null;
-    this.listeners.clear();
+    // No limpiar los listeners aquí para permitir reconexión
+    // this.listeners.clear();
     this.isConnecting = false;
   }
 

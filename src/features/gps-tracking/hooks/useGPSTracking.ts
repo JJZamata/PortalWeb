@@ -9,6 +9,7 @@ export const useGPSTracking = () => {
     connecting: false,
     error: null,
   });
+  const [trackingActive, setTrackingActive] = useState<boolean>(false);
 
   const handleAllLocations = useCallback((allLocations: any[]) => {
     // Transformar los datos al formato esperado
@@ -78,6 +79,16 @@ export const useGPSTracking = () => {
     setConnectionStatus(prev => ({ ...prev, connected: false }));
   }, []);
 
+  const handleTrackingStatusChanged = useCallback((data: { active: boolean; updatedBy: string; timestamp: string }) => {
+    console.log('📡 Tracking status changed:', data);
+    setTrackingActive(data.active);
+  }, []);
+
+  const handleTrackingStatus = useCallback((data: { active: boolean; updatedAt?: string }) => {
+    console.log('📡 Tracking status response:', data);
+    setTrackingActive(data.active);
+  }, []);
+
   const connect = useCallback(async () => {
     setConnectionStatus(prev => ({ ...prev, connecting: true, error: null }));
 
@@ -117,6 +128,47 @@ export const useGPSTracking = () => {
     };
   }, [handleAllLocations, handleRealtimeLocation, handleConnect, handleDisconnect]);
 
+  // Configurar listeners para eventos de tracking
+  useEffect(() => {
+    if (!socketService.isConnected()) return;
+
+    const socket = socketService.getSocket();
+    if (!socket) return;
+
+    // Escuchar cambios en el estado del tracking
+    const handleTrackingStatusChanged = (data: { active: boolean; updatedBy: string; timestamp: string }) => {
+      console.log('📡 Tracking status changed:', data);
+      setTrackingActive(data.active);
+    };
+
+    const handleTrackingStatus = (data: { active: boolean; updatedAt?: string }) => {
+      console.log('📡 Tracking status response:', data);
+      setTrackingActive(data.active);
+    };
+
+    const handleTrackingStatusResponse = (data: { success: boolean; message: string; active: boolean }) => {
+      console.log('📡 Tracking status response:', data);
+      if (data.success) {
+        setTrackingActive(data.active);
+      }
+    };
+
+    socket.on('tracking:statusChanged', handleTrackingStatusChanged);
+    socket.on('tracking:status', handleTrackingStatus);
+    socket.on('tracking:statusResponse', handleTrackingStatusResponse);
+
+    // Pedir estado actual al conectar
+    setTimeout(() => {
+      socketService.getTrackingStatus();
+    }, 1000);
+
+    return () => {
+      socket.off('tracking:statusChanged', handleTrackingStatusChanged);
+      socket.off('tracking:status', handleTrackingStatus);
+      socket.off('tracking:statusResponse', handleTrackingStatusResponse);
+    };
+  }, []);
+
   // Efecto separado para manejar la conexión inicial
   useEffect(() => {
     // Conectar automáticamente al montar el hook
@@ -144,11 +196,25 @@ export const useGPSTracking = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const toggleTracking = useCallback(() => {
+    const newStatus = !trackingActive;
+    console.log(`🔄 ${newStatus ? 'Activando' : 'Desactivando'} tracking...`);
+
+    // Obtener el ID del usuario desde localStorage
+    const userId = localStorage.getItem('userId') || localStorage.getItem('username') || 'admin';
+    socketService.setTrackingStatus(newStatus, userId);
+
+    // Actualizar el estado local inmediatamente para mejor UX
+    setTrackingActive(newStatus);
+  }, [trackingActive]);
+
   return {
     locations,
     connectionStatus,
     connect,
     disconnect,
     isConnected: connectionStatus.connected,
+    trackingActive,
+    toggleTracking,
   };
 };

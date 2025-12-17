@@ -161,6 +161,44 @@ class SocketService {
     }
   }
 
+  // Métodos para control del tracking
+  setTrackingStatus(active: boolean, userId?: string) {
+    if (this.socket?.connected) {
+      const data = {
+        active,
+        userId: userId || 'admin' // Valor por defecto si no se proporciona
+      };
+      console.log(`📡 Emitting tracking:setStatus with active=${active}`);
+      this.socket.emit('tracking:setStatus', data, (response: any) => {
+        console.log('✅ Response from tracking:setStatus:', response);
+      });
+    } else {
+      console.warn('⚠️ Socket not connected - cannot set tracking status');
+    }
+  }
+
+  getTrackingStatus() {
+    if (this.socket?.connected) {
+      console.log('📡 Emitting tracking:getStatus');
+      this.socket.emit('tracking:getStatus');
+    } else {
+      console.warn('⚠️ Socket not connected - cannot get tracking status');
+    }
+  }
+
+  requestAllLocations() {
+    if (this.socket?.connected) {
+      console.log('📡 Emitting location:getAll');
+      this.socket.emit('location:getAll');
+    } else {
+      console.warn('⚠️ Socket not connected - cannot request locations');
+    }
+  }
+
+  getSocket(): Socket | null {
+    return this.socket;
+  }
+
   isConnected(): boolean {
     return this.socket?.connected || false;
   }

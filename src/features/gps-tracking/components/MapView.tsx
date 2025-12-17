@@ -18,6 +18,8 @@ export const MapView = ({ locations, onMarkerClick }: MapViewProps) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [userHasInteracted, setUserHasInteracted] = useState(false); // Para saber si el usuario interactuó
+  const initialLoadRef = useRef(true); // Para controlar el ajuste inicial
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -38,6 +40,19 @@ export const MapView = ({ locations, onMarkerClick }: MapViewProps) => {
 
     map.current.on('load', () => {
       setMapLoaded(true);
+
+      // Detectar cuando el usuario interactúa con el mapa
+      const handleUserInteraction = () => {
+        if (!userHasInteracted) {
+          setUserHasInteracted(true);
+        }
+      };
+
+      // Eventos que indican interacción del usuario
+      map.current?.on('dragstart', handleUserInteraction);
+      map.current?.on('zoomstart', handleUserInteraction);
+      map.current?.on('pitchstart', handleUserInteraction);
+      map.current?.on('rotatestart', handleUserInteraction);
     });
 
     return () => {
@@ -113,8 +128,10 @@ export const MapView = ({ locations, onMarkerClick }: MapViewProps) => {
       markersRef.current.push(marker);
     });
 
-    // Ajustar vista para mostrar todos los marcadores si hay ubicaciones
-    if (locations.length > 0) {
+    // Ajustar vista SOLO en las siguientes condiciones:
+    // 1. Es la primera carga (initialLoadRef.current === true)
+    // 2. El usuario NO ha interactuado aún
+    if (locations.length > 0 && (initialLoadRef.current || !userHasInteracted)) {
       const bounds = new mapboxgl.LngLatBounds();
       locations.forEach(location => {
         if (location.location.latitude && location.location.longitude) {
@@ -138,8 +155,13 @@ export const MapView = ({ locations, onMarkerClick }: MapViewProps) => {
           });
         }
       }
-    } else {
-      // Volver al centro si no hay ubicaciones
+
+      // Después de la primera carga, marcar que ya no es inicial
+      if (initialLoadRef.current) {
+        initialLoadRef.current = false;
+      }
+    } else if (locations.length === 0 && (initialLoadRef.current || !userHasInteracted)) {
+      // Volver al centro solo si no hay ubicaciones y no hay interacción del usuario
       map.current.flyTo({
         center: PERU_CENTER,
         zoom: 15,

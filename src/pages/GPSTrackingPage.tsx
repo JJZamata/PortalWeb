@@ -8,7 +8,7 @@ import { UserLocation } from '@/features/gps-tracking/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Users, MapPin, RefreshCw } from 'lucide-react';
+import { Users, MapPin, RefreshCw, Power } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const GPSTrackingPage = () => {
@@ -18,6 +18,8 @@ export const GPSTrackingPage = () => {
     connect,
     disconnect,
     isConnected,
+    trackingActive,
+    toggleTracking,
   } = useGPSTracking();
 
   const [selectedLocation, setSelectedLocation] = useState<UserLocation | null>(null);
@@ -62,11 +64,49 @@ export const GPSTrackingPage = () => {
                 <RefreshCw className={`h-4 w-4 mr-2 ${connectionStatus.connecting ? 'animate-spin' : ''}`} />
                 {isConnected ? 'Reconectar' : 'Conectar'}
               </Button>
+              <Button
+                variant={trackingActive ? "destructive" : "default"}
+                onClick={toggleTracking}
+                disabled={!isConnected}
+                className="flex items-center gap-2"
+              >
+                <Power className="h-4 w-4" />
+                {trackingActive ? '🔴 Desactivar Tracking' : '🟢 Activar Tracking'}
+              </Button>
             </div>
           </div>
 
+          {/* Status del Tracking */}
+          <Card className={`border-2 ${trackingActive ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded-full ${trackingActive ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></div>
+                  <div>
+                    <p className="text-lg font-semibold">
+                      Sistema de Tracking: <span className={trackingActive ? 'text-green-600' : 'text-red-600'}>
+                        {trackingActive ? 'ACTIVO' : 'INACTIVO'}
+                      </span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {trackingActive
+                        ? 'Recibiendo ubicaciones de fiscalizadores en tiempo real'
+                        : 'El sistema no está recibiendo ubicaciones. Haz clic en "Activar Tracking" para iniciar.'
+                      }
+                    </p>
+                  </div>
+                </div>
+                {!trackingActive && isConnected && (
+                  <Badge variant="destructive" className="animate-pulse">
+                    Sistema Desactivado
+                  </Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Fiscalizadores</CardTitle>
@@ -94,6 +134,18 @@ export const GPSTrackingPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-gray-600">{locations.length - onlineCount}</div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Estado del Tracking</CardTitle>
+                <Power className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${trackingActive ? 'text-green-600' : 'text-red-600'}`}>
+                  {trackingActive ? 'ACTIVO' : 'INACTIVO'}
+                </div>
               </CardContent>
             </Card>
           </div>

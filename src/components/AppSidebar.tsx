@@ -20,7 +20,8 @@ import {
   X,
   FileBarChart, // Nuevo icono para Actas
   CheckCircle,  // Para Actas Conformes
-  XCircle      // Para Actas No Conformes
+  XCircle,      // Para Actas No Conformes
+  MapPin        // Icono para GPS Tracking
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -35,6 +36,14 @@ const menuItems = [
     title: "Dashboard",
     icon: LayoutDashboard,
     url: "/admin",
+  },
+  {
+    title: "GPS Tracking",
+    icon: MapPin,
+    items: [
+      { title: "En vivo", url: "/gps-tracking", icon: MapPin },
+      { title: "Historial", url: "/gps-tracking/history", icon: Archive }
+    ],
   },
   {
     title: "Personal",

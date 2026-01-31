@@ -1,0 +1,67 @@
+.mapboxgl-popup {
+  font-family: inherit;
+}
+
+.mapboxgl-popup-content {
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 0;
+  overflow: hidden;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.marker-wrapper {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Animación de pulso para marcadores activos */
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping {
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Controles del mapa */
+.mapboxgl-ctrl {
+  margin: 10px !important;
+}
+
+.mapboxgl-ctrl-group {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+.mapboxgl-ctrl button {
+  border-radius: 0 !important;
+  border: none !important;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.mapboxgl-ctrl button:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Control de escala */
+.mapboxgl-ctrl-scale {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid #bbb !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  line-height: 20px !important;
+  padding: 0 5px !important;
+}

@@ -23,14 +23,123 @@ import {
   Award,
   Globe,
   Smartphone,
-  Database
+  Database,
+  Eye,
+  ChevronRight,
+  AlertCircle,
+  Filter
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
-import DocumentacionImg from '@/assets/images/documentacion.png';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
+
+  // Datos para el gráfico de barras - Actas por Tipo (Última Semana)
+  const actasPorTipoData = [
+    { dia: 'Lun', conformes: 24, noConformes: 8 },
+    { dia: 'Mar', conformes: 18, noConformes: 12 },
+    { dia: 'Mié', conformes: 28, noConformes: 6 },
+    { dia: 'Jue', conformes: 22, noConformes: 10 },
+    { dia: 'Vie', conformes: 32, noConformes: 5 },
+    { dia: 'Sáb', conformes: 15, noConformes: 3 },
+    { dia: 'Dom', conformes: 8, noConformes: 2 },
+  ];
+
+  // Datos para el gráfico de dona - Infracciones por Gravedad
+  const infraccionesPorGravedadData = [
+    { name: 'Leve', value: 50, color: '#f59e0b' },
+    { name: 'Grave', value: 33, color: '#fb923c' },
+    { name: 'Muy Grave', value: 17, color: '#ef4444' },
+  ];
+
+  // Datos para el gráfico de línea - Actas Registradas por Día
+  const actasPorDiaData = [
+    { fecha: '25/01', total: 32 },
+    { fecha: '26/01', total: 28 },
+    { fecha: '27/01', total: 34 },
+    { fecha: '28/01', total: 42 },
+    { fecha: '29/01', total: 38 },
+    { fecha: '30/01', total: 45 },
+    { fecha: '31/01', total: 40 },
+  ];
+
+  // Datos de actas recientes
+  const actasRecientes = [
+    {
+      numeroActa: 'ACT-2024-001',
+      fecha: '31/01/2024 09:45',
+      placa: 'AQP-123',
+      conductor: 'Juan Pérez Mamani',
+      fiscalizador: 'Carlos Quispe',
+      tipo: 'Conforme',
+      estado: 'Validada',
+    },
+    {
+      numeroActa: 'ACT-2024-002',
+      fecha: '31/01/2024 10:20',
+      placa: 'AQP-456',
+      conductor: 'María López Cruz',
+      fiscalizador: 'Ana Torres',
+      tipo: 'No Conforme',
+      estado: 'Pendiente',
+    },
+    {
+      numeroActa: 'ACT-2024-003',
+      fecha: '31/01/2024 11:15',
+      placa: 'AQP-789',
+      conductor: 'Pedro Huanca Flores',
+      fiscalizador: 'Carlos Quispe',
+      tipo: 'Conforme',
+      estado: 'Validada',
+    },
+    {
+      numeroActa: 'ACT-2024-004',
+      fecha: '31/01/2024 12:30',
+      placa: 'AQP-234',
+      conductor: 'Rosa Choque Apaza',
+      fiscalizador: 'Luis Mendoza',
+      tipo: 'Conforme',
+      estado: 'Validada',
+    },
+  ];
+
+  // Actividad reciente
+  const actividadReciente = [
+    {
+      id: 1,
+      accion: 'Nuevo conductor registrado',
+      detalles: 'Juan Pérez - Zona Norte',
+      tiempo: 'Hace 5 minutos',
+      tipo: 'success',
+      icono: Users,
+    },
+    {
+      id: 2,
+      accion: 'Infracción registrada',
+      detalles: 'Mototaxi ABC-123 - Exceso de velocidad',
+      tiempo: 'Hace 12 minutos',
+      tipo: 'warning',
+      icono: AlertTriangle,
+    },
+    {
+      id: 3,
+      accion: 'Documento vencido detectado',
+      detalles: 'Licencia de conducir - 5 vencimientos',
+      tiempo: 'Hace 25 minutos',
+      tipo: 'error',
+      icono: FileText,
+    },
+    {
+      id: 4,
+      accion: 'Fiscalización completada',
+      detalles: 'Zona Centro - 15 mototaxis revisadas',
+      tiempo: 'Hace 1 hora',
+      tipo: 'info',
+      icono: Shield,
+    },
+  ];
 
   // Solo las estadísticas más relevantes para FISCAMOTO
   const stats = [
@@ -171,125 +280,257 @@ const AdminPanel = () => {
   return (
     <AdminLayout>
       <div className="space-y-8">
-        {/* Hero Section con color azul */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 dark:from-blue-900 dark:via-blue-950 dark:to-gray-900 p-8 text-white shadow-2xl">
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-2xl bg-white/20 dark:bg-white/10 p-3 backdrop-blur-sm">
-                    <Shield className="w-8 h-8" />
+        {/* Acciones Rápidas */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {quickActions.map((action, index) => (
+            <Card 
+              key={index}
+              className="group cursor-pointer border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-background to-accent/20 dark:from-gray-900 dark:to-gray-800 hover:scale-105"
+              onClick={action.onClick}
+            >
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className={`p-4 rounded-2xl bg-gradient-to-br ${action.gradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    <action.icon className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-4xl font-bold tracking-tight">FISCAMOTO</h1>
-                    <p className="text-blue-100 dark:text-blue-200 text-lg">Sistema de Control y Fiscalización</p>
+                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{action.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{action.description}</p>
                   </div>
                 </div>
-                <p className="text-blue-200 dark:text-blue-300 max-w-2xl">
-                  Monitoreo en tiempo real del sistema de mototaxis. Control total sobre fiscalizadores, 
-                  conductores, vehículos y empresas operativas.
-                </p>
-              </div>
-              <div className="hidden lg:flex items-center gap-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold">1,247</div>
-                  <div className="text-sm text-blue-200 dark:text-blue-300">Vehículos</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold">94.2%</div>
-                  <div className="text-sm text-blue-200 dark:text-blue-300">Conformidad</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold">24</div>
-                  <div className="text-sm text-blue-200 dark:text-blue-300">Fiscalizadores</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 h-72 w-72 rounded-full bg-white/5 dark:bg-white/10"></div>
-          <div className="absolute bottom-0 left-0 -mb-4 -ml-4 h-48 w-48 rounded-full bg-white/5 dark:bg-white/10"></div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Quick Actions */}
-          <Card className="lg:col-span-1 border-0 shadow-lg bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Zap className="w-6 h-6 text-orange-500" />
-                Acciones Rápidas
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Acceso directo a las funciones más utilizadas
-              </CardDescription>
+        {/* Gráficos estadísticos */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Actas por Tipo (Última Semana) */}
+          <Card className="border-0 shadow-lg bg-background dark:bg-gray-900">
+            <CardHeader>
+              <CardTitle className="text-lg text-foreground">Actas por Tipo (Última Semana)</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {quickActions.map((action, index) => (
-                <div 
-                  key={index}
-                  className="group flex items-center p-4 rounded-xl border border-border hover:border-accent hover:bg-background dark:hover:bg-accent/10 cursor-pointer transition-all duration-300 hover:shadow-md"
-                  onClick={action.onClick}
-                >
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${action.gradient} dark:from-gray-900 dark:to-gray-800 shadow-lg mr-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <action.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-foreground group-hover:text-muted-foreground transition-colors">{action.title}</p>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
-                  </div>
-                </div>
-              ))}
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={actasPorTipoData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="dia" tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
+                  <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                  />
+                  <Bar dataKey="conformes" fill="#22c55e" radius={[8, 8, 0, 0]} name="Conformes" />
+                  <Bar dataKey="noConformes" fill="#ef4444" radius={[8, 8, 0, 0]} name="No Conformes" />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
-          <Card className="lg:col-span-2 border-0 shadow-lg bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Activity className="w-6 h-6 text-blue-500" />
-                Actividad Reciente
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Últimas actividades registradas en el sistema
-              </CardDescription>
+          {/* Infracciones por Gravedad */}
+          <Card className="border-0 shadow-lg bg-background dark:bg-gray-900">
+            <CardHeader>
+              <CardTitle className="text-lg text-foreground">Infracciones por Gravedad</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentActivities.map((activity, index) => (
-                  <div key={activity.id} className="group flex items-start space-x-4 p-4 rounded-xl border border-border hover:border-accent hover:bg-background dark:hover:bg-accent/10 transition-all duration-300 hover:shadow-md">
-                    <div className="flex-shrink-0">
-                      <div className={`p-3 rounded-xl bg-gradient-to-br ${activity.gradient} dark:from-gray-900 dark:to-gray-800 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <activity.icon className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground group-hover:text-muted-foreground transition-colors">
-                        {activity.action}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">{activity.details}</p>
-                      <div className="flex items-center justify-between mt-3">
-                        <p className="text-xs text-muted-foreground flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {activity.time}
-                        </p>
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs border ${getActivityBadge(activity.type)}`}
-                        >
-                          {activity.type === 'success' ? 'Registro' :
-                           activity.type === 'warning' ? 'Infracción' :
-                           activity.type === 'error' ? 'Vencimiento' :
-                           'Fiscalización'}
-                        </Badge>
-                      </div>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={infraccionesPorGravedadData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, value }) => `${name} (${value}%)`}
+                  >
+                    {infraccionesPorGravedadData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Actas Registradas por Día */}
+          <Card className="border-0 shadow-lg bg-background dark:bg-gray-900">
+            <CardHeader>
+              <CardTitle className="text-lg text-foreground">Actas Registradas por Día</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={actasPorDiaData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="fecha" tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
+                  <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      color: 'hsl(var(--foreground))'
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="total" 
+                    stroke="#1e3a8a" 
+                    strokeWidth={2}
+                    dot={{ fill: '#1e3a8a', r: 4 }}
+                    activeDot={{ r: 6 }}
+                    name="Total Actas"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Actas Recientes y Actividad */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Actas Recientes */}
+          <Card className="lg:col-span-2 border-0 shadow-lg bg-background dark:bg-gray-900">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg text-foreground">Actas Recientes</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="dark:border-gray-700 dark:hover:bg-gray-800">
+                    Todos
+                  </Button>
+                  <Button variant="outline" size="sm" className="dark:border-gray-700 dark:hover:bg-gray-800">
+                    Todos
+                  </Button>
+                  <Button variant="outline" size="sm" className="dark:border-gray-700 dark:hover:bg-gray-800">
+                    <Filter className="w-4 h-4 mr-1" />
+                    Más filtros
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b dark:border-gray-700">
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">N° ACTA</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">FECHA Y HORA</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">PLACA</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">CONDUCTOR</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">FISCALIZADOR</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">TIPO</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">ESTADO</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">ACCIÓN</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {actasRecientes.map((acta) => (
+                      <tr key={acta.numeroActa} className="border-b dark:border-gray-800 hover:bg-accent/50 dark:hover:bg-gray-800/50 transition-colors">
+                        <td className="py-3 px-2 text-sm text-foreground">{acta.numeroActa}</td>
+                        <td className="py-3 px-2 text-sm text-foreground">{acta.fecha}</td>
+                        <td className="py-3 px-2 text-sm font-medium text-foreground">{acta.placa}</td>
+                        <td className="py-3 px-2 text-sm text-foreground">{acta.conductor}</td>
+                        <td className="py-3 px-2 text-sm text-foreground">{acta.fiscalizador}</td>
+                        <td className="py-3 px-2">
+                          <Badge 
+                            className={`text-xs ${
+                              acta.tipo === 'Conforme' 
+                                ? 'bg-blue-900 text-white hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700' 
+                                : 'bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                            }`}
+                          >
+                            {acta.tipo}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-2">
+                          <Badge 
+                            className={`text-xs ${
+                              acta.estado === 'Validada'
+                                ? 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
+                                : 'bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700'
+                            }`}
+                            variant="outline"
+                          >
+                            {acta.estado}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate('/actas')}
+                            className="dark:hover:bg-gray-800"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Ver
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actividad Reciente */}
+          <Card className="lg:col-span-1 border-0 shadow-lg bg-background dark:bg-gray-900">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2 text-foreground">
+                  <Activity className="w-5 h-5" />
+                  Actividad Reciente
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {actividadReciente.map((actividad) => (
+                <div
+                  key={actividad.id}
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 dark:hover:bg-gray-800/50 transition-colors border border-border dark:border-gray-700"
+                >
+                  <div className={`p-2 rounded-lg flex-shrink-0 ${
+                    actividad.tipo === 'success'
+                      ? 'bg-green-100 dark:bg-green-900/30'
+                      : actividad.tipo === 'warning'
+                      ? 'bg-yellow-100 dark:bg-yellow-900/30'
+                      : actividad.tipo === 'error'
+                      ? 'bg-red-100 dark:bg-red-900/30'
+                      : 'bg-blue-100 dark:bg-blue-900/30'
+                  }`}>
+                    <actividad.icono className={`w-4 h-4 ${
+                      actividad.tipo === 'success'
+                        ? 'text-green-600 dark:text-green-400'
+                        : actividad.tipo === 'warning'
+                        ? 'text-yellow-600 dark:text-yellow-400'
+                        : actividad.tipo === 'error'
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-blue-600 dark:text-blue-400'
+                    }`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-foreground">{actividad.accion}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{actividad.detalles}</p>
+                    <div className="flex items-center mt-2">
+                      <Clock className="w-3 h-3 mr-1 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">{actividad.tiempo}</p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>

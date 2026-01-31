@@ -10,22 +10,42 @@ interface CurrentUser {
 }
 
 export const useCurrentUser = () => {
-  // Start with whatever is in localStorage to avoid showing placeholders while cargando
+  // Inicializar con los datos del localStorage que se guardan en Login
   const initialUser: CurrentUser | null = (() => {
-    const username = localStorage.getItem('username') || undefined;
-    const email = localStorage.getItem('userEmail') || undefined;
-    if (username || email) return { username, email };
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    const username = localStorage.getItem('username');
+    const email = localStorage.getItem('userEmail');
+    const userId = localStorage.getItem('userId');
+    const rolesString = localStorage.getItem('userRoles');
+
+    let roles: string[] | undefined = undefined;
+    if (rolesString) {
+      try {
+        roles = JSON.parse(rolesString);
+      } catch (e) {
+        console.error('Error parsing roles:', e);
+      }
+    }
+
+    if (username || email) {
+      return {
+        id: userId || undefined,
+        username: username || undefined,
+        email: email || undefined,
+        roles: roles,
+      };
+    }
     return null;
   })();
 
   const [user, setUser] = useState<CurrentUser | null>(initialUser);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialUser);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        setLoading(true);
-        // Obtener el token del localStorage
         const token = localStorage.getItem('token');
 
         if (!token) {
@@ -34,8 +54,35 @@ export const useCurrentUser = () => {
           return;
         }
 
+        // Si ya tenemos datos en localStorage, usar esos
+        const storedUsername = localStorage.getItem('username');
+        const storedEmail = localStorage.getItem('userEmail');
+        const storedUserId = localStorage.getItem('userId');
+        const storedRolesString = localStorage.getItem('userRoles');
+
+        let storedRoles: string[] | undefined = undefined;
+        if (storedRolesString) {
+          try {
+            storedRoles = JSON.parse(storedRolesString);
+          } catch (e) {
+            console.error('Error parsing stored roles:', e);
+          }
+        }
+
+        if (storedUsername || storedEmail) {
+          const currentUser: CurrentUser = {
+            id: storedUserId || undefined,
+            username: storedUsername || undefined,
+            email: storedEmail || undefined,
+            roles: storedRoles,
+          };
+          setUser(currentUser);
+          setLoading(false);
+          return;
+        }
+
+        // Si no hay datos en localStorage, intentar obtener del API
         try {
-          // Nuevo endpoint provisto: obtener al usuario autenticado
           const response = await axiosInstance.get('/users/me');
           const apiUser = response.data?.data ?? response.data;
 
@@ -50,29 +97,26 @@ export const useCurrentUser = () => {
 
             setUser(normalizedUser);
 
+            // Guardar en localStorage para futuras cargas
+            if (normalizedUser.id) {
+              localStorage.setItem('userId', normalizedUser.id.toString());
+            }
             if (normalizedUser.username) {
               localStorage.setItem('username', normalizedUser.username);
             }
             if (normalizedUser.email) {
               localStorage.setItem('userEmail', normalizedUser.email);
             }
-
-            setLoading(false);
-            return;
+            if (normalizedUser.roles && normalizedUser.roles.length > 0) {
+              localStorage.setItem('userRoles', JSON.stringify(normalizedUser.roles));
+            }
           }
-        } catch (refreshError: any) {
-        }        // Fallback: Obtener datos del localStorage
-        const userEmail = localStorage.getItem('userEmail');
-        const username = localStorage.getItem('username');
-
-        if (username || userEmail) {
-          const fallbackUser: CurrentUser = {
-            username: username || 'Usuario',
-            email: userEmail || undefined
-          };
-          setUser(fallbackUser);
+        } catch (apiError: any) {
+          console.warn('Error al obtener datos del API /users/me, usando localStorage:', apiError.message);
+          // Fallback ya realizado arriba
         }
       } catch (error) {
+        console.error('Error en useCurrentUser:', error);
       } finally {
         setLoading(false);
       }

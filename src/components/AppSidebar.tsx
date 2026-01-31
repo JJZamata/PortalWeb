@@ -198,12 +198,12 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         "fixed left-0 top-0 z-50 bg-background border-r border-border transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:left-0",
         // Responsive widths
         "w-80 sm:w-80 md:w-80 lg:w-64 xl:w-72",
-        // Altura completa siempre
-        "h-screen min-h-screen lg:h-screen lg:min-h-screen",
+        // Altura completa siempre con flex para estructura
+        "h-screen min-h-screen lg:h-screen lg:min-h-screen flex flex-col",
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
               <img 
@@ -300,7 +300,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-3 sm:p-4 border-t border-border">
+        <div className="p-3 sm:p-4 border-t border-border flex-shrink-0">
           <Button
             variant="ghost"
             className="w-full justify-start h-12 px-3 sm:px-4 rounded-xl font-medium text-muted-foreground hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/40 dark:hover:text-red-200 transition-all duration-200 text-sm sm:text-base"

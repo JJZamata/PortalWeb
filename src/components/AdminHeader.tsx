@@ -40,18 +40,37 @@ export function AdminHeader() {
 
   // Obtener el nombre del usuario
   const getDisplayName = () => {
-    if (userLoading) return 'Cargando...';
-    return user?.username || (user as any)?.name || 'Usuario';
+    if (user?.username) return user.username;
+    if (user?.email) return user.email.split('@')[0];
+    return 'Usuario';
+  };
+
+  // Obtener el email del usuario
+  const getDisplayEmail = () => {
+    if (user?.email) return user.email;
+    return 'Sin correo asignado';
   };
 
   // Obtener el rol del usuario
   const getUserRole = () => {
-    if (userLoading) return 'Cargando...';
     if (user?.roles && user.roles.length > 0) {
-      const first = user.roles[0] as any;
-      return typeof first === 'string' ? first : first.name || 'Usuario';
+      return user.roles[0];
     }
-    return 'Usuario';
+    
+    // Fallback a localStorage
+    const storedRoles = localStorage.getItem('userRoles');
+    if (storedRoles) {
+      try {
+        const roles = JSON.parse(storedRoles);
+        if (Array.isArray(roles) && roles.length > 0) {
+          return roles[0];
+        }
+      } catch (e) {
+        console.error('Error parsing roles:', e);
+      }
+    }
+    
+    return 'Administrador';
   };
 
   useEffect(() => {
@@ -128,30 +147,36 @@ export function AdminHeader() {
                     {getDisplayName()}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {userLoading ? 'Cargando...' : (user?.email || 'Sin email')}
+                    {getDisplayEmail()}
                   </p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-64 sm:w-72">
+              <DropdownMenuLabel className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-md px-3 py-2 mb-2">
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                    {getDisplayName()}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 break-all">
+                    {getDisplayEmail()}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <div className="px-2 py-2 text-sm">
-                <p className="font-medium text-gray-900 dark:text-gray-100">{getDisplayName()}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 break-all">
-                  {userLoading ? 'Cargando...' : (user?.email || 'Sin email')}
-                </p>
-                <Badge variant="secondary" className="mt-2 text-xs capitalize">
+              <div className="px-3 py-2 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Rol:</span>
+                <Badge variant="secondary" className="text-xs capitalize">
                   {getUserRole()}
                 </Badge>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
                 <User className="w-4 h-4 mr-2" />
-                Perfil
+                Ver Perfil
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 focus:bg-red-50 dark:focus:bg-red-950/20">
                 <LogOut className="w-4 h-4 mr-2" />
                 Cerrar Sesión
               </DropdownMenuItem>

@@ -46,29 +46,40 @@ const Login = () => {
       );
 
       if (response.data.success) {
-        // Guardar el token en localStorage
+        // El endpoint devuelve los datos en response.data.data
+        const userData = response.data.data;
+
+        // Guardar el token en localStorage si viene (aunque el servidor usa cookies)
         if (response.data.token) {
           localStorage.setItem('token', response.data.token);
+        } else {
+          // Si no viene token, usar un token dummy para indicar que está autenticado
+          localStorage.setItem('token', 'authenticated');
         }
         
         // Guardar el ID del usuario en localStorage
-        if (response.data.user?.id) {
-          localStorage.setItem('userId', response.data.user.id.toString());
+        if (userData?.id) {
+          localStorage.setItem('userId', userData.id.toString());
         }
 
         // Guardar el username del usuario en localStorage
-        if (response.data.user?.username) {
-          localStorage.setItem('username', response.data.user.username);
+        if (userData?.username) {
+          localStorage.setItem('username', userData.username);
         }
 
         // Guardar el email del usuario en localStorage
-        if (response.data.user?.email) {
-          localStorage.setItem('userEmail', response.data.user.email);
+        if (userData?.email) {
+          localStorage.setItem('userEmail', userData.email);
+        }
+
+        // Guardar los roles del usuario
+        if (userData?.roles && Array.isArray(userData.roles)) {
+          localStorage.setItem('userRoles', JSON.stringify(userData.roles));
         }
         
         toast({
           title: "¡Inicio de sesión exitoso!",
-          description: "Bienvenido al sistema.",
+          description: `Bienvenido ${userData?.username || 'al sistema'}.`,
         });
         navigate('/admin');
       } else {

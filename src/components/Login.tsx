@@ -105,60 +105,6 @@ const Login = () => {
     }
   };
 
-  const createRainDrop = () => {
-    const drop = document.createElement('div');
-    drop.className = 'rain-drop';
-
-    const left = Math.random() * window.innerWidth;
-    const size = Math.random() * 6 + 12;
-    const duration = Math.random() * 4 + 8;
-    const delay = Math.random() * 6;
-
-    drop.style.left = `${left}px`;
-    drop.style.width = `${size}px`;
-    drop.style.height = `${size}px`;
-    drop.style.animationDuration = `${duration}s`;
-    drop.style.animationDelay = `${delay}s`;
-
-    drop.addEventListener('animationend', () => {
-      if (drop.parentNode) {
-        drop.parentNode.removeChild(drop);
-      }
-
-      const newDrop = createRainDrop();
-      const container = document.querySelector('.rain-container');
-      if (container) {
-        container.appendChild(newDrop);
-      }
-    });
-
-    return drop;
-  };
-
-  const startRain = () => {
-    const container = document.querySelector('.rain-container');
-    if (!container) return;
-
-    for (let i = 0; i < 10; i++) {
-      const drop = createRainDrop();
-      container.appendChild(drop);
-    }
-
-    const interval = setInterval(() => {
-      const drop = createRainDrop();
-      container.appendChild(drop);
-    }, 2000);
-
-    return () => clearInterval(interval);
-  };
-
-  useEffect(() => {
-    const rainCleanup = startRain();
-    return () => {
-      rainCleanup && rainCleanup();
-    };
-  }, []);
-
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#8B1F1F] via-[#A52A2A] to-[#5E1515] flex relative overflow-hidden">
       {/* Fondo de la imagen LAJOYA */}

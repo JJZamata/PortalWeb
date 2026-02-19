@@ -3,10 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Shield, User, Calendar, Monitor } from "lucide-react";
+import { Shield, User, Calendar, Monitor, AlertTriangle, CheckCircle2, UserCircle2, FileText, Car, Sparkles } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { AuditLog } from "../types";
 import React from "react";
+import { AuditActionIconKey, translateAuditAction } from "../utils/auditActionTranslator";
 
 interface Props {
   open: boolean;
@@ -16,6 +17,25 @@ interface Props {
 
 export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog }: Props) => {
   if (!auditLog) return null;
+
+  const action = translateAuditAction(auditLog.method, auditLog.url);
+
+  const getActionIcon = (iconKey: AuditActionIconKey) => {
+    switch (iconKey) {
+      case 'warning':
+        return <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
+      case 'success':
+        return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+      case 'user':
+        return <UserCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />;
+      case 'document':
+        return <FileText className="w-4 h-4 text-orange-600 dark:text-orange-400" />;
+      case 'vehicle':
+        return <Car className="w-4 h-4 text-gray-600 dark:text-gray-300" />;
+      default:
+        return <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />;
+    }
+  };
 
   const getMethodColor = (method: string) => {
     switch (method) {
@@ -89,6 +109,15 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
                     <p className="text-sm font-mono font-semibold text-gray-900 dark:text-white mt-1 break-all">
                       {auditLog.url}
                     </p>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Acción para usuario
+                    </Label>
+                    <div className="mt-1 flex items-center gap-2">
+                      {getActionIcon(action.iconKey)}
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{action.title}</p>
+                    </div>
                   </div>
                   <div>
                     <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">

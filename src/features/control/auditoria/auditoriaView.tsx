@@ -86,16 +86,6 @@ const AuditoriaView = () => {
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Errores</p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-blue-700 dark:text-blue-400">
-                  {loading ? '-' : estadisticas?.avg_duration_ms || '0'}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Duración Promedio (ms)</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-indigo-700 dark:text-indigo-400">{loading ? '-' : pagination?.total_records || 0}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Total Registros</p>
-              </div>
             </div>
           </div>
         </div>

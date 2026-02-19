@@ -1,8 +1,9 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, RefreshCw, Search, Calendar, User, Database } from "lucide-react";
+import { Eye, RefreshCw, Search, Calendar, User, AlertTriangle, CheckCircle2, UserCircle2, FileText, Car, Sparkles } from "lucide-react";
 import { AuditLog } from "../types";
+import { AuditActionIconKey, translateAuditAction } from "../utils/auditActionTranslator";
 
 interface Props {
   auditLogs: AuditLog[];
@@ -12,6 +13,23 @@ interface Props {
 }
 
 export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props) => {
+  const getActionIcon = (iconKey: AuditActionIconKey) => {
+    switch (iconKey) {
+      case 'warning':
+        return <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
+      case 'success':
+        return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+      case 'user':
+        return <UserCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />;
+      case 'document':
+        return <FileText className="w-4 h-4 text-orange-600 dark:text-orange-400" />;
+      case 'vehicle':
+        return <Car className="w-4 h-4 text-gray-600 dark:text-gray-300" />;
+      default:
+        return <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />;
+    }
+  };
+
   const getMethodBadge = (method: string) => {
     switch (method) {
       case 'GET':
@@ -44,9 +62,11 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
   const filteredLogs = auditLogs.filter(log => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
+    const action = translateAuditAction(log.method, log.url);
     return (
       (log.method && log.method.toLowerCase().includes(searchLower)) ||
       (log.url && log.url.toLowerCase().includes(searchLower)) ||
+      action.title.toLowerCase().includes(searchLower) ||
       (log.user?.username && log.user.username.toLowerCase().includes(searchLower)) ||
       (log.ip && log.ip.toLowerCase().includes(searchLower))
     );
@@ -70,9 +90,9 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
               <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Fecha/Hora</TableHead>
               <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Método</TableHead>
               <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Endpoint</TableHead>
+              <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Acción</TableHead>
               <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Estado</TableHead>
               <TableHead className="font-bold text-indigo-900 dark:text-white py-4">Usuario</TableHead>
-              <TableHead className="font-bold text-indigo-900 dark:text-white py-4">IP</TableHead>
               <TableHead className="font-bold text-indigo-900 dark:text-white text-center py-4">Detalles</TableHead>
             </TableRow>
           </TableHeader>
@@ -89,6 +109,11 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
             ) : (
               filteredLogs.map((log) => (
                 <TableRow key={log.id} className="hover:bg-indigo-50/50 dark:hover:bg-gray-800 transition-colors border-b border-gray-200 dark:border-gray-700">
+                  {(() => {
+                    const action = translateAuditAction(log.method, log.url);
+
+                    return (
+                      <>
                   <TableCell className="py-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -112,6 +137,12 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
                   </TableCell>
                   <TableCell className="font-mono font-medium text-gray-900 dark:text-gray-300 py-4 max-w-xs truncate">{log.url}</TableCell>
                   <TableCell className="py-4">
+                    <div className="flex items-center gap-2 min-w-[220px]">
+                      {getActionIcon(action.iconKey)}
+                      <span className="font-medium text-gray-900 dark:text-gray-200">{action.title}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-4">
                     <Badge 
                       variant="secondary" 
                       className={`${getStatusBadge(log.statusCode)} font-semibold rounded-full border`}
@@ -125,7 +156,6 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
                       <span className="font-medium text-gray-900 dark:text-gray-300">{log.user?.username || '-'}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-gray-700 dark:text-gray-300 py-4">{log.ip}</TableCell>
                   <TableCell className="text-center py-4">
                     <Button 
                       variant="ghost" 
@@ -136,6 +166,9 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
                       <Eye className="w-4 h-4" />
                     </Button>
                   </TableCell>
+                      </>
+                    );
+                  })()}
                 </TableRow>
               ))
             )}

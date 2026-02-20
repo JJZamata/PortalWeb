@@ -6,66 +6,123 @@ interface ActasDiariasData {
   total: number;
 }
 
+interface ActasPorTipoData {
+  dia: string;
+  conformes: number;
+  noConformes: number;
+}
+
 interface ActaRecord {
   id: number;
   createdAt: string;
+  type?: string;
+  recordType?: string;
   [key: string]: any;
 }
+
+interface PaginationMeta {
+  hasNextPage?: boolean;
+  nextPage?: number | null;
+}
+
+const toLocalDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const toDisplayDate = (date: Date) => date.toLocaleDateString('es-ES', {
+  day: '2-digit',
+  month: '2-digit',
+});
 
 export const useActasDiarias = () => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['actas-diarias'],
     queryFn: async () => {
       try {
-        // Obtener registros sin parámetros opcionales que causen problemas
-        const response = await axiosInstance.get('/records');
-        
-        if (!response.data.success) {
-          throw new Error('Error en la respuesta del servidor');
+        const allRecords: ActaRecord[] = [];
+        let currentPage = 1;
+        let hasNextPage = true;
+
+        while (hasNextPage) {
+          const response = await axiosInstance.get(`/records?page=${currentPage}`);
+
+          if (!response.data?.success) {
+            throw new Error('Error en la respuesta del servidor');
+          }
+
+          const pageRecords: ActaRecord[] = response.data?.data?.data || [];
+          allRecords.push(...pageRecords);
+
+          const pagination: PaginationMeta = response.data?.data?.pagination || {};
+          hasNextPage = !!pagination.hasNextPage;
+          currentPage = pagination.nextPage ?? currentPage + 1;
+
+          if (currentPage > 200) {
+            hasNextPage = false;
+          }
         }
 
-        // Obtener los registros del response
-        const records: ActaRecord[] = response.data.data.data || [];
-
-        // Generar últimos 7 días
-        const last7Days: ActasDiariasData[] = [];
+        const last7DaysMeta: Array<{ key: string; label: string }> = [];
         const today = new Date();
-        
+
         for (let i = 6; i >= 0; i--) {
           const date = new Date(today);
           date.setDate(date.getDate() - i);
-          date.setHours(0, 0, 0, 0);
-          
-          const dateStr = date.toLocaleDateString('es-ES', {
-            day: '2-digit',
-            month: '2-digit',
-          });
-          
-          last7Days.push({
-            fecha: dateStr,
-            total: 0
+          last7DaysMeta.push({
+            key: toLocalDateKey(date),
+            label: toDisplayDate(date),
           });
         }
 
-        // Agrupar registros por fecha de creación
-        records.forEach((record) => {
-          if (record.createdAt) {
-            const recordDate = new Date(record.createdAt);
-            const recordDateStr = recordDate.toLocaleDateString('es-ES', {
-              day: '2-digit',
-              month: '2-digit',
-            });
-            
-            // Buscar el día que coincida por string
-            const dayIndex = last7Days.findIndex((day) => day.fecha === recordDateStr);
-            
-            if (dayIndex !== -1) {
-              last7Days[dayIndex].total++;
-            }
+        const actasPorDia: ActasDiariasData[] = last7DaysMeta.map((day) => ({
+          fecha: day.label,
+          total: 0,
+        }));
+
+        const actasPorTipo: ActasPorTipoData[] = last7DaysMeta.map((day) => ({
+          dia: day.label,
+          conformes: 0,
+          noConformes: 0,
+        }));
+
+        const indexByDay = new Map(last7DaysMeta.map((day, index) => [day.key, index]));
+
+        allRecords.forEach((record) => {
+          if (!record.createdAt) {
+            return;
+          }
+
+          const created = new Date(record.createdAt);
+          if (Number.isNaN(created.getTime())) {
+            return;
+          }
+
+          const dayKey = toLocalDateKey(created);
+          const dayIndex = indexByDay.get(dayKey);
+
+          if (dayIndex === undefined) {
+            return;
+          }
+
+          actasPorDia[dayIndex].total += 1;
+
+          const rawType = String(record.type ?? record.recordType ?? '').toLowerCase();
+          const normalizedType = rawType.replace(/[\s_-]/g, '');
+
+          if (normalizedType === 'conforme') {
+            actasPorTipo[dayIndex].conformes += 1;
+          } else if (normalizedType === 'noconforme') {
+            actasPorTipo[dayIndex].noConformes += 1;
           }
         });
-        
-        return last7Days;
+
+        return {
+          actasPorDia,
+          actasPorTipo,
+        };
       } catch (err: any) {
         throw err;
       }
@@ -75,7 +132,8 @@ export const useActasDiarias = () => {
   });
 
   return {
-    actasPorDia: data || [],
+    actasPorDia: data?.actasPorDia || [],
+    actasPorTipo: data?.actasPorTipo || [],
     loading: isLoading,
     error: error ? (error instanceof Error ? error.message : 'Error desconocido') : null,
     refetch

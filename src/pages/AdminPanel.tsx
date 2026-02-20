@@ -36,18 +36,7 @@ import { useActasDiarias } from '@/features/actas/hooks/useActasDiarias';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { actasPorDia, loading: loadingActasDiarias, error: errorActasDiarias } = useActasDiarias();
-
-  // Datos para el gráfico de barras - Actas por Tipo (Última Semana)
-  const actasPorTipoData = [
-    { dia: 'Lun', conformes: 24, noConformes: 8 },
-    { dia: 'Mar', conformes: 18, noConformes: 12 },
-    { dia: 'Mié', conformes: 28, noConformes: 6 },
-    { dia: 'Jue', conformes: 22, noConformes: 10 },
-    { dia: 'Vie', conformes: 32, noConformes: 5 },
-    { dia: 'Sáb', conformes: 15, noConformes: 3 },
-    { dia: 'Dom', conformes: 8, noConformes: 2 },
-  ];
+  const { actasPorDia, actasPorTipo, loading: loadingActasDiarias, error: errorActasDiarias } = useActasDiarias();
 
   // Datos para el gráfico de dona - Infracciones por Gravedad
   const infraccionesPorGravedadData = [
@@ -299,26 +288,39 @@ const AdminPanel = () => {
           {/* Actas por Tipo (Última Semana) */}
           <Card className="border-0 shadow-lg bg-background dark:bg-gray-900">
             <CardHeader>
-              <CardTitle className="text-lg text-foreground">Actas por Tipo (Última Semana)</CardTitle>
+              <CardTitle className="text-lg text-foreground">Actas por Tipo (Últimos 7 días)</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={actasPorTipoData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="dia" tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
-                  <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      color: 'hsl(var(--foreground))'
-                    }}
-                  />
-                  <Bar dataKey="conformes" fill="#22c55e" radius={[8, 8, 0, 0]} name="Conformes" />
-                  <Bar dataKey="noConformes" fill="#ef4444" radius={[8, 8, 0, 0]} name="No Conformes" />
-                </BarChart>
-              </ResponsiveContainer>
+              {errorActasDiarias ? (
+                <div className="h-[250px] flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-red-500 font-medium">Error al cargar datos</p>
+                    <p className="text-sm text-muted-foreground mt-2">{errorActasDiarias}</p>
+                  </div>
+                </div>
+              ) : loadingActasDiarias ? (
+                <div className="h-[250px] flex items-center justify-center">
+                  <div className="text-muted-foreground">Cargando datos...</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={actasPorTipo}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="dia" tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
+                    <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        color: 'hsl(var(--foreground))'
+                      }}
+                    />
+                    <Bar dataKey="conformes" fill="#22c55e" radius={[8, 8, 0, 0]} name="Conformes" />
+                    <Bar dataKey="noConformes" fill="#ef4444" radius={[8, 8, 0, 0]} name="No Conformes" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 

@@ -6,6 +6,7 @@ export interface Record {
   location: string;
   observations: string;
   inspectionDateTime: string;
+  s3FileUrl?: string;
   createdAt: string;
   updatedAt: string;
   inspector: {

@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '@/components/AdminLayout';
 import { useUsuarios } from './hooks/useUsuarios';
 import { useUsuarioDetail } from './hooks/useUsuarioDetail';
-import { useUsuarioStats } from './hooks/useUsuarioStats';
 import { UsuariosTable } from './components/UsuariosTable';
 import { AddUsuarioDialog } from './components/AddUsuarioDialog';
 import { UsuarioDetailDialog } from './components/UsuarioDetailDialog';
@@ -12,7 +12,6 @@ import { ResetDeviceDialog } from './components/ResetDeviceDialog';
 import { DeleteUsuarioDialog } from './components/DeleteUsuarioDialog';
 import { PaginationControls } from './components/PaginationControls';
 import { UsuariosFilters } from './components/UsuariosFilters';
-import { UsuarioStats } from './components/UsuarioStats';
 import { usuariosService } from './services/usuariosService';
 import { useToast } from '@/hooks/use-toast';
 import { RefreshCw, XCircle, Search, Plus } from 'lucide-react';
@@ -37,9 +36,36 @@ const UsuariosView = () => {
   const [activeFilters, setActiveFilters] = useState<Partial<UsuariosQueryParams>>({});
 
   const { usuarios, pagination, loading, error, page, handlePageChange, updateFilters, refetch } = useUsuarios(searchTerm, activeFilters);
-  const { stats, loading: statsLoading, error: statsError, groupBy, updateGroupBy, refreshStats } = useUsuarioStats();
   const { usuarioDetail, loadingDetail, errorDetail, fetchUsuarioDetail } = useUsuarioDetail();
   const { toast } = useToast();
+
+  const { data: fiscalizadoresConTelefono = 0, isLoading: loadingFiscalizadoresConTelefono, refetch: refetchFiscalizadoresConTelefono } = useQuery({
+    queryKey: ['usuarios-count-con-telefono', 'fiscalizador'],
+    queryFn: async () => {
+      const response = await usuariosService.getUsuarios({
+        page: 1,
+        limit: 1,
+        role: 'fiscalizador',
+        deviceConfigured: true,
+      });
+      return response.data.pagination.totalItems || 0;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: administradoresConTelefono = 0, isLoading: loadingAdministradoresConTelefono, refetch: refetchAdministradoresConTelefono } = useQuery({
+    queryKey: ['usuarios-count-con-telefono', 'admin'],
+    queryFn: async () => {
+      const response = await usuariosService.getUsuarios({
+        page: 1,
+        limit: 1,
+        role: 'admin',
+        deviceConfigured: true,
+      });
+      return response.data.pagination.totalItems || 0;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const handleAddUsuario = async (values: AddUserFormData) => {
     // La validación de contraseñas ya se maneja en el diálogo con Zod
@@ -66,7 +92,8 @@ const UsuariosView = () => {
 
         // Refrescar datos
         refetch();
-        refreshStats();
+        refetchFiscalizadoresConTelefono();
+        refetchAdministradoresConTelefono();
       }
     } catch (error: any) {
       const errorData = error as CreateUserError;
@@ -117,7 +144,8 @@ const UsuariosView = () => {
 
         // Refrescar datos
         refetch();
-        refreshStats();
+        refetchFiscalizadoresConTelefono();
+        refetchAdministradoresConTelefono();
       }
     } catch (error: any) {
       const errorData = error as UpdateUserError;
@@ -221,7 +249,8 @@ const UsuariosView = () => {
 
       // Refrescar datos
       refetch();
-      refreshStats();
+      refetchFiscalizadoresConTelefono();
+      refetchAdministradoresConTelefono();
     } catch (error: any) {
       const errorData = error as ResetDeviceError;
 
@@ -258,7 +287,8 @@ const UsuariosView = () => {
 
       // Refrescar datos
       refetch();
-      refreshStats();
+      refetchFiscalizadoresConTelefono();
+      refetchAdministradoresConTelefono();
     } catch (error: any) {
       const errorData = error as DeleteUserError;
 
@@ -278,10 +308,6 @@ const UsuariosView = () => {
 
   const handleClearFilters = () => {
     setActiveFilters({});
-  };
-
-  const handleGroupByChange = (value: 'all' | 'role' | 'device') => {
-    updateGroupBy(value);
   };
 
   if (error) {
@@ -317,19 +343,17 @@ const UsuariosView = () => {
                 <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{loading ? '-' : pagination?.totalItems || 0}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Total Usuarios</p>
               </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{loadingFiscalizadoresConTelefono ? '-' : fiscalizadoresConTelefono}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Fiscalizadores con Teléfono</p>
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{loadingAdministradoresConTelefono ? '-' : administradoresConTelefono}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Administradores con Teléfono</p>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Estadísticas de Usuarios */}
-        <UsuarioStats
-          stats={stats}
-          loading={statsLoading}
-          error={statsError}
-          groupBy={groupBy}
-          onGroupByChange={handleGroupByChange}
-          onRefresh={refreshStats}
-        />
 
         {/* Tabla de usuarios */}
         <Card className="shadow-lg border-0 bg-white dark:bg-gray-900 rounded-2xl">
@@ -374,6 +398,8 @@ const UsuariosView = () => {
               onClearFilters={handleClearFilters}
               loading={loading}
             />
+
+            <div className="flex flex-col lg:flex-row gap-4 mb-6"></div>
 
             <UsuariosTable
               usuarios={usuarios}

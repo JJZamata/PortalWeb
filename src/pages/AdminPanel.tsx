@@ -32,9 +32,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useActasDiarias } from '@/features/actas/hooks/useActasDiarias';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
+  const { actasPorDia, loading: loadingActasDiarias, error: errorActasDiarias } = useActasDiarias();
 
   // Datos para el gráfico de barras - Actas por Tipo (Última Semana)
   const actasPorTipoData = [
@@ -52,17 +54,6 @@ const AdminPanel = () => {
     { name: 'Leve', value: 50, color: '#f59e0b' },
     { name: 'Grave', value: 33, color: '#fb923c' },
     { name: 'Muy Grave', value: 17, color: '#ef4444' },
-  ];
-
-  // Datos para el gráfico de línea - Actas Registradas por Día
-  const actasPorDiaData = [
-    { fecha: '25/01', total: 32 },
-    { fecha: '26/01', total: 28 },
-    { fecha: '27/01', total: 34 },
-    { fecha: '28/01', total: 42 },
-    { fecha: '29/01', total: 38 },
-    { fecha: '30/01', total: 45 },
-    { fecha: '31/01', total: 40 },
   ];
 
   // Datos de actas recientes
@@ -369,33 +360,46 @@ const AdminPanel = () => {
           {/* Actas Registradas por Día */}
           <Card className="border-0 shadow-lg bg-background dark:bg-gray-900">
             <CardHeader>
-              <CardTitle className="text-lg text-foreground">Actas Registradas por Día</CardTitle>
+              <CardTitle className="text-lg text-foreground">Actas Registradas por Día (Últimos 7 días)</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={actasPorDiaData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="fecha" tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
-                  <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      color: 'hsl(var(--foreground))'
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="total" 
-                    stroke="#1e3a8a" 
-                    strokeWidth={2}
-                    dot={{ fill: '#1e3a8a', r: 4 }}
-                    activeDot={{ r: 6 }}
-                    name="Total Actas"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {errorActasDiarias ? (
+                <div className="h-[250px] flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-red-500 font-medium">Error al cargar datos</p>
+                    <p className="text-sm text-muted-foreground mt-2">{errorActasDiarias}</p>
+                  </div>
+                </div>
+              ) : loadingActasDiarias ? (
+                <div className="h-[250px] flex items-center justify-center">
+                  <div className="text-muted-foreground">Cargando datos...</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={actasPorDia}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="fecha" tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
+                    <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        color: 'hsl(var(--foreground))'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="total" 
+                      stroke="#1e3a8a" 
+                      strokeWidth={2}
+                      dot={{ fill: '#1e3a8a', r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name="Total Actas"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </div>

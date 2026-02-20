@@ -29,14 +29,89 @@ import {
   AlertCircle,
   Filter
 } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useActasDiarias } from '@/features/actas/hooks/useActasDiarias';
+import { auditoriaService } from '@/features/control/auditoria/services/auditoriaService';
+import { translateAuditAction } from '@/features/control/auditoria/utils/auditActionTranslator';
 
 const AdminPanel = () => {
   const navigate = useNavigate();
   const { actasPorDia, actasPorTipo, loading: loadingActasDiarias, error: errorActasDiarias } = useActasDiarias();
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date().getTime();
+    const time = new Date(timestamp).getTime();
+    const diffMs = now - time;
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+    if (diffMinutes < 1) return 'Hace unos segundos';
+    if (diffMinutes < 60) return `Hace ${diffMinutes} minuto${diffMinutes === 1 ? '' : 's'}`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours === 1 ? '' : 's'}`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    return `Hace ${diffDays} día${diffDays === 1 ? '' : 's'}`;
+  };
+
+  const { data: actividadReciente = [], isLoading: loadingActividadReciente, error: errorActividadReciente } = useQuery({
+    queryKey: ['dashboard-actividad-reciente'],
+    queryFn: async () => {
+      const allowedMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+      let page = 1;
+      let hasNextPage = true;
+      const maxPagesToScan = 12;
+      const collectedLogs: any[] = [];
+
+      while (hasNextPage && page <= maxPagesToScan && collectedLogs.length < 30) {
+        const response = await auditoriaService.getAuditLogs(page, 50);
+        const logs = response?.data?.logs || [];
+        const pagination = response?.data?.pagination || {};
+
+        collectedLogs.push(...logs);
+
+        hasNextPage = Boolean(pagination.has_next ?? pagination.hasNextPage ?? false);
+        page += 1;
+      }
+
+      return collectedLogs
+        .filter((log: any) => allowedMethods.has(String(log.method || '').toUpperCase()))
+        .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 6)
+        .map((log: any) => {
+          const method = String(log.method || '').toUpperCase();
+          const action = translateAuditAction(method, log.url || '');
+
+          let tipo: 'success' | 'warning' | 'error' | 'info' = 'info';
+          let icono = Eye;
+
+          if (method === 'POST') {
+            tipo = 'success';
+            icono = CheckCircle;
+          } else if (method === 'PUT' || method === 'PATCH') {
+            tipo = 'warning';
+            icono = Activity;
+          } else if (method === 'DELETE') {
+            tipo = 'error';
+            icono = XCircle;
+          }
+
+          return {
+            id: log.id,
+            accion: action.title,
+            detalles: `${method} ${log.url || '/api'}${log.user?.username ? ` · ${log.user.username}` : ''}`,
+            tiempo: formatTimeAgo(log.timestamp),
+            tipo,
+            icono,
+          };
+        });
+    },
+    staleTime: 60 * 1000,
+  });
 
   // Datos para el gráfico de dona - Infracciones por Gravedad
   const infraccionesPorGravedadData = [
@@ -85,41 +160,6 @@ const AdminPanel = () => {
     },
   ];
 
-  // Actividad reciente
-  const actividadReciente = [
-    {
-      id: 1,
-      accion: 'Nuevo conductor registrado',
-      detalles: 'Juan Pérez - Zona Norte',
-      tiempo: 'Hace 5 minutos',
-      tipo: 'success',
-      icono: Users,
-    },
-    {
-      id: 2,
-      accion: 'Infracción registrada',
-      detalles: 'Mototaxi ABC-123 - Exceso de velocidad',
-      tiempo: 'Hace 12 minutos',
-      tipo: 'warning',
-      icono: AlertTriangle,
-    },
-    {
-      id: 3,
-      accion: 'Documento vencido detectado',
-      detalles: 'Licencia de conducir - 5 vencimientos',
-      tiempo: 'Hace 25 minutos',
-      tipo: 'error',
-      icono: FileText,
-    },
-    {
-      id: 4,
-      accion: 'Fiscalización completada',
-      detalles: 'Zona Centro - 15 mototaxis revisadas',
-      tiempo: 'Hace 1 hora',
-      tipo: 'info',
-      icono: Shield,
-    },
-  ];
 
   // Solo las estadísticas más relevantes para FISCAMOTO
   const stats = [
@@ -155,45 +195,6 @@ const AdminPanel = () => {
     }
   ];
 
-  // Actividades recientes con mejor diseño
-  const recentActivities = [
-    { 
-      id: "ACT-001", 
-      action: "Nuevo conductor registrado", 
-      time: "Hace 5 minutos", 
-      type: "success",
-      details: "Juan Pérez - Zona Norte",
-      icon: Users,
-      gradient: "from-green-400 to-emerald-500"
-    },
-    { 
-      id: "ACT-002", 
-      action: "Infracción registrada", 
-      time: "Hace 12 minutos", 
-      type: "warning",
-      details: "Mototaxi ABC-123 - Exceso de velocidad",
-      icon: AlertTriangle,
-      gradient: "from-yellow-400 to-orange-500"
-    },
-    { 
-      id: "ACT-003", 
-      action: "Documento vencido detectado", 
-      time: "Hace 25 minutos", 
-      type: "error",
-      details: "Licencia de conducir - 5 vencimientos",
-      icon: FileText,
-      gradient: "from-red-400 to-pink-500"
-    },
-    { 
-      id: "ACT-004", 
-      action: "Fiscalización completada", 
-      time: "Hace 1 hora", 
-      type: "info",
-      details: "Zona Centro - 15 mototaxis revisadas",
-      icon: Shield,
-      gradient: "from-blue-400 to-cyan-500"
-    },
-  ];
 
   // Acciones rápidas con mejor diseño
   const quickActions = [
@@ -227,35 +228,6 @@ const AdminPanel = () => {
     }
   ];
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-      case 'error':
-        return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'info':
-        return <Shield className="w-5 h-5 text-blue-500" />;
-      default:
-        return <Activity className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const getActivityBadge = (type: string) => {
-    switch (type) {
-      case 'success':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'error':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'info':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
 
   return (
     <AdminLayout>
@@ -503,40 +475,54 @@ const AdminPanel = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {actividadReciente.map((actividad) => (
-                <div
-                  key={actividad.id}
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 dark:hover:bg-gray-800/50 transition-colors border border-border dark:border-gray-700"
-                >
-                  <div className={`p-2 rounded-lg flex-shrink-0 ${
-                    actividad.tipo === 'success'
-                      ? 'bg-green-100 dark:bg-green-900/30'
-                      : actividad.tipo === 'warning'
-                      ? 'bg-yellow-100 dark:bg-yellow-900/30'
-                      : actividad.tipo === 'error'
-                      ? 'bg-red-100 dark:bg-red-900/30'
-                      : 'bg-blue-100 dark:bg-blue-900/30'
-                  }`}>
-                    <actividad.icono className={`w-4 h-4 ${
+              {errorActividadReciente ? (
+                <div className="text-center py-8">
+                  <p className="text-red-500 font-medium text-sm">Error al cargar actividad reciente</p>
+                </div>
+              ) : loadingActividadReciente ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground text-sm">Cargando actividad...</p>
+                </div>
+              ) : actividadReciente.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground text-sm">Sin actividad reciente</p>
+                </div>
+              ) : (
+                actividadReciente.map((actividad) => (
+                  <div
+                    key={actividad.id}
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 dark:hover:bg-gray-800/50 transition-colors border border-border dark:border-gray-700"
+                  >
+                    <div className={`p-2 rounded-lg flex-shrink-0 ${
                       actividad.tipo === 'success'
-                        ? 'text-green-600 dark:text-green-400'
+                        ? 'bg-green-100 dark:bg-green-900/30'
                         : actividad.tipo === 'warning'
-                        ? 'text-yellow-600 dark:text-yellow-400'
+                        ? 'bg-yellow-100 dark:bg-yellow-900/30'
                         : actividad.tipo === 'error'
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-blue-600 dark:text-blue-400'
-                    }`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-foreground">{actividad.accion}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{actividad.detalles}</p>
-                    <div className="flex items-center mt-2">
-                      <Clock className="w-3 h-3 mr-1 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">{actividad.tiempo}</p>
+                        ? 'bg-red-100 dark:bg-red-900/30'
+                        : 'bg-blue-100 dark:bg-blue-900/30'
+                    }`}>
+                      <actividad.icono className={`w-4 h-4 ${
+                        actividad.tipo === 'success'
+                          ? 'text-green-600 dark:text-green-400'
+                          : actividad.tipo === 'warning'
+                          ? 'text-yellow-600 dark:text-yellow-400'
+                          : actividad.tipo === 'error'
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-blue-600 dark:text-blue-400'
+                      }`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground">{actividad.accion}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{actividad.detalles}</p>
+                      <div className="flex items-center mt-2">
+                        <Clock className="w-3 h-3 mr-1 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">{actividad.tiempo}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </div>

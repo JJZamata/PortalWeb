@@ -1,87 +1,146 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Users,
   Car,
-  Building2,
-  FileText,
-  Shield,
   AlertTriangle,
-  TrendingUp,
   Activity,
   FileCheck,
   Clock,
-  MapPin,
   CheckCircle,
   XCircle,
-  BarChart3,
-  Zap,
-  Target,
-  Award,
-  Globe,
-  Smartphone,
-  Database,
-  Eye,
-  ChevronRight,
-  AlertCircle,
-  Filter
+  Eye
 } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useActasDiarias } from '@/features/actas/hooks/useActasDiarias';
+import { actasService } from '@/features/actas/services/actasService';
+import { infraccionesService } from '@/features/documentacion/infracciones/services/infraccionesService';
 import { auditoriaService } from '@/features/control/auditoria/services/auditoriaService';
 import { translateAuditAction } from '@/features/control/auditoria/utils/auditActionTranslator';
+
+// Funciones de utilidad (fuera del componente para evitar recreaciones)
+const formatTimeAgo = (timestamp: string): string => {
+  const now = new Date().getTime();
+  const time = new Date(timestamp).getTime();
+  const diffMs = now - time;
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+  if (diffMinutes < 1) return 'Hace unos segundos';
+  if (diffMinutes < 60) return `Hace ${diffMinutes} minuto${diffMinutes === 1 ? '' : 's'}`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `Hace ${diffHours} hora${diffHours === 1 ? '' : 's'}`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `Hace ${diffDays} día${diffDays === 1 ? '' : 's'}`;
+};
+
+const formatDateTime = (dateValue?: string): string => {
+  if (!dateValue) return '—';
+
+  const parsedDate = new Date(dateValue);
+  if (Number.isNaN(parsedDate.getTime())) return '—';
+
+  return new Intl.DateTimeFormat('es-PE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(parsedDate);
+};
+
+// Estilos compartidos para tooltips de gráficos
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: 'hsl(var(--background))',
+  border: '1px solid hsl(var(--border))',
+  borderRadius: '8px',
+  color: 'hsl(var(--foreground))'
+};
+
+const CHART_TOOLTIP_ITEM_STYLE = {
+  color: 'hsl(var(--foreground))'
+};
+
+// Acciones rápidas (constante estática)
+const QUICK_ACTIONS = [
+  {
+    title: "Registrar Conductor",
+    description: "Agregar nuevo conductor al sistema",
+    icon: Users,
+    gradient: "from-blue-500 to-cyan-500",
+    path: '/conductores'
+  },
+  {
+    title: "Registrar Mototaxi",
+    description: "Agregar nueva mototaxi al sistema",
+    icon: Car,
+    gradient: "from-emerald-500 to-teal-500",
+    path: '/vehiculos'
+  },
+  {
+    title: "Registrar Infracción",
+    description: "Reportar nueva infracción",
+    icon: AlertTriangle,
+    gradient: "from-orange-500 to-red-500",
+    path: '/infracciones'
+  },
+  {
+    title: "Gestionar Documentos",
+    description: "Revisar documentos y certificaciones",
+    icon: FileCheck,
+    gradient: "from-purple-500 to-pink-500",
+    path: '/documentos'
+  }
+];
 
 const AdminPanel = () => {
   const navigate = useNavigate();
   const { actasPorDia, actasPorTipo, loading: loadingActasDiarias, error: errorActasDiarias } = useActasDiarias();
-
-  const formatTimeAgo = (timestamp: string) => {
-    const now = new Date().getTime();
-    const time = new Date(timestamp).getTime();
-    const diffMs = now - time;
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-
-    if (diffMinutes < 1) return 'Hace unos segundos';
-    if (diffMinutes < 60) return `Hace ${diffMinutes} minuto${diffMinutes === 1 ? '' : 's'}`;
-
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours === 1 ? '' : 's'}`;
-
-    const diffDays = Math.floor(diffHours / 24);
-    return `Hace ${diffDays} día${diffDays === 1 ? '' : 's'}`;
-  };
+  const [chartKey, setChartKey] = useState(Date.now());
+  const animatingRef = useRef(false);
 
   const { data: actividadReciente = [], isLoading: loadingActividadReciente, error: errorActividadReciente } = useQuery({
     queryKey: ['dashboard-actividad-reciente'],
     queryFn: async () => {
       const allowedMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+      const targetCount = 6;
+      const filteredLogs: any[] = [];
 
       let page = 1;
       let hasNextPage = true;
-      const maxPagesToScan = 12;
-      const collectedLogs: any[] = [];
+      const maxPagesToScan = 5;
 
-      while (hasNextPage && page <= maxPagesToScan && collectedLogs.length < 30) {
+      // Escanear solo hasta obtener suficientes registros filtrados o alcanzar el límite
+      while (hasNextPage && page <= maxPagesToScan && filteredLogs.length < targetCount) {
         const response = await auditoriaService.getAuditLogs(page, 50);
         const logs = response?.data?.logs || [];
         const pagination = response?.data?.pagination || {};
 
-        collectedLogs.push(...logs);
+        // Filtrar y agregar solo los necesarios
+        const filtered = logs.filter((log: any) => 
+          allowedMethods.has(String(log.method || '').toUpperCase())
+        );
+        
+        const remaining = targetCount - filteredLogs.length;
+        filteredLogs.push(...filtered.slice(0, remaining));
+
+        // Detenerse si ya tenemos suficientes
+        if (filteredLogs.length >= targetCount) break;
 
         hasNextPage = Boolean(pagination.has_next ?? pagination.hasNextPage ?? false);
         page += 1;
       }
 
-      return collectedLogs
-        .filter((log: any) => allowedMethods.has(String(log.method || '').toUpperCase()))
+      return filteredLogs
         .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 6)
+        .slice(0, targetCount)
         .map((log: any) => {
           const method = String(log.method || '').toUpperCase();
           const action = translateAuditAction(method, log.url || '');
@@ -113,120 +172,53 @@ const AdminPanel = () => {
     staleTime: 60 * 1000,
   });
 
-  // Datos para el gráfico de dona - Infracciones por Gravedad
-  const infraccionesPorGravedadData = [
-    { name: 'Leve', value: 50, color: '#f59e0b' },
-    { name: 'Grave', value: 33, color: '#fb923c' },
-    { name: 'Muy Grave', value: 17, color: '#ef4444' },
-  ];
+  const { data: actasRecientes = [], isLoading: loadingActasRecientes, error: errorActasRecientes } = useQuery({
+    queryKey: ['dashboard-actas-recientes'],
+    queryFn: async () => {
+      const response = await actasService.getActas(1, '', 'all', 'createdAt', 'DESC');
 
-  // Datos de actas recientes
-  const actasRecientes = [
-    {
-      numeroActa: 'ACT-2024-001',
-      fecha: '31/01/2024 09:45',
-      placa: 'AQP-123',
-      conductor: 'Juan Pérez Mamani',
-      fiscalizador: 'Carlos Quispe',
-      tipo: 'Conforme',
-      estado: 'Validada',
+      return (response.records || []).slice(0, 4).map((record: any) => ({
+        numeroActa: `ACT-${record.id}`,
+        fecha: formatDateTime(record.createdAt || record.inspectionDateTime),
+        placa: record.vehiclePlate || record.vehicle?.plateNumber || '—',
+        conductor: record.driver?.name || 'Sin conductor',
+        fiscalizador: record.inspector?.username || 'Sin fiscalizador',
+        tipo: String(record.type || record.recordType || '').toUpperCase() === 'NOCONFORME' ? 'No Conforme' : 'Conforme',
+        estado: record.status || 'Registrada',
+      }));
     },
-    {
-      numeroActa: 'ACT-2024-002',
-      fecha: '31/01/2024 10:20',
-      placa: 'AQP-456',
-      conductor: 'María López Cruz',
-      fiscalizador: 'Ana Torres',
-      tipo: 'No Conforme',
-      estado: 'Pendiente',
-    },
-    {
-      numeroActa: 'ACT-2024-003',
-      fecha: '31/01/2024 11:15',
-      placa: 'AQP-789',
-      conductor: 'Pedro Huanca Flores',
-      fiscalizador: 'Carlos Quispe',
-      tipo: 'Conforme',
-      estado: 'Validada',
-    },
-    {
-      numeroActa: 'ACT-2024-004',
-      fecha: '31/01/2024 12:30',
-      placa: 'AQP-234',
-      conductor: 'Rosa Choque Apaza',
-      fiscalizador: 'Luis Mendoza',
-      tipo: 'Conforme',
-      estado: 'Validada',
-    },
-  ];
+    staleTime: 60 * 1000,
+  });
 
+  const { data: infraccionesStats, isLoading: loadingInfraccionesStats, error: errorInfraccionesStats } = useQuery({
+    queryKey: ['dashboard-infracciones-stats'],
+    queryFn: () => infraccionesService.getStats(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
 
-  // Solo las estadísticas más relevantes para FISCAMOTO
-  const stats = [
-    {
-      title: "Fiscalizadores",
-      value: "24",
-      change: "+3 este mes",
-      icon: Shield,
-      gradient: "from-blue-500 to-cyan-500",
-      bgGradient: "from-blue-50 to-cyan-50",
-      color: "text-blue-600",
-      onClick: () => navigate('/fiscalizadores')
-    },
-    {
-      title: "Conductores",
-      value: "1,089",
-      change: "+45 este mes",
-      icon: Users,
-      gradient: "from-emerald-500 to-teal-500",
-      bgGradient: "from-emerald-50 to-teal-50",
-      color: "text-emerald-600",
-      onClick: () => navigate('/conductores')
-    },
-    {
-      title: "Mototaxis",
-      value: "892",
-      change: "+23 este mes",
-      icon: Car,
-      gradient: "from-orange-500 to-red-500",
-      bgGradient: "from-orange-50 to-red-50",
-      color: "text-orange-600",
-      onClick: () => navigate('/vehiculos')
+  // Controlar la key del gráfico para que la animación no se interrumpa
+  useEffect(() => {
+    if (!loadingInfraccionesStats && infraccionesStats && !animatingRef.current) {
+      animatingRef.current = true;
+      setChartKey(Date.now());
+      
+      // Marcar como no animando después de que termine la animación
+      const timer = setTimeout(() => {
+        animatingRef.current = false;
+      }, 1300); // Un poco más que la duración de la animación
+      
+      return () => clearTimeout(timer);
     }
-  ];
+  }, [loadingInfraccionesStats, infraccionesStats]);
 
-
-  // Acciones rápidas con mejor diseño
-  const quickActions = [
-    {
-      title: "Registrar Conductor",
-      description: "Agregar nuevo conductor al sistema",
-      icon: Users,
-      gradient: "from-blue-500 to-cyan-500",
-      onClick: () => navigate('/conductores')
-    },
-    {
-      title: "Registrar Mototaxi",
-      description: "Agregar nueva mototaxi al sistema",
-      icon: Car,
-      gradient: "from-emerald-500 to-teal-500",
-      onClick: () => navigate('/vehiculos')
-    },
-    {
-      title: "Registrar Infracción",
-      description: "Reportar nueva infracción",
-      icon: AlertTriangle,
-      gradient: "from-orange-500 to-red-500",
-      onClick: () => navigate('/infracciones')
-    },
-    {
-      title: "Gestionar Documentos",
-      description: "Revisar documentos y certificaciones",
-      icon: FileCheck,
-      gradient: "from-purple-500 to-pink-500",
-      onClick: () => navigate('/documentos')
-    }
-  ];
+  // Datos para el gráfico de dona - Infracciones por Gravedad (memoizado)
+  const infraccionesPorGravedadData = useMemo(() => [
+    { name: 'Leve', value: Number(infraccionesStats?.data?.porcentajes?.porGravedad?.leves ?? 0), color: '#f59e0b' },
+    { name: 'Grave', value: Number(infraccionesStats?.data?.porcentajes?.porGravedad?.graves ?? 0), color: '#fb923c' },
+    { name: 'Muy Grave', value: Number(infraccionesStats?.data?.porcentajes?.porGravedad?.muyGraves ?? 0), color: '#ef4444' },
+  ], [infraccionesStats]);
 
 
   return (
@@ -234,11 +226,11 @@ const AdminPanel = () => {
       <div className="space-y-8">
         {/* Acciones Rápidas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => (
+          {QUICK_ACTIONS.map((action, index) => (
             <Card 
               key={index}
               className="group cursor-pointer border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-background to-accent/20 dark:from-gray-900 dark:to-gray-800 hover:scale-105"
-              onClick={action.onClick}
+              onClick={() => navigate(action.path)}
             >
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center space-y-3">
@@ -280,14 +272,7 @@ const AdminPanel = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="dia" tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
                     <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        color: 'hsl(var(--foreground))'
-                      }}
-                    />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                     <Bar dataKey="conformes" fill="#22c55e" radius={[8, 8, 0, 0]} name="Conformes" />
                     <Bar dataKey="noConformes" fill="#ef4444" radius={[8, 8, 0, 0]} name="No Conformes" />
                   </BarChart>
@@ -302,32 +287,47 @@ const AdminPanel = () => {
               <CardTitle className="text-lg text-foreground">Infracciones por Gravedad</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={infraccionesPorGravedadData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, value }) => `${name} (${value}%)`}
-                  >
-                    {infraccionesPorGravedadData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      color: 'hsl(var(--foreground))'
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              {errorInfraccionesStats ? (
+                <div className="h-[250px] flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-red-500 font-medium">Error al cargar datos</p>
+                    <p className="text-sm text-muted-foreground mt-2">No se pudo obtener estadísticas de infracciones</p>
+                  </div>
+                </div>
+              ) : loadingInfraccionesStats ? (
+                <div className="h-[250px] flex items-center justify-center">
+                  <div className="text-muted-foreground">Cargando datos...</div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart key={chartKey}>
+                    <Pie
+                      data={infraccionesPorGravedadData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
+                      dataKey="value"
+                      isAnimationActive={true}
+                      animationBegin={0}
+                      animationDuration={1200}
+                      animationEasing="ease-out"
+                      label={({ name, value }) => `${name} (${Math.round(Number(value))}%)`}
+                    >
+                      {infraccionesPorGravedadData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => `${Math.round(Number(value))}%`}
+                      contentStyle={CHART_TOOLTIP_STYLE}
+                      itemStyle={CHART_TOOLTIP_ITEM_STYLE}
+                      labelStyle={CHART_TOOLTIP_ITEM_STYLE}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
@@ -354,14 +354,7 @@ const AdminPanel = () => {
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="fecha" tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
                     <YAxis tick={{ fontSize: 12, fill: 'currentColor' }} className="text-muted-foreground" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--background))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        color: 'hsl(var(--foreground))'
-                      }}
-                    />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                     <Line 
                       type="monotone" 
                       dataKey="total" 
@@ -383,21 +376,7 @@ const AdminPanel = () => {
           {/* Actas Recientes */}
           <Card className="lg:col-span-2 border-0 shadow-lg bg-background dark:bg-gray-900">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg text-foreground">Actas Recientes</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="dark:border-gray-700 dark:hover:bg-gray-800">
-                    Todos
-                  </Button>
-                  <Button variant="outline" size="sm" className="dark:border-gray-700 dark:hover:bg-gray-800">
-                    Todos
-                  </Button>
-                  <Button variant="outline" size="sm" className="dark:border-gray-700 dark:hover:bg-gray-800">
-                    <Filter className="w-4 h-4 mr-1" />
-                    Más filtros
-                  </Button>
-                </div>
-              </div>
+              <CardTitle className="text-lg text-foreground">Actas Recientes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -415,7 +394,25 @@ const AdminPanel = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {actasRecientes.map((acta) => (
+                    {errorActasRecientes ? (
+                      <tr>
+                        <td colSpan={8} className="py-8 px-2 text-center text-sm text-red-500">
+                          Error al cargar actas recientes
+                        </td>
+                      </tr>
+                    ) : loadingActasRecientes ? (
+                      <tr>
+                        <td colSpan={8} className="py-8 px-2 text-center text-sm text-muted-foreground">
+                          Cargando actas recientes...
+                        </td>
+                      </tr>
+                    ) : actasRecientes.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-8 px-2 text-center text-sm text-muted-foreground">
+                          No hay actas recientes
+                        </td>
+                      </tr>
+                    ) : actasRecientes.map((acta) => (
                       <tr key={acta.numeroActa} className="border-b dark:border-gray-800 hover:bg-accent/50 dark:hover:bg-gray-800/50 transition-colors">
                         <td className="py-3 px-2 text-sm text-foreground">{acta.numeroActa}</td>
                         <td className="py-3 px-2 text-sm text-foreground">{acta.fecha}</td>
@@ -465,8 +462,8 @@ const AdminPanel = () => {
           </Card>
 
           {/* Actividad Reciente */}
-          <Card className="lg:col-span-1 border-0 shadow-lg bg-background dark:bg-gray-900">
-            <CardHeader>
+          <Card className="lg:col-span-1 border-0 shadow-lg bg-background dark:bg-gray-900 flex flex-col h-full">
+            <CardHeader className="flex-shrink-0">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2 text-foreground">
                   <Activity className="w-5 h-5" />
@@ -474,21 +471,21 @@ const AdminPanel = () => {
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {errorActividadReciente ? (
-                <div className="text-center py-8">
-                  <p className="text-red-500 font-medium text-sm">Error al cargar actividad reciente</p>
-                </div>
-              ) : loadingActividadReciente ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground text-sm">Cargando actividad...</p>
-                </div>
-              ) : actividadReciente.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground text-sm">Sin actividad reciente</p>
-                </div>
-              ) : (
-                actividadReciente.map((actividad) => (
+            <CardContent className="flex-1 overflow-hidden">
+              <div className="h-[400px] overflow-y-auto space-y-4 pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">{errorActividadReciente ? (
+                  <div className="text-center py-8">
+                    <p className="text-red-500 font-medium text-sm">Error al cargar actividad reciente</p>
+                  </div>
+                ) : loadingActividadReciente ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground text-sm">Cargando actividad...</p>
+                  </div>
+                ) : actividadReciente.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground text-sm">Sin actividad reciente</p>
+                  </div>
+                ) : (
+                  actividadReciente.map((actividad) => (
                   <div
                     key={actividad.id}
                     className="flex items-start gap-3 p-3 rounded-lg hover:bg-accent/50 dark:hover:bg-gray-800/50 transition-colors border border-border dark:border-gray-700"
@@ -523,6 +520,7 @@ const AdminPanel = () => {
                   </div>
                 ))
               )}
+              </div>
             </CardContent>
           </Card>
         </div>

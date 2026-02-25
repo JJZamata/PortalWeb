@@ -43,6 +43,12 @@ export const ConductorDetailDialog = React.memo(({ open, onOpenChange, conductor
     });
   };
 
+  const summaryData = (licenciasSummary ?? {}) as Record<string, any>;
+  const totalLicencias = Number(summaryData.total ?? summaryData.totalLicencias ?? summaryData.cantidadTotal ?? licencias.length ?? 0);
+  const vigentesLicencias = Number(summaryData.vigentes ?? summaryData.totalVigentes ?? 0);
+  const porVencerLicencias = Number(summaryData.porVencer ?? summaryData.por_vencer ?? summaryData.totalPorVencer ?? 0);
+  const vencidasLicencias = Number(summaryData.vencidas ?? summaryData.totalVencidas ?? 0);
+
   if (error) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -294,33 +300,33 @@ export const ConductorDetailDialog = React.memo(({ open, onOpenChange, conductor
                 </div>
               </CardHeader>
               <CardContent>
-                {licenciasSummary && (
+                {(licenciasSummary || licencias.length > 0) && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">Total</span>
                       <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700">
-                        {licenciasSummary.total}
+                        {totalLicencias}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">Vigentes</span>
                       <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700">
                         <CheckCircle className="w-3 h-3 mr-1" />
-                        {licenciasSummary.vigentes}
+                        {vigentesLicencias}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">Por Vencer</span>
                       <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700">
                         <AlertTriangle className="w-3 h-3 mr-1" />
-                        {licenciasSummary.porVencer}
+                        {porVencerLicencias}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">Vencidas</span>
                       <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700">
                         <XCircle className="w-3 h-3 mr-1" />
-                        {licenciasSummary.vencidas}
+                        {vencidasLicencias}
                       </Badge>
                     </div>
                   </div>

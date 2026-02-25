@@ -16,12 +16,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { ConductorDetalladoNuevo } from './types';
 import { conductoresService } from './services/conductoresService';
+import { licensesService } from './services/licensesService';
 import { useQueryClient } from '@tanstack/react-query';
 
 const ConductoresView = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { conductores, pagination, summary, stats, loading, error, page, handlePageChange } = useConductores(searchTerm);
-  const { conductorDetail, licencias, licenciasSummary, loadingDetail, errorDetail, fetchConductorDetail } = useConductorDetail();
+  const { conductorDetail, licencias, licenciasSummary, loadingDetail, errorDetail, fetchConductorDetail, refreshConductorDetail } = useConductorDetail();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -57,12 +58,32 @@ const ConductoresView = () => {
   const handleDeleteConductor = async () => {
     if (deleteDni) {
       try {
-        // Aquí iría la lógica para eliminar el conductor (usando conductoresService.deleteConductor)
-        await conductoresService.deleteConductor(deleteDni); // Asegúrate de importar conductoresService
+        // 1) Obtener licencias del conductor para borrado en cascada
+        const detail = await conductoresService.getConductorDetail(deleteDni);
+        const driverLicenses = Array.isArray(detail?.licencias) ? detail.licencias : [];
+
+        // 2) Eliminar primero las licencias asociadas
+        if (driverLicenses.length > 0) {
+          const deleteResults = await Promise.allSettled(
+            driverLicenses
+              .map((license: any) => String(license?.licenseNumber ?? '').trim())
+              .filter((licenseNumber: string) => !!licenseNumber)
+              .map((licenseNumber: string) => licensesService.deleteLicense(licenseNumber))
+          );
+
+          const failedDeletes = deleteResults.filter((result) => result.status === 'rejected');
+          if (failedDeletes.length > 0) {
+            throw new Error(`No se pudieron eliminar ${failedDeletes.length} licencia(s) del conductor. El conductor no fue eliminado.`);
+          }
+        }
+
+        // 3) Eliminar conductor después de borrar sus licencias
+        await conductoresService.deleteConductor(deleteDni);
         toast({ title: "Conductor eliminado", description: "El conductor fue eliminado exitosamente.", variant: "success" });
         refreshConductores();
       } catch (error) {
-        toast({ title: "Error al eliminar conductor", description: "Error desconocido", variant: "destructive" });
+        const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+        toast({ title: "Error al eliminar conductor", description: errorMessage, variant: "destructive" });
       } finally {
         setShowDeleteDialog(false);
       }
@@ -74,6 +95,24 @@ const ConductoresView = () => {
     queryClient.invalidateQueries({ queryKey: ['conductores'] });
     queryClient.invalidateQueries({ queryKey: ['conductores-stats'] });
     handlePageChange(page);
+  };
+
+  const refreshDetailAndList = (dni?: string | null) => {
+    refreshConductores();
+    if (dni) {
+      queryClient.invalidateQueries({ queryKey: ['conductorDetail', dni] });
+      fetchConductorDetail(dni);
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['conductorDetail', dni] });
+        fetchConductorDetail(dni);
+      }, 700);
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['conductorDetail', dni] });
+        fetchConductorDetail(dni);
+      }, 1600);
+    } else {
+      refreshConductorDetail();
+    }
   };
 
   if (error) {
@@ -110,19 +149,6 @@ const ConductoresView = () => {
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Total Conductores</p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-blue-700 dark:text-blue-400">
-                  {loading ? '-' : stats?.totales?.completados || 0}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Completados</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
-                  {loading ? '-' : stats?.totales?.pendientes || 0}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Pendientes</p>
-              </div>
-              
             </div>
           </div>
         </div>
@@ -178,13 +204,20 @@ const ConductoresView = () => {
           open={showEditDialog}
           onOpenChange={(open) => {
             setShowEditDialog(open);
-            if (!open) setEditConductor(null);
+            if (!open) {
+              const dniToRefresh = editConductor?.dni || conductorDetail?.dni;
+              setEditConductor(null);
+              refreshDetailAndList(dniToRefresh);
+            }
           }}
           conductor={editConductor}
-          onSuccess={() => {
-            setShowEditDialog(false);
-            setEditConductor(null);
-            refreshConductores();
+          onSuccess={(type) => {
+            const dniToRefresh = editConductor?.dni || conductorDetail?.dni;
+            refreshDetailAndList(dniToRefresh);
+            if (type === 'conductor') {
+              setShowEditDialog(false);
+              setEditConductor(null);
+            }
           }}
           licensesData={licencias || []}
         />
@@ -198,7 +231,7 @@ const ConductoresView = () => {
           open={showAddLicenseDialog}
           onOpenChange={setShowAddLicenseDialog}
           conductorDni={conductorDetail?.dni || ''}
-          onSuccess={() => conductorDetail && fetchConductorDetail(conductorDetail.dni)}
+          onSuccess={() => refreshDetailAndList(conductorDetail?.dni)}
         />
       </div>
     </AdminLayout>

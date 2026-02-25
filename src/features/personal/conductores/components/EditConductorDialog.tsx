@@ -19,12 +19,13 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   conductor: ConductorDetalladoNuevo | null;
-  onSuccess: () => void;
+  onSuccess: (type?: 'conductor' | 'license') => void;
   licensesData?: Licencia[];
 }
 
 export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, licensesData = [] }: Props) => {
   const { toast } = useToast();
+  const [localLicenses, setLocalLicenses] = useState<Licencia[]>(licensesData);
   const [showRestrictions, setShowRestrictions] = useState(false);
   const [expandedLicense, setExpandedLicense] = useState<string | undefined>(undefined);
   const [licenseForm, setLicenseForm] = useState({
@@ -41,6 +42,10 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
     },
   });
 
+  useEffect(() => {
+    setLocalLicenses(licensesData);
+  }, [licensesData]);
+
   const mutation = useMutation({
     mutationFn: (data: any) => conductoresService.updateConductor(conductor!.dni, data),
     onSuccess: () => {
@@ -50,7 +55,7 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
         variant: "success" 
       });
       onOpenChange(false);
-      onSuccess();
+      onSuccess('conductor');
     },
     onError: (error: any) => {
       const apiMessage = error?.response?.data?.message;
@@ -76,8 +81,15 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
         description: "La licencia fue eliminada correctamente.", 
         variant: "success" 
       });
+      setLocalLicenses((prev) => prev.filter((license) => license.licenseNumber !== expandedLicense));
       setExpandedLicense(undefined);
-      onSuccess();
+      setShowRestrictions(false);
+      setLicenseForm({
+        category: '',
+        expirationDate: '',
+        restrictions: 'SIN RESTRICCIONES'
+      });
+      onSuccess('license');
     },
     onError: (error: any) => {
       let errorMessage = error.response?.data?.message || error.message || 'Error desconocido al eliminar la licencia';
@@ -111,7 +123,7 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
         variant: "success" 
       });
       setShowRestrictions(false);
-      onSuccess();
+      onSuccess('license');
     },
     onError: (error: any) => {
       let errorMessage = error.response?.data?.message || error.message || 'Error desconocido al actualizar la licencia';
@@ -154,7 +166,7 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
     setExpandedLicense(licenseNumber || undefined);
     if (!licenseNumber) return;
 
-    const selectedLicense = licensesData.find((license) => license.licenseNumber === licenseNumber);
+    const selectedLicense = localLicenses.find((license) => license.licenseNumber === licenseNumber);
     if (!selectedLicense) return;
 
     setLicenseForm({
@@ -289,7 +301,7 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
               </CardContent>
             </Card>
 
-            {licensesData.length > 0 && (
+            {localLicenses.length > 0 && (
               <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
                 <CardContent className="p-6 space-y-5">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
@@ -298,7 +310,7 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
                   </h3>
 
                   <Accordion type="single" collapsible value={expandedLicense} onValueChange={handleSelectLicense}>
-                    {licensesData.map((license) => (
+                    {localLicenses.map((license) => (
                       <AccordionItem key={license.licenseNumber} value={license.licenseNumber} className="border-gray-200 dark:border-gray-700">
                         <AccordionTrigger className="text-left hover:no-underline py-3">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full pr-4 gap-1">

@@ -5,14 +5,30 @@ import { conductoresService } from '../services/conductoresService';
 export const useConductorDetail = () => {
   const [selectedDni, setSelectedDni] = useState<string | null>(null);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['conductorDetail', selectedDni],
     queryFn: () => conductoresService.getConductorDetail(selectedDni!),
     enabled: !!selectedDni,
   });
 
   const fetchConductorDetail = (dni: string | null) => {
+    if (!dni) {
+      setSelectedDni(null);
+      return;
+    }
+
+    if (dni === selectedDni) {
+      refetch();
+      return;
+    }
+
     setSelectedDni(dni);
+  };
+
+  const refreshConductorDetail = () => {
+    if (selectedDni) {
+      refetch();
+    }
   };
 
   return {
@@ -22,5 +38,6 @@ export const useConductorDetail = () => {
     loadingDetail: isLoading,
     errorDetail: error?.message || null,
     fetchConductorDetail,
+    refreshConductorDetail,
   };
 };

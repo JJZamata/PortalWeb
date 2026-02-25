@@ -3,25 +3,42 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Edit, Phone, MapPin, Camera, User, Save } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Edit, Phone, MapPin, Camera, User, Save, Trash2, IdCard } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useMutation } from '@tanstack/react-query';
 import { conductoresService } from '../services/conductoresService';
+import { licensesService } from '../services/licensesService';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ConductorDetalladoNuevo } from "../types";
+import { Licencia } from "../types";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   conductor: ConductorDetalladoNuevo | null;
   onSuccess: () => void;
+  licensesData?: Licencia[];
 }
 
-export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }: Props) => {
+export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, licensesData = [] }: Props) => {
   const { toast } = useToast();
+  const [showRestrictions, setShowRestrictions] = useState(false);
+  const [expandedLicense, setExpandedLicense] = useState<string | undefined>(undefined);
+  const [licenseForm, setLicenseForm] = useState({
+    category: '',
+    expirationDate: '',
+    restrictions: 'SIN RESTRICCIONES'
+  });
+  
   const form = useForm({
-    defaultValues: { phoneNumber: '', address: '', photoUrl: '' },
+    defaultValues: { 
+      phoneNumber: '', 
+      address: '', 
+      photoUrl: ''
+    },
   });
 
   const mutation = useMutation({
@@ -36,17 +53,74 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }
       onSuccess();
     },
     onError: (error: any) => {
-      // Manejo mejorado de errores
-      let errorMessage = error.response?.data?.message || error.message || 'Error desconocido al actualizar los datos';
+      const apiMessage = error?.response?.data?.message;
+      const firstDetail = Array.isArray(error?.response?.data?.errors)
+        ? error.response.data.errors[0]?.message
+        : null;
+      const enhancedError = new Error(firstDetail || apiMessage || error?.message || 'Error al registrar la licencia');
+      (enhancedError as any).partialSuccess = true;
+      throw enhancedError;
+    }
+  });
 
-      // Si hay errores específicos de validación, mostrar el primer error
+  const mutationDeleteLicense = useMutation({
+    mutationFn: (licenseNumber: string) => {
+      if (!licenseNumber) {
+        throw new Error('No hay licencia para eliminar');
+      }
+      return licensesService.deleteLicense(licenseNumber);
+    },
+    onSuccess: () => {
+      toast({ 
+        title: "✅ Licencia eliminada", 
+        description: "La licencia fue eliminada correctamente.", 
+        variant: "success" 
+      });
+      setExpandedLicense(undefined);
+      onSuccess();
+    },
+    onError: (error: any) => {
+      let errorMessage = error.response?.data?.message || error.message || 'Error desconocido al eliminar la licencia';
       if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
         const firstError = error.response.data.errors[0];
         errorMessage = firstError.message || errorMessage;
       }
-
       toast({
-        title: "❌ Error al actualizar conductor",
+        title: "❌ Error al eliminar licencia",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    },
+  });
+
+  const mutationUpdateLicense = useMutation({
+    mutationFn: ({ licenseNumber, data }: { licenseNumber: string; data: any }) => {
+      if (!licenseNumber) {
+        throw new Error('No hay licencia para actualizar');
+      }
+      const updateData: any = {};
+      if (data.category) updateData.category = data.category;
+      if (data.expirationDate) updateData.expirationDate = data.expirationDate;
+      updateData.restrictions = data.restrictions || 'SIN RESTRICCIONES';
+      return licensesService.updateLicense(licenseNumber, updateData);
+    },
+    onSuccess: () => {
+      toast({ 
+        title: "✅ Licencia actualizada", 
+        description: "La licencia fue actualizada correctamente.", 
+        variant: "success" 
+      });
+      setShowRestrictions(false);
+      onSuccess();
+    },
+    onError: (error: any) => {
+      let errorMessage = error.response?.data?.message || error.message || 'Error desconocido al actualizar la licencia';
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        const firstError = error.response.data.errors[0];
+        errorMessage = firstError.message || errorMessage;
+      }
+      toast({
+        title: "❌ Error al actualizar licencia",
         description: errorMessage,
         variant: "destructive"
       });
@@ -71,10 +145,28 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }
       form.reset({
         phoneNumber: conductor.phoneNumber || '',
         address: conductor.address || '',
-        photoUrl: conductor.photoUrl || '',
+        photoUrl: conductor.photoUrl || ''
       });
     }
   }, [conductor, form]);
+
+  const handleSelectLicense = (licenseNumber: string) => {
+    setExpandedLicense(licenseNumber || undefined);
+    if (!licenseNumber) return;
+
+    const selectedLicense = licensesData.find((license) => license.licenseNumber === licenseNumber);
+    if (!selectedLicense) return;
+
+    setLicenseForm({
+      category: selectedLicense.category || '',
+      expirationDate: selectedLicense.expirationDate ? String(selectedLicense.expirationDate).slice(0, 10) : '',
+      restrictions: selectedLicense.restrictions || 'SIN RESTRICCIONES'
+    });
+
+    setShowRestrictions(
+      !!selectedLicense.restrictions && selectedLicense.restrictions.toUpperCase() !== 'SIN RESTRICCIONES'
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,6 +288,130 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess }
                 />
               </CardContent>
             </Card>
+
+            {licensesData.length > 0 && (
+              <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+                <CardContent className="p-6 space-y-5">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
+                    <IdCard className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    Editar Licencia
+                  </h3>
+
+                  <Accordion type="single" collapsible value={expandedLicense} onValueChange={handleSelectLicense}>
+                    {licensesData.map((license) => (
+                      <AccordionItem key={license.licenseNumber} value={license.licenseNumber} className="border-gray-200 dark:border-gray-700">
+                        <AccordionTrigger className="text-left hover:no-underline py-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full pr-4 gap-1">
+                            <span className="font-medium text-gray-900 dark:text-white">{license.licenseNumber}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Categoría: {license.category} · Vence: {String(license.expirationDate).slice(0, 10)}</span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pt-2">
+                          {expandedLicense === license.licenseNumber && (
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Categoría *</FormLabel>
+                                  <Input
+                                    value={licenseForm.category}
+                                    maxLength={10}
+                                    placeholder="Ej: B-IIa"
+                                    className="mt-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-green-500 focus:ring-green-500"
+                                    onChange={(e) => setLicenseForm((prev) => ({ ...prev, category: e.target.value.trimStart() }))}
+                                    onBlur={(e) => setLicenseForm((prev) => ({ ...prev, category: e.target.value.trim() }))}
+                                  />
+                                </div>
+
+                                <div>
+                                  <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Fecha de Vencimiento *</FormLabel>
+                                  <Input
+                                    value={licenseForm.expirationDate}
+                                    type="date"
+                                    min={String(license.issueDate).slice(0, 10)}
+                                    className="mt-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 [color-scheme:light] dark:[color-scheme:dark]"
+                                    onChange={(e) => setLicenseForm((prev) => ({ ...prev, expirationDate: e.target.value }))}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <Checkbox
+                                  checked={showRestrictions}
+                                  onCheckedChange={(checked) => {
+                                    const next = checked as boolean;
+                                    setShowRestrictions(next);
+                                    if (!next) {
+                                      setLicenseForm((prev) => ({ ...prev, restrictions: 'SIN RESTRICCIONES' }));
+                                    }
+                                  }}
+                                  id={`hasRestrictions-${license.licenseNumber}`}
+                                />
+                                <label htmlFor={`hasRestrictions-${license.licenseNumber}`} className="text-sm font-medium cursor-pointer text-gray-700 dark:text-gray-300">
+                                  Editar restricciones
+                                </label>
+                              </div>
+
+                              {showRestrictions && (
+                                <div>
+                                  <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Restricciones</FormLabel>
+                                  <Input
+                                    value={licenseForm.restrictions}
+                                    maxLength={100}
+                                    placeholder="Ej: LENTES CORRECTIVOS, APARATOS AUDITIVOS"
+                                    className="mt-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11"
+                                    onChange={(e) => setLicenseForm((prev) => ({ ...prev, restrictions: e.target.value.toUpperCase() }))}
+                                  />
+                                </div>
+                              )}
+
+                              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (window.confirm(`¿Eliminar la licencia ${license.licenseNumber}?`)) {
+                                      mutationDeleteLicense.mutate(license.licenseNumber);
+                                    }
+                                  }}
+                                  className="flex-1 rounded-lg border-gray-300 dark:border-gray-600 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10"
+                                  disabled={mutationDeleteLicense.isPending}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  {mutationDeleteLicense.isPending ? 'Eliminando...' : 'Eliminar Licencia'}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg"
+                                  onClick={() => {
+                                    mutationUpdateLicense.mutate({
+                                      licenseNumber: license.licenseNumber,
+                                      data: licenseForm
+                                    });
+                                  }}
+                                  disabled={mutationUpdateLicense.isPending}
+                                >
+                                  {mutationUpdateLicense.isPending ? (
+                                    <>
+                                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+                                      Actualizando...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Save className="w-4 h-4 mr-2" />
+                                      Guardar Cambios
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
               <Button 

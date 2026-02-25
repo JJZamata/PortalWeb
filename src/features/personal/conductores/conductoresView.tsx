@@ -26,6 +26,7 @@ const ConductoresView = () => {
   const queryClient = useQueryClient();
 
   // Estado para controlar los diálogos
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editConductor, setEditConductor] = useState<ConductorDetalladoNuevo | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -33,8 +34,18 @@ const ConductoresView = () => {
   const [showAddLicenseDialog, setShowAddLicenseDialog] = useState(false);
 
   // Funciones para abrir diálogos
+  const openDetailDialog = (dni: string) => {
+    setShowAddLicenseDialog(false); // Cerrar cualquier dialogo abierto
+    setShowEditDialog(false);
+    fetchConductorDetail(dni);
+    setShowDetailDialog(true);
+  };
+
   const openEditDialog = (conductor: ConductorDetalladoNuevo) => {
+    setShowDetailDialog(false); // Cerrar detail primero
+    setShowAddLicenseDialog(false); // Cerrar add license si está abierto
     setEditConductor(conductor);
+    fetchConductorDetail(conductor.dni); // Obtener detalle con licencias
     setShowEditDialog(true);
   };
 
@@ -111,12 +122,7 @@ const ConductoresView = () => {
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">Pendientes</p>
               </div>
-              <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-purple-700 dark:text-purple-400">
-                  {loading ? '-' : stats?.totales?.porcentajeCompletado || 0}%
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">% Completado</p>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -147,7 +153,7 @@ const ConductoresView = () => {
             <ConductoresTable
               conductores={conductores}
               loading={loading}
-              onView={fetchConductorDetail}
+              onView={openDetailDialog}
               onEdit={openEditDialog}
               onDelete={openDeleteDialog}
             />
@@ -156,8 +162,11 @@ const ConductoresView = () => {
         </Card>
 
         <ConductorDetailDialog
-          open={!!conductorDetail}
-          onOpenChange={() => fetchConductorDetail(null)}
+          open={showDetailDialog}
+          onOpenChange={(open) => {
+            setShowDetailDialog(open);
+            if (!open) fetchConductorDetail(null);
+          }}
           conductor={conductorDetail}
           licencias={licencias}
           licenciasSummary={licenciasSummary}
@@ -167,9 +176,17 @@ const ConductoresView = () => {
         />
         <EditConductorDialog
           open={showEditDialog}
-          onOpenChange={setShowEditDialog}
+          onOpenChange={(open) => {
+            setShowEditDialog(open);
+            if (!open) setEditConductor(null);
+          }}
           conductor={editConductor}
-          onSuccess={refreshConductores}
+          onSuccess={() => {
+            setShowEditDialog(false);
+            setEditConductor(null);
+            refreshConductores();
+          }}
+          licensesData={licencias || []}
         />
         <DeleteConductorDialog
           open={showDeleteDialog}

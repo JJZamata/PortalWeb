@@ -53,8 +53,8 @@ const Login = () => {
         if (response.data.token) {
           localStorage.setItem('token', response.data.token);
         } else {
-          // Si no viene token, usar un token dummy para indicar que está autenticado
-          localStorage.setItem('token', 'authenticated');
+          // Si no viene token, limpiar cualquier token previo para evitar Bearer inválido
+          localStorage.removeItem('token');
         }
         
         // Guardar el ID del usuario en localStorage

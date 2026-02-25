@@ -3,12 +3,14 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, User, Phone, MapPin, Camera, IdCard } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useMutation } from '@tanstack/react-query';
 import { conductoresService } from '../services/conductoresService';
+import { licensesService } from '../services/licensesService';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Props {
   onSuccess: () => void;
@@ -17,7 +19,11 @@ interface Props {
 export const AddConductorDialog = ({ onSuccess }: Props) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [showLicenseSection, setShowLicenseSection] = useState(false);
+  const today = new Date().toISOString().split('T')[0];
   
+  const [showRestrictions, setShowRestrictions] = useState(false);
+
   const form = useForm({
     defaultValues: { 
       dni: "", 
@@ -25,23 +31,92 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
       lastName: "", 
       phoneNumber: "", 
       address: "", 
-      photoUrl: "" 
+      photoUrl: "",
+      licenseNumber: "",
+      category: "",
+      issueDate: "",
+      expirationDate: "",
+      issuingEntity: "SUTRAN",
+      restrictions: ""
     },
   });
 
+  const issueDateValue = form.watch('issueDate');
+
+  // Auto-calcular expirationDate a 5 años desde issueDate
+  useEffect(() => {
+    if (issueDateValue) {
+      const issueDate = new Date(issueDateValue);
+      const expiryDate = new Date(issueDate.getFullYear() + 5, issueDate.getMonth(), issueDate.getDate());
+      const expiryDateString = expiryDate.toISOString().split('T')[0];
+      form.setValue('expirationDate', expiryDateString);
+    }
+  }, [issueDateValue, form]);
+
   const mutation = useMutation({
-    mutationFn: (data: any) => conductoresService.addConductor(data),
-    onSuccess: () => {
+    mutationFn: async (data: any) => {
+      const conductorPayload = {
+        dni: data.dni,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
+        address: data.address,
+        photoUrl: data.photoUrl
+      };
+
+      await conductoresService.addConductor(conductorPayload);
+
+      if (showLicenseSection) {
+        try {
+          // Si restrictions está vacío, enviar "SIN RESTRICCIONES"
+          const restrictions = !data.restrictions || data.restrictions.trim() === '' ? 'SIN RESTRICCIONES' : data.restrictions;
+          await licensesService.addLicense({
+            driverDni: data.dni,
+            licenseNumber: data.licenseNumber,
+            category: data.category,
+            issueDate: data.issueDate,
+            expirationDate: data.expirationDate,
+            issuingEntity: data.issuingEntity,
+            restrictions: restrictions
+          });
+        } catch (licenseError: any) {
+          const apiMessage = licenseError?.response?.data?.message;
+          const firstDetail = Array.isArray(licenseError?.response?.data?.errors)
+            ? licenseError.response.data.errors[0]?.message
+            : null;
+          const enhancedError = new Error(firstDetail || apiMessage || licenseError?.message || 'Error al registrar la licencia');
+          (enhancedError as any).partialSuccess = true;
+          throw enhancedError;
+        }
+      }
+
+      return { licenseCreated: showLicenseSection };
+    },
+    onSuccess: (result) => {
       toast({ 
         title: "✅ Conductor agregado", 
-        description: "El conductor fue registrado correctamente en el sistema.", 
+        description: result?.licenseCreated
+          ? "El conductor y su licencia fueron registrados correctamente."
+          : "El conductor fue registrado correctamente en el sistema.", 
         variant: "success" 
       });
       form.reset();
+      setShowRestrictions(false);
+      setShowLicenseSection(false);
       setOpen(false);
       onSuccess();
     },
     onError: (error: any) => {
+      if (error?.partialSuccess) {
+        toast({
+          title: "⚠️ Registro parcial",
+          description: `El conductor se registró, pero la licencia no se pudo guardar: ${error.message}`,
+          variant: "destructive"
+        });
+        onSuccess();
+        return;
+      }
+
       // Usar mensaje detallado si viene del backend o del helper handleApiError
       let errorMessage =
         error.response?.data?.message ||
@@ -88,6 +163,44 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
     return true;
   };
 
+  const validateLicenseNumber = (licenseNumber: string) => {
+    if (!showLicenseSection) return true;
+    if (!licenseNumber.trim()) return "El número de licencia es obligatorio";
+    if (licenseNumber.length > 15) return "Máximo 15 caracteres";
+    if (!/^[A-Za-z0-9-]+$/.test(licenseNumber)) return "Solo letras, números y guiones";
+    return true;
+  };
+
+  const validateLicenseCategory = (category: string) => {
+    if (!showLicenseSection) return true;
+    const trimmed = category.trim();
+    if (!trimmed) return "La categoría es obligatoria";
+    if (trimmed.length > 10) return "Máximo 10 caracteres";
+    if (/1/.test(trimmed)) return "Usa letra I, no número 1";
+    if (!/^[A-Z]-[A-Z]{1,4}[a-z]?$/.test(trimmed)) return "Formato inválido. Ejemplos: B-I, B-IIa";
+    return true;
+  };
+
+  const validateIssueDate = (issueDate: string) => {
+    if (!showLicenseSection) return true;
+    if (!issueDate) return "La fecha de emisión es obligatoria";
+    if (issueDate > today) return "La fecha de emisión no puede ser futura";
+    return true;
+  };
+
+  const validateExpirationDate = (expirationDate: string) => {
+    if (!showLicenseSection) return true;
+    if (!expirationDate) return "La fecha de vencimiento es obligatoria";
+    if (issueDateValue && expirationDate < issueDateValue) return "Debe ser igual o posterior a la emisión";
+    return true;
+  };
+
+  const validateIssuingEntity = (issuingEntity: string) => {
+    if (!showLicenseSection) return true;
+    if (!issuingEntity.trim()) return "La entidad emisora es obligatoria";
+    return true;
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -109,18 +222,7 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
         
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((values) => {
-              // Armar payload para que todos los campos lleguen correctamente
-              const payload = {
-                dni: values.dni,
-                firstName: values.firstName,
-                lastName: values.lastName,
-                phoneNumber: values.phoneNumber,
-                address: values.address,
-                photoUrl: values.photoUrl
-              };
-              mutation.mutate(payload);
-            })}
+            onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
             className="space-y-6 pt-4"
           >
             <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
@@ -257,6 +359,176 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
                     </FormItem>
                   )} 
                 />
+              </CardContent>
+            </Card>
+
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-5">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <IdCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      Licencia de Conducir (Opcional)
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      Activa esta sección si deseas registrar la licencia junto al conductor.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowLicenseSection((prev) => !prev)}
+                    className="rounded-lg"
+                  >
+                    {showLicenseSection ? 'Ocultar licencia' : 'Agregar licencia ahora'}
+                  </Button>
+                </div>
+
+                {showLicenseSection && (
+                  <div className="space-y-4 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        name="licenseNumber"
+                        control={form.control}
+                        rules={{ validate: validateLicenseNumber }}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Número de Licencia *</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                maxLength={15}
+                                placeholder="Ej: K87654321"
+                                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11"
+                                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-500 text-sm" />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        name="category"
+                        control={form.control}
+                        rules={{ validate: validateLicenseCategory }}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Categoría *</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                maxLength={10}
+                                placeholder="Ej: B-IIa"
+                                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11"
+                                onChange={(e) => field.onChange(e.target.value.trimStart())}
+                                onBlur={(e) => field.onChange(e.target.value.trim())}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-500 text-sm" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        name="issueDate"
+                        control={form.control}
+                        rules={{ validate: validateIssueDate }}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Fecha de Emisión *</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="date"
+                                max={today}
+                                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 [color-scheme:light] dark:[color-scheme:dark]"
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-500 text-sm" />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        name="expirationDate"
+                        control={form.control}
+                        rules={{ validate: validateExpirationDate }}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Fecha de Vencimiento *</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="date"
+                                min={issueDateValue || today}
+                                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 [color-scheme:light] dark:[color-scheme:dark]"
+                              />
+                            </FormControl>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Auto-calculado a 5 años.</p>
+                            <FormMessage className="text-red-500 text-sm" />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      name="issuingEntity"
+                      control={form.control}
+                      rules={{ validate: validateIssuingEntity }}
+                      render={({ field }) => (
+                        <FormItem className="mb-4">
+                          <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Entidad Emisora *</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              maxLength={50}
+                              placeholder="Ej: MTC, SUTRAN"
+                              className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11"
+                            />
+                          </FormControl>
+                          <FormMessage className="text-red-500 text-sm" />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="mb-4 flex items-center gap-2">
+                      <Checkbox
+                        checked={showRestrictions}
+                        onCheckedChange={(checked) => setShowRestrictions(checked as boolean)}
+                        id="hasRestrictions"
+                      />
+                      <label htmlFor="hasRestrictions" className="text-sm font-medium cursor-pointer text-gray-700 dark:text-gray-300">
+                        Esta licencia tiene restricciones
+                      </label>
+                    </div>
+
+                    {showRestrictions && (
+                      <FormField
+                        name="restrictions"
+                        control={form.control}
+                        render={({ field }) => (
+                          <FormItem className="mb-4">
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Restricciones</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                maxLength={100}
+                                placeholder="Ej: LENTES CORRECTIVOS"
+                                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11"
+                                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                                autoFocus
+                              />
+                            </FormControl>
+                            <FormMessage className="text-red-500 text-sm" />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

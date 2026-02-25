@@ -249,6 +249,7 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
                           maxLength={9} 
                           placeholder="987654321"
                           className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-green-500 focus:ring-green-500" 
+                          onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, '').replace(/\D+/g, ''))}
                         />
                       </FormControl>
                       <FormMessage className="text-red-500 text-sm" />
@@ -329,8 +330,8 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
                                     maxLength={10}
                                     placeholder="Ej: B-IIa"
                                     className="mt-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-green-500 focus:ring-green-500"
-                                    onChange={(e) => setLicenseForm((prev) => ({ ...prev, category: e.target.value.trimStart() }))}
-                                    onBlur={(e) => setLicenseForm((prev) => ({ ...prev, category: e.target.value.trim() }))}
+                                    onChange={(e) => setLicenseForm((prev) => ({ ...prev, category: e.target.value.replace(/\s+/g, '') }))}
+                                    onBlur={(e) => setLicenseForm((prev) => ({ ...prev, category: e.target.value.replace(/\s+/g, '') }))}
                                   />
                                 </div>
 

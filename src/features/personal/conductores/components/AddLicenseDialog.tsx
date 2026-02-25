@@ -130,7 +130,7 @@ export const AddLicenseDialog = ({ open, onOpenChange, conductorDni, onSuccess }
                       autoComplete="off"
                       placeholder="Ej: K87654321"
                       className="bg-background text-foreground border-border placeholder:text-muted-foreground"
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, '').toUpperCase())}
                     />
                   </FormControl>
                   <p className="text-xs text-muted-foreground">Máximo 15 caracteres.</p>
@@ -160,8 +160,8 @@ export const AddLicenseDialog = ({ open, onOpenChange, conductorDni, onSuccess }
                       autoComplete="off"
                       placeholder="Ej: B-IIa"
                       className="bg-background text-foreground border-border placeholder:text-muted-foreground"
-                      onChange={(e) => field.onChange(e.target.value.trimStart())}
-                      onBlur={(e) => field.onChange(e.target.value.trim())}
+                      onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, ''))}
+                      onBlur={(e) => field.onChange(e.target.value.replace(/\s+/g, ''))}
                     />
                   </FormControl>
                   <p className="text-xs text-muted-foreground">Usa letra I, no número 1.</p>

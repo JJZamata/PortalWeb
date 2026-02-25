@@ -64,11 +64,13 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
         photoUrl: data.photoUrl
       };
 
-      await conductoresService.addConductor(conductorPayload);
+      let conductorCreated = false;
 
-      if (showLicenseSection) {
-        try {
-          // Si restrictions está vacío, enviar "SIN RESTRICCIONES"
+      try {
+        await conductoresService.addConductor(conductorPayload);
+        conductorCreated = true;
+
+        if (showLicenseSection) {
           const restrictions = !data.restrictions || data.restrictions.trim() === '' ? 'SIN RESTRICCIONES' : data.restrictions;
           await licensesService.addLicense({
             driverDni: data.dni,
@@ -79,15 +81,24 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
             issuingEntity: data.issuingEntity,
             restrictions: restrictions
           });
-        } catch (licenseError: any) {
-          const apiMessage = licenseError?.response?.data?.message;
-          const firstDetail = Array.isArray(licenseError?.response?.data?.errors)
-            ? licenseError.response.data.errors[0]?.message
-            : null;
-          const enhancedError = new Error(firstDetail || apiMessage || licenseError?.message || 'Error al registrar la licencia');
-          (enhancedError as any).partialSuccess = true;
-          throw enhancedError;
         }
+      } catch (error: any) {
+        if (showLicenseSection && conductorCreated) {
+          const apiMessage = error?.response?.data?.message;
+          const firstDetail = Array.isArray(error?.response?.data?.errors)
+            ? error.response.data.errors[0]?.message
+            : null;
+          const licenseErrorMessage = firstDetail || apiMessage || error?.message || 'Error al registrar la licencia';
+
+          try {
+            await conductoresService.deleteConductor(data.dni);
+            throw new Error(`No se pudo registrar la licencia: ${licenseErrorMessage}. Se revirtió el registro del conductor para evitar datos incompletos.`);
+          } catch {
+            throw new Error(`No se pudo registrar la licencia: ${licenseErrorMessage}. Además, no se pudo revertir automáticamente el conductor; revisa y elimina manualmente si corresponde.`);
+          }
+        }
+
+        throw error;
       }
 
       return { licenseCreated: showLicenseSection };
@@ -107,16 +118,6 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
       onSuccess();
     },
     onError: (error: any) => {
-      if (error?.partialSuccess) {
-        toast({
-          title: "⚠️ Registro parcial",
-          description: `El conductor se registró, pero la licencia no se pudo guardar: ${error.message}`,
-          variant: "destructive"
-        });
-        onSuccess();
-        return;
-      }
-
       // Usar mensaje detallado si viene del backend o del helper handleApiError
       let errorMessage =
         error.response?.data?.message ||
@@ -246,6 +247,7 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
                             maxLength={8} 
                             placeholder="12345678"
                             className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-green-500 focus:ring-green-500" 
+                            onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, '').replace(/\D+/g, ''))}
                           />
                         </FormControl>
                         <FormMessage className="text-red-500 text-sm" />
@@ -269,6 +271,7 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
                             maxLength={9} 
                             placeholder="987654321"
                             className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-green-500 focus:ring-green-500" 
+                            onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, '').replace(/\D+/g, ''))}
                           />
                         </FormControl>
                         <FormMessage className="text-red-500 text-sm" />
@@ -400,7 +403,7 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
                                 maxLength={15}
                                 placeholder="Ej: K87654321"
                                 className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11"
-                                onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                                onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, '').toUpperCase())}
                               />
                             </FormControl>
                             <FormMessage className="text-red-500 text-sm" />
@@ -421,8 +424,8 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
                                 maxLength={10}
                                 placeholder="Ej: B-IIa"
                                 className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11"
-                                onChange={(e) => field.onChange(e.target.value.trimStart())}
-                                onBlur={(e) => field.onChange(e.target.value.trim())}
+                                onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, ''))}
+                                onBlur={(e) => field.onChange(e.target.value.replace(/\s+/g, ''))}
                               />
                             </FormControl>
                             <FormMessage className="text-red-500 text-sm" />

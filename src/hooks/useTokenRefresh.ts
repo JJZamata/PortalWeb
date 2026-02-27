@@ -1,26 +1,25 @@
 import { useEffect, useRef } from 'react';
 import axiosInstance from '@/lib/axios';
-import { useToast } from '@/hooks/use-toast';
 
 export const useTokenRefresh = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const hasSessionData = !!localStorage.getItem('username') || !!localStorage.getItem('userId');
     
-    if (token) {
-      // Verificar el token cada 5 minutos
+    if (token || hasSessionData) {
+      // Refrescar sesión cada 20 minutos usando endpoint real de refresh
       intervalRef.current = setInterval(async () => {
         try {
-          await axiosInstance.get('/auth/verify');
+          await axiosInstance.post('/auth/refresh');
         } catch (error) {
-          // Token expirado, el interceptor ya maneja la redirección
+          // El interceptor de axios maneja reintentos/redirect según corresponda
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
           }
         }
-      }, 5 * 60 * 1000); // 5 minutos
+      }, 20 * 60 * 1000); // 20 minutos
     }
 
     return () => {

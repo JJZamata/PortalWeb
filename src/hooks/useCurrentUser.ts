@@ -9,79 +9,51 @@ interface CurrentUser {
   platform?: string;
 }
 
+const getStoredUser = (): CurrentUser | null => {
+  const username = localStorage.getItem('username');
+  const email = localStorage.getItem('userEmail');
+  const userId = localStorage.getItem('userId');
+  const rolesString = localStorage.getItem('userRoles');
+
+  let roles: string[] | undefined = undefined;
+  if (rolesString) {
+    try {
+      roles = JSON.parse(rolesString);
+    } catch (e) {
+      console.error('Error parsing roles:', e);
+    }
+  }
+
+  if (!username && !email && !userId) return null;
+
+  return {
+    id: userId || undefined,
+    username: username || undefined,
+    email: email || undefined,
+    roles,
+  };
+};
+
 export const useCurrentUser = () => {
-  // Inicializar con los datos del localStorage que se guardan en Login
-  const initialUser: CurrentUser | null = (() => {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-
-    const username = localStorage.getItem('username');
-    const email = localStorage.getItem('userEmail');
-    const userId = localStorage.getItem('userId');
-    const rolesString = localStorage.getItem('userRoles');
-
-    let roles: string[] | undefined = undefined;
-    if (rolesString) {
-      try {
-        roles = JSON.parse(rolesString);
-      } catch (e) {
-        console.error('Error parsing roles:', e);
-      }
-    }
-
-    if (username || email) {
-      return {
-        id: userId || undefined,
-        username: username || undefined,
-        email: email || undefined,
-        roles: roles,
-      };
-    }
-    return null;
-  })();
+  // Inicializar con datos guardados, aunque no exista token Bearer (sesión por cookie)
+  const initialUser: CurrentUser | null = getStoredUser();
 
   const [user, setUser] = useState<CurrentUser | null>(initialUser);
   const [loading, setLoading] = useState(!initialUser);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
+      const storedUser = getStoredUser();
+
+      if (storedUser) {
+        setUser(storedUser);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+
       try {
-        const token = localStorage.getItem('token');
-
-        if (!token) {
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-
-        // Si ya tenemos datos en localStorage, usar esos
-        const storedUsername = localStorage.getItem('username');
-        const storedEmail = localStorage.getItem('userEmail');
-        const storedUserId = localStorage.getItem('userId');
-        const storedRolesString = localStorage.getItem('userRoles');
-
-        let storedRoles: string[] | undefined = undefined;
-        if (storedRolesString) {
-          try {
-            storedRoles = JSON.parse(storedRolesString);
-          } catch (e) {
-            console.error('Error parsing stored roles:', e);
-          }
-        }
-
-        if (storedUsername || storedEmail) {
-          const currentUser: CurrentUser = {
-            id: storedUserId || undefined,
-            username: storedUsername || undefined,
-            email: storedEmail || undefined,
-            roles: storedRoles,
-          };
-          setUser(currentUser);
-          setLoading(false);
-          return;
-        }
-
-        // Si no hay datos en localStorage, intentar obtener del API
+        // Intentar obtener del API incluso sin token Bearer (puede haber sesión por cookie)
         try {
           const response = await axiosInstance.get('/users/me');
           const apiUser = response.data?.data ?? response.data;
@@ -112,8 +84,10 @@ export const useCurrentUser = () => {
             }
           }
         } catch (apiError: any) {
-          console.warn('Error al obtener datos del API /users/me, usando localStorage:', apiError.message);
-          // Fallback ya realizado arriba
+          if (!storedUser) {
+            setUser(null);
+          }
+          console.warn('Error al obtener datos del API /users/me, usando fallback local:', apiError.message);
         }
       } catch (error) {
         console.error('Error en useCurrentUser:', error);

@@ -165,32 +165,9 @@ export const empresasService = {
     });
     return response.data;
   },
-  deleteEmpresa: async (ruc: string) => {    
-    // Intentar varios endpoints comunes para eliminación
-    const endpoints = [
-      `/companies/${ruc}`,           // Endpoint original
-      `/companies/delete/${ruc}`,    // Con prefijo delete
-      `/companies/${ruc}/delete`,    // Con sufijo delete
-    ];
-    
-    let lastError;
-    
-    for (const endpoint of endpoints) {
-      try {
-        const response = await axiosInstance.delete(endpoint);
-        return response.data;
-      } catch (error: any) {
-        lastError = error;
-        
-        // Si es un error de autorización o servidor, no intentar más endpoints
-        if (error.response?.status === 401 || error.response?.status === 500) {
-          break;
-        }
-      }
-    }
-    
-    // Si todos los endpoints fallaron, lanzar el último error
-    throw lastError;
+  deleteEmpresa: async (ruc: string) => {
+    const response = await axiosInstance.delete(`/companies/${ruc}`);
+    return response.data;
   },
   getStats: async () => {
     const response = await axiosInstance.get('/companies/stats');

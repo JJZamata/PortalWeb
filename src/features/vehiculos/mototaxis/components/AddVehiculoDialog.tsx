@@ -9,9 +9,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Plus, Car, User, FileText, Calendar, Building2, Settings, UserPlus } from "lucide-react";
 import { memo, useState } from "react";
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { vehiculosService } from '../services/vehiculosService';
 import { propietariosService } from '../../propietarios/services/propietariosService';
+import { empresasService } from '../../empresas/services/empresasService';
 import { AddPropietarioDialog } from '../../propietarios/components/AddPropietarioDialog';
 import { useToast } from '@/hooks/use-toast';
 
@@ -54,6 +55,40 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
   const queryClient = useQueryClient();
   const [showPropietarioDialog, setShowPropietarioDialog] = useState(false);
   const [propietarioName, setPropietarioName] = useState('');
+  const [selectedCompanyName, setSelectedCompanyName] = useState('');
+
+  const { data: empresasOptions = [], isLoading: loadingEmpresas } = useQuery({
+    queryKey: ['empresas-vehiculo-selector'],
+    queryFn: async () => {
+      const firstPage = await empresasService.getEmpresas(1, '', 'ALL');
+      const totalPages = Number(firstPage?.pagination?.totalPages || 1);
+
+      let empresas = Array.isArray(firstPage?.empresas) ? firstPage.empresas : [];
+
+      if (totalPages > 1) {
+        const restPages = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, index) =>
+            empresasService.getEmpresas(index + 2, '', 'ALL')
+          )
+        );
+
+        restPages.forEach((pageResult) => {
+          if (Array.isArray(pageResult?.empresas)) {
+            empresas = [...empresas, ...pageResult.empresas];
+          }
+        });
+      }
+
+      const uniqueEmpresas = empresas.filter(
+        (empresa: any, index: number, arr: any[]) =>
+          arr.findIndex((item: any) => item?.ruc === empresa?.ruc) === index
+      );
+
+      return uniqueEmpresas;
+    },
+    enabled: open,
+    staleTime: 60 * 1000,
+  });
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -91,6 +126,7 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
         variant: "default"
       });
       form.reset();
+      setSelectedCompanyName('');
       onOpenChange(false);
       onSuccess();
     },
@@ -384,17 +420,41 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
                       <FormItem>
                         <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1">
                           <Building2 className="w-4 h-4" />
-                          RUC de la Empresa *
+                          Empresa *
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            {...field} 
-                            placeholder="20123456789"
-                            maxLength={11}
-                            className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500" 
-                          />
+                          <Select
+                            value={field.value}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              const selected = empresasOptions.find((empresa: any) => empresa.ruc === value);
+                              setSelectedCompanyName(selected?.nombre || '');
+                            }}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500">
+                                <SelectValue placeholder={loadingEmpresas ? 'Cargando empresas...' : 'Selecciona una empresa'} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                              {empresasOptions.length > 0 ? (
+                                empresasOptions.map((empresa: any) => (
+                                  <SelectItem key={empresa.ruc} value={empresa.ruc}>
+                                    {empresa.nombre} - {empresa.ruc}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="__no-results" disabled>
+                                  Sin empresas disponibles
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
                         </FormControl>
-                        <p className="text-xs text-muted-foreground">La empresa debe estar previamente registrada.</p>
+                        {selectedCompanyName && (
+                          <p className="text-xs text-green-600 font-medium">✓ {selectedCompanyName}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground">Selecciona una empresa registrada (se guarda su RUC automáticamente).</p>
                         <FormMessage className="text-red-500 text-sm" />
                       </FormItem>
                     )}
@@ -406,7 +466,7 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
                   <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
                     <li>• La placa debe seguir el formato estándar (ABC-123)</li>
                     <li>• El DNI del propietario debe estar registrado previamente</li>
-                    <li>• El RUC debe corresponder a una empresa registrada</li>
+                    <li>• Selecciona una empresa registrada de la lista</li>
                     <li>• Puedes crear un nuevo propietario usando el botón "Nuevo"</li>
                   </ul>
                 </div>

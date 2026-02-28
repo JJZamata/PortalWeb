@@ -9,6 +9,7 @@ import { EditEmpresaDialog } from './components/EditEmpresaDialog';
 import { DeleteEmpresaDialog } from './components/DeleteEmpresaDialog';
 import { PaginationControls } from './components/PaginationControls';
 import { empresasService } from './services/empresasService';
+import { vehiculosService } from '../mototaxis/services/vehiculosService';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { XCircle, RefreshCw, Search, X, Filter } from 'lucide-react';
@@ -40,11 +41,37 @@ const EmpresasView = () => {
     setShowDeleteDialog(true);
   };
 
-  const handleDeleteEmpresa = async () => {
+  const handleDeleteEmpresa = async (forceCascade: boolean = false) => {
     if (deleteRuc) {
+      let shouldCloseDialog = true;
       try {
+        if (forceCascade) {
+          const detail = await empresasService.getEmpresaDetail(deleteRuc);
+          const associatedVehicles = Array.isArray(detail?.vehicles) ? detail.vehicles : [];
+
+          if (associatedVehicles.length > 0) {
+            const deleteResults = await Promise.allSettled(
+              associatedVehicles
+                .map((vehicle: any) => String(vehicle?.plateNumber ?? vehicle?.placa ?? '').trim())
+                .filter((plate: string) => !!plate)
+                .map((plate: string) => vehiculosService.deleteVehiculo(plate))
+            );
+
+            const failedVehicleDeletes = deleteResults.filter((result) => result.status === 'rejected');
+            if (failedVehicleDeletes.length > 0) {
+              throw new Error(`No se pudieron eliminar ${failedVehicleDeletes.length} vehículo(s) asociados.`);
+            }
+          }
+        }
+
         await empresasService.deleteEmpresa(deleteRuc);
-        toast({ title: "Empresa eliminada", description: "La empresa fue eliminada exitosamente.", variant: "success" });
+        toast({
+          title: "Empresa eliminada",
+          description: forceCascade
+            ? "Se eliminaron las vinculaciones con todos los vehículos asociados y la empresa fue eliminada exitosamente."
+            : "La empresa fue eliminada exitosamente.",
+          variant: "success"
+        });
         
         // Invalidar cache y recargar datos
         queryClient.invalidateQueries({ queryKey: ['empresas'] });
@@ -53,13 +80,32 @@ const EmpresasView = () => {
         handlePageChange(page);
       } catch (error: any) {
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido';
+        const errorStatus = error?.response?.status;
+        const responsePayloadText = JSON.stringify(error?.response?.data ?? '').toLowerCase();
+        const combinedErrorText = `${errorMessage} ${responsePayloadText}`.toLowerCase();
+        const hasAssociatedVehicles = !forceCascade && (
+          errorStatus === 409 ||
+          /veh[ií]culo|vehicle|placa|associated|asociad|vinculad|foreign key|constraint/i.test(combinedErrorText)
+        );
+
+        if (hasAssociatedVehicles) {
+          shouldCloseDialog = false;
+          const cascadeError: any = new Error(errorMessage);
+          cascadeError.code = 'HAS_ASSOCIATED_VEHICLES';
+          cascadeError.status = errorStatus;
+          throw cascadeError;
+        }
+
         toast({ 
           title: "Error al eliminar empresa", 
           description: `Error: ${errorMessage}`, 
           variant: "destructive" 
         });
+        throw error;
       } finally {
-        setShowDeleteDialog(false);
+        if (shouldCloseDialog) {
+          setShowDeleteDialog(false);
+        }
       }
     }
   };

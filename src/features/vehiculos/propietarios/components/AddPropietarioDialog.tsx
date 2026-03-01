@@ -83,15 +83,17 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="shadow-xl border border-border rounded-xl max-w-2xl">
-        <DialogHeader className="pb-4">
+      <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-2xl bg-white dark:bg-gray-900">
+        <DialogHeader className="pb-4 border-b border-gray-100 dark:border-gray-800">
           <DialogTitle className="text-2xl font-bold text-foreground">Registrar Propietario</DialogTitle>
-          <DialogDescription className="text-gray-600">Ingresa los datos del nuevo propietario de vehículos</DialogDescription>
+          <DialogDescription className="text-gray-600 dark:text-gray-300">
+            Ingresa los datos del nuevo propietario de vehículos
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="mb-4 rounded-lg border border-blue-300 bg-blue-50 p-4 text-sm text-blue-900">
-          <p className="font-semibold text-blue-900 mb-2">Información importante:</p>
-          <ul className="list-disc pl-5 space-y-1 text-blue-800">
+        <div className="mb-4 rounded-lg border border-blue-300 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-100">
+          <p className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Información importante:</p>
+          <ul className="list-disc pl-5 space-y-1 text-blue-800 dark:text-blue-200">
             <li>El DNI debe ser único en el sistema</li>
             <li>El propietario podrá tener múltiples vehículos asociados</li>
             <li>El email y la foto son opcionales</li>
@@ -106,7 +108,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                 name="dni"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1">
+                    <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
                       <User className="w-4 h-4" />
                       DNI *
                     </FormLabel>
@@ -115,7 +117,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                         {...field}
                         placeholder="12345678"
                         maxLength={8}
-                        className="bg-white"
+                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </FormControl>
                     <FormMessage />
@@ -128,7 +130,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                 name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1">
+                    <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
                       <Phone className="w-4 h-4" />
                       Teléfono *
                     </FormLabel>
@@ -137,7 +139,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                         {...field}
                         placeholder="987654321"
                         maxLength={9}
-                        className="bg-white"
+                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </FormControl>
                     <p className="text-xs text-muted-foreground">Debe tener exactamente 9 dígitos.</p>
@@ -153,7 +155,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1">
+                    <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
                       <User className="w-4 h-4" />
                       Nombres *
                     </FormLabel>
@@ -162,7 +164,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                         {...field}
                         placeholder="Juan Carlos"
                         maxLength={50}
-                        className="bg-white"
+                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </FormControl>
                     <FormMessage />
@@ -175,7 +177,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1">
+                    <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
                       <User className="w-4 h-4" />
                       Apellidos *
                     </FormLabel>
@@ -184,7 +186,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                         {...field}
                         placeholder="Pérez García"
                         maxLength={50}
-                        className="bg-white"
+                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </FormControl>
                     <FormMessage />
@@ -198,7 +200,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-1">
+                  <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
                     <Mail className="w-4 h-4" />
                     Email (Opcional)
                   </FormLabel>
@@ -207,7 +209,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                       {...field}
                       type="email"
                       placeholder="propietario@ejemplo.com"
-                      className="bg-white"
+                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     />
                   </FormControl>
                   <FormMessage />
@@ -220,7 +222,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
               name="photoUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-1">
+                  <FormLabel className="flex items-center gap-1 text-gray-700 dark:text-gray-200">
                     <Image className="w-4 h-4" />
                     URL de Foto (Opcional)
                   </FormLabel>
@@ -229,7 +231,7 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
                       {...field}
                       type="url"
                       placeholder="https://ejemplo.com/foto.jpg"
-                      className="bg-white"
+                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     />
                   </FormControl>
                   <FormMessage />
@@ -237,19 +239,20 @@ export const AddPropietarioDialog = ({ open, onOpenChange, onSuccess }: Props) =
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 disabled={mutation.isPending}
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={mutation.isPending}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white"
               >
                 {mutation.isPending ? 'Registrando...' : 'Registrar Propietario'}
               </Button>

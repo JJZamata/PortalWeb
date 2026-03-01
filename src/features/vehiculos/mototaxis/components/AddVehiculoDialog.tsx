@@ -44,6 +44,12 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+interface OwnerOption {
+  dni: string;
+  fullName: string;
+  vehicleCount: number;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -54,8 +60,55 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showPropietarioDialog, setShowPropietarioDialog] = useState(false);
-  const [propietarioName, setPropietarioName] = useState('');
+  const [selectedOwnerInfo, setSelectedOwnerInfo] = useState<OwnerOption | null>(null);
   const [selectedCompanyName, setSelectedCompanyName] = useState('');
+
+  const { data: ownerOptions = [], isLoading: loadingOwners } = useQuery({
+    queryKey: ['propietarios-vehiculo-selector'],
+    queryFn: async () => {
+      const firstPage = await propietariosService.getPropietarios(1, '');
+      const totalPages = Number(firstPage?.pagination?.totalPages || 1);
+
+      let propietarios = Array.isArray(firstPage?.propietarios) ? firstPage.propietarios : [];
+
+      if (totalPages > 1) {
+        const restPages = await Promise.all(
+          Array.from({ length: totalPages - 1 }, (_, index) =>
+            propietariosService.getPropietarios(index + 2, '')
+          )
+        );
+
+        restPages.forEach((pageResult) => {
+          if (Array.isArray(pageResult?.propietarios)) {
+            propietarios = [...propietarios, ...pageResult.propietarios];
+          }
+        });
+      }
+
+      const uniqueOwners = propietarios.filter(
+        (owner: any, index: number, arr: any[]) => {
+          const currentDni = String(owner?.dni ?? owner?.ownerDni ?? '').trim();
+          return arr.findIndex((item: any) => String(item?.dni ?? item?.ownerDni ?? '').trim() === currentDni) === index;
+        }
+      );
+
+      return uniqueOwners
+        .map((owner: any) => {
+          const dni = String(owner?.dni ?? owner?.ownerDni ?? '').trim();
+          const firstName = String(owner?.firstName ?? owner?.nombres ?? '').trim();
+          const lastName = String(owner?.lastName ?? owner?.apellidos ?? '').trim();
+          const computedFullName = `${firstName} ${lastName}`.trim();
+          const fullName = String(owner?.fullName ?? owner?.nombreCompleto ?? computedFullName ?? '').trim() || 'Sin nombre';
+          const vehicleCount = Number(owner?.vehicleCount ?? owner?.vehicle_count ?? owner?.totalVehicles ?? owner?.vehiclesCount ?? 0);
+
+          return { dni, fullName, vehicleCount } as OwnerOption;
+        })
+        .filter((owner: OwnerOption) => owner.dni.length > 0)
+        .sort((a: OwnerOption, b: OwnerOption) => a.fullName.localeCompare(b.fullName));
+    },
+    enabled: open,
+    staleTime: 60 * 1000,
+  });
 
   const { data: empresasOptions = [], isLoading: loadingEmpresas } = useQuery({
     queryKey: ['empresas-vehiculo-selector'],
@@ -105,20 +158,7 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      // Validar que el propietario existe
-      try {
-        const propietario = await propietariosService.getPropietarioDetail(data.ownerDni);
-        setPropietarioName(propietario?.firstName && propietario?.lastName 
-          ? `${propietario.firstName} ${propietario.lastName}`
-          : 'Propietario encontrado');
-      } catch (error: any) {
-        const errorMsg = error?.response?.data?.message || `Propietario con DNI ${data.ownerDni} no encontrado`;
-        throw new Error(errorMsg);
-      }
-      // Si el propietario existe, proceder a crear el vehículo
-      return vehiculosService.addVehiculo(data);
-    },
+    mutationFn: async (data: FormData) => vehiculosService.addVehiculo(data),
     onSuccess: () => {
       toast({
         title: "Vehículo agregado",
@@ -126,6 +166,7 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
         variant: "default"
       });
       form.reset();
+      setSelectedOwnerInfo(null);
       setSelectedCompanyName('');
       onOpenChange(false);
       onSuccess();
@@ -360,7 +401,7 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
                         <FormLabel className="text-gray-700 dark:text-gray-300 font-medium flex items-center gap-1 justify-between">
                           <span className="flex items-center gap-1">
                             <FileText className="w-4 h-4" />
-                            DNI del Propietario *
+                            Propietario *
                           </span>
                           <Button
                             type="button"
@@ -374,40 +415,40 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
                           </Button>
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            {...field} 
-                            placeholder="12345678"
-                            maxLength={8}
-                            onBlur={async (e) => {
-                              field.onBlur();
-                              const dni = e.target.value;
-                              if (dni.length === 8) {
-                                try {
-                                  const propietario = await propietariosService.getPropietarioDetail(dni);
-                                  if (propietario?.firstName && propietario?.lastName) {
-                                    setPropietarioName(`${propietario.firstName} ${propietario.lastName}`);
-                                    toast({
-                                      title: "Propietario encontrado",
-                                      description: `${propietario.firstName} ${propietario.lastName}`,
-                                    });
-                                  }
-                                } catch (error) {
-                                  setPropietarioName('');
-                                  toast({
-                                    title: "Propietario no encontrado",
-                                    description: "Puedes registrar un nuevo propietario haciendo clic en 'Nuevo'",
-                                    variant: "destructive"
-                                  });
-                                }
-                              }
+                          <Select
+                            value={field.value}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              const selectedOwner = ownerOptions.find((owner: OwnerOption) => owner.dni === value) || null;
+                              setSelectedOwnerInfo(selectedOwner);
                             }}
-                            className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500" 
-                          />
+                          >
+                            <FormControl>
+                              <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500">
+                                <SelectValue placeholder={loadingOwners ? 'Cargando propietarios...' : 'Selecciona un propietario'} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                              {ownerOptions.length > 0 ? (
+                                ownerOptions.map((owner: OwnerOption) => (
+                                  <SelectItem key={owner.dni} value={owner.dni}>
+                                    {owner.fullName} - {owner.dni} ({owner.vehicleCount} vehículo{owner.vehicleCount === 1 ? '' : 's'})
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="__no-owners" disabled>
+                                  No hay propietarios disponibles
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
                         </FormControl>
-                        {propietarioName && (
-                          <p className="text-xs text-green-600 font-medium">✓ {propietarioName}</p>
+                        {selectedOwnerInfo && (
+                          <p className="text-xs text-green-600 font-medium">
+                            ✓ {selectedOwnerInfo.fullName} ({selectedOwnerInfo.vehicleCount} vehículo{selectedOwnerInfo.vehicleCount === 1 ? '' : 's'})
+                          </p>
                         )}
-                        <p className="text-xs text-muted-foreground">El propietario debe estar registrado en el sistema.</p>
+                        <p className="text-xs text-muted-foreground">Selecciona un propietario registrado. El contador muestra cuántos vehículos ya tiene.</p>
                         <FormMessage className="text-red-500 text-sm" />
                       </FormItem>
                     )}
@@ -465,7 +506,7 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
                   <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Información importante:</h4>
                   <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
                     <li>• La placa debe seguir el formato estándar (ABC-123)</li>
-                    <li>• El DNI del propietario debe estar registrado previamente</li>
+                    <li>• Selecciona un propietario registrado de la lista</li>
                     <li>• Selecciona una empresa registrada de la lista</li>
                     <li>• Puedes crear un nuevo propietario usando el botón "Nuevo"</li>
                   </ul>
@@ -502,6 +543,7 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
         onOpenChange={setShowPropietarioDialog}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['propietarios'] });
+          queryClient.invalidateQueries({ queryKey: ['propietarios-vehiculo-selector'] });
           toast({
             title: "Propietario registrado",
             description: "Ahora puedes usarlo para el vehículo",

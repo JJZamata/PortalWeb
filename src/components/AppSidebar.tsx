@@ -4,7 +4,6 @@ import {
   Car,
   User,
   Building2,
-  FileCheck,
   FileText,
   Shield,
   ClipboardCheck,
@@ -71,7 +70,8 @@ const menuItems = [
     title: "Documentación",
     icon: FileText,
     items: [
-      { title: "Documentos", url: "/documentos", icon: FileCheck },
+      { title: "AFOCAT", url: "/afocat", icon: Shield },
+      { title: "Revisión Técnica", url: "/revision", icon: ClipboardCheck },
       { title: "TUCs", url: "/tucs", icon: FileText },
       { title: "Infracciones", url: "/infracciones", icon: AlertTriangle },
     ],

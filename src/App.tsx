@@ -9,7 +9,8 @@ import Index from "./pages/Index";
 import AdminPanel from "./pages/AdminPanel";
 import FiscalizadoresPage from "./pages/personal/FiscalizadoresPage";
 import VehiculosPage from "./pages/vehiculos/VehiculosPage";
-import DocumentosPage from "./pages/documentacion/DocumentosPage";
+import AfocatPage from "./pages/documentacion/AfocatPage";
+import RevisionPage from "./pages/documentacion/RevisionPage";
 import TUCsPage from "./pages/documentacion/TUCsPage";
 import ConductoresPage from "./pages/personal/ConductoresPage";
 import EmpresasPage from "./pages/vehiculos/EmpresasPage";
@@ -28,7 +29,6 @@ import ConsultaPlacaPage from "./pages/unused/ConsultaPlacaPage";
 import CitvPage from "./pages/unused/CitvPage";
 import TucPage from "./pages/unused/TucPage";
 import HabilitacionesPage from "./pages/unused/HabilitacionesPage";
-import AfocatPage from "./pages/unused/AfocatPage";
 import ControlesTecnicosPage from "./pages/unused/ControlesTecnicosPage";
 import FotosPage from "./pages/unused/FotosPage";
 
@@ -50,7 +50,8 @@ const App: React.FC = () => {
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/fiscalizadores" element={<FiscalizadoresPage />} />
             <Route path="/vehiculos" element={<VehiculosPage />} />
-            <Route path="/documentos" element={<DocumentosPage />} />
+            <Route path="/afocat" element={<AfocatPage />} />
+            <Route path="/revision" element={<RevisionPage />} />
             <Route path="/tucs" element={<TUCsPage />} />
             <Route path="/conductores" element={<ConductoresPage />} />
             <Route path="/empresas" element={<EmpresasPage />} />
@@ -67,7 +68,6 @@ const App: React.FC = () => {
             <Route path="/consulta-placa" element={<ConsultaPlacaPage />} />
             <Route path="/citv" element={<CitvPage />} />
             <Route path="/habilitaciones" element={<HabilitacionesPage />} />
-            <Route path="/afocat" element={<AfocatPage />} />
             <Route path="/controles-tecnicos" element={<ControlesTecnicosPage />} />
             <Route path="/fotos" element={<FotosPage />} />
             <Route path="/actas" element={<ActasPage />} />

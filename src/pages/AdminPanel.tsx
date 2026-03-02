@@ -96,7 +96,7 @@ const QUICK_ACTIONS = [
     description: "Revisar documentos y certificaciones",
     icon: FileCheck,
     gradient: "from-purple-500 to-pink-500",
-    path: '/documentos'
+    path: '/afocat'
   }
 ];
 

@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useState, useEffect } from "react";
 import { documentosService } from '../services/documentosService';
+import { vehiculosService } from '../../../vehiculos/mototaxis/services/vehiculosService';
+import { conductoresService } from '../../../personal/conductores/services/conductoresService';
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Calendar, Car, CreditCard, User, Building2, AlertCircle, FileText, Info } from "lucide-react";
 
@@ -31,7 +33,7 @@ interface FormData {
   startDate: string;
   expirationDate: string;
   coverage: string;
-  licenseId: number;
+  driverDni: string;
   ownerDni: string;
 }
 
@@ -41,10 +43,19 @@ interface ValidationError {
   value?: any;
 }
 
+interface VehicleOption {
+  plate: string;
+  ownerDni: string;
+  ownerName: string;
+}
+
 export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([]);
+  const [loadingVehicleOptions, setLoadingVehicleOptions] = useState(false);
+  const [autoFillingVehicleData, setAutoFillingVehicleData] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<FormData>({
@@ -54,7 +65,7 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
     startDate: '',
     expirationDate: '',
     coverage: '',
-    licenseId: 0,
+    driverDni: '',
     ownerDni: '',
   });
 
@@ -71,11 +82,58 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
         startDate: today,
         expirationDate: oneYearLater,
         coverage: '',
-        licenseId: 0,
+        driverDni: '',
         ownerDni: '',
       });
       setErrors([]);
     }
+  }, [open]);
+
+  useEffect(() => {
+    const loadVehicleOptions = async () => {
+      if (!open) return;
+
+      setLoadingVehicleOptions(true);
+      try {
+        const firstPage = await vehiculosService.getVehiculos(1, '');
+        const totalPages = Number(firstPage?.pagination?.totalPages || 1);
+        let vehicles = Array.isArray(firstPage?.vehicles) ? firstPage.vehicles : [];
+
+        if (totalPages > 1) {
+          const restPages = await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, index) =>
+              vehiculosService.getVehiculos(index + 2, '')
+            )
+          );
+
+          restPages.forEach((pageResult: any) => {
+            if (Array.isArray(pageResult?.vehicles)) {
+              vehicles = [...vehicles, ...pageResult.vehicles];
+            }
+          });
+        }
+
+        const mappedOptions = vehicles
+          .map((vehicle: any) => ({
+            plate: String(vehicle?.placa?.plateNumber || vehicle?.placa_v || '').trim().toUpperCase(),
+            ownerDni: String(vehicle?.propietario?.dni || vehicle?.ownerDni || '').trim(),
+            ownerName: String(vehicle?.propietario?.nombreCompleto || vehicle?.ownerName || '').trim(),
+          }))
+          .filter((item: VehicleOption) => item.plate.length > 0)
+          .filter((item: VehicleOption, index: number, array: VehicleOption[]) =>
+            array.findIndex((target: VehicleOption) => target.plate === item.plate) === index
+          )
+          .sort((a: VehicleOption, b: VehicleOption) => a.plate.localeCompare(b.plate));
+
+        setVehicleOptions(mappedOptions);
+      } catch (error) {
+        setVehicleOptions([]);
+      } finally {
+        setLoadingVehicleOptions(false);
+      }
+    };
+
+    loadVehicleOptions();
   }, [open]);
 
   const handleInputChange = (field: keyof FormData, value: string | number) => {
@@ -86,6 +144,41 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
     // Limpiar errores al cambiar el campo
     if (errors.length > 0) {
       setErrors(errors.filter(error => error.field !== field));
+    }
+  };
+
+  const handleVehicleSelection = async (selectedPlate: string) => {
+    const normalizedPlate = String(selectedPlate || '').toUpperCase().trim();
+    const selectedVehicle = vehicleOptions.find((vehicle) => vehicle.plate === normalizedPlate);
+
+    setFormData((prev) => ({
+      ...prev,
+      vehiclePlate: normalizedPlate,
+      ownerDni: selectedVehicle?.ownerDni || prev.ownerDni,
+    }));
+
+    setErrors((prev) => prev.filter((error) => !['vehiclePlate', 'ownerDni'].includes(error.field)));
+
+    if (!normalizedPlate) return;
+
+    setAutoFillingVehicleData(true);
+    try {
+      const detail = await vehiculosService.getVehiculoDetail(normalizedPlate);
+      const ownerDniFromDetail = String(detail?.propietario?.dni || detail?.ownerDni || selectedVehicle?.ownerDni || '').trim();
+
+      setFormData((prev) => ({
+        ...prev,
+        vehiclePlate: normalizedPlate,
+        ownerDni: ownerDniFromDetail || prev.ownerDni,
+      }));
+    } catch (error) {
+      toast({
+        title: 'No se pudo autocompletar',
+        description: 'No se pudieron recuperar todos los datos del vehículo. Verifica matrícula y conductor.',
+        variant: 'destructive',
+      });
+    } finally {
+      setAutoFillingVehicleData(false);
     }
   };
 
@@ -174,11 +267,16 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
       });
     }
 
-    // Validación del ID de licencia del conductor (número entero positivo >= 1)
-    if (!formData.licenseId || formData.licenseId < 1) {
+    // Validación del DNI del conductor (exactamente 8 dígitos)
+    if (!formData.driverDni.trim()) {
       newErrors.push({
-        field: 'licenseId',
-        message: 'El ID de la licencia del conductor es obligatorio y debe ser un número válido'
+        field: 'driverDni',
+        message: 'El DNI del conductor es obligatorio'
+      });
+    } else if (!/^\d{8}$/.test(formData.driverDni)) {
+      newErrors.push({
+        field: 'driverDni',
+        message: 'El DNI del conductor debe contener exactamente 8 dígitos numéricos'
       });
     }
 
@@ -214,6 +312,27 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
 
     setLoading(true);
     try {
+      const conductorDetail = await conductoresService.getConductorDetail(formData.driverDni);
+      const licencias = Array.isArray(conductorDetail?.licencias) ? conductorDetail.licencias : [];
+
+      const sortedLicencias = [...licencias].sort((a: any, b: any) => {
+        const aDays = Number(a?.diasParaVencimiento ?? Number.MAX_SAFE_INTEGER);
+        const bDays = Number(b?.diasParaVencimiento ?? Number.MAX_SAFE_INTEGER);
+
+        const aIsValid = aDays >= 0;
+        const bIsValid = bDays >= 0;
+
+        if (aIsValid !== bIsValid) return aIsValid ? -1 : 1;
+        return aDays - bDays;
+      });
+
+      const selectedLicense = sortedLicencias[0];
+      const resolvedLicenseId = Number(selectedLicense?.licenseId ?? selectedLicense?.id ?? 0);
+
+      if (!resolvedLicenseId || resolvedLicenseId < 1) {
+        throw new Error('El conductor no tiene una licencia válida registrada para asociar al AFOCAT.');
+      }
+
       const response = await documentosService.createInsurance({
         insuranceCompanyName: formData.insuranceCompanyName,
         policyNumber: formData.policyNumber,
@@ -221,7 +340,7 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
         startDate: formData.startDate,
         expirationDate: formData.expirationDate,
         coverage: formData.coverage,
-        licenseId: formData.licenseId,
+        licenseId: resolvedLicenseId,
         ownerDni: formData.ownerDni,
       });
 
@@ -360,21 +479,36 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
                   Placa del Vehículo
                   <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="vehiclePlate"
+                <Select
                   value={formData.vehiclePlate}
-                  onChange={(e) => handleInputChange('vehiclePlate', e.target.value.toUpperCase())}
-                  placeholder="ABC123"
-                  maxLength={10}
-                  className={hasError('vehiclePlate') ? 'border-red-500 focus-visible:ring-red-500' : ''}
-                />
+                  onValueChange={handleVehicleSelection}
+                  disabled={loadingVehicleOptions}
+                >
+                  <SelectTrigger id="vehiclePlate" className={hasError('vehiclePlate') ? 'border-red-500 focus-visible:ring-red-500' : ''}>
+                    <SelectValue placeholder={loadingVehicleOptions ? 'Cargando matrículas...' : 'Selecciona una matrícula'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vehicleOptions.length > 0 ? (
+                      vehicleOptions.map((vehicle) => (
+                        <SelectItem key={vehicle.plate} value={vehicle.plate}>
+                          {vehicle.plate}
+                          {vehicle.ownerDni ? ` - DNI ${vehicle.ownerDni}` : ''}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="__no-vehicles" disabled>
+                        No hay matrículas disponibles
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
                 {getFieldError('vehiclePlate') && (
                   <p className="text-xs text-red-600 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
                     {getFieldError('vehiclePlate')}
                   </p>
                 )}
-                <p className="text-xs text-gray-500">6-10 caracteres alfanuméricos</p>
+                <p className="text-xs text-gray-500">Selecciona la matrícula para autocompletar propietario y licencia.</p>
               </div>
 
               {/* DNI del Propietario */}
@@ -386,14 +520,11 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
                 <Input
                   id="ownerDni"
                   value={formData.ownerDni}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
-                    if (value.length <= 8) {
-                      handleInputChange('ownerDni', value);
-                    }
-                  }}
+                  onChange={() => {}}
                   placeholder="12345678"
                   maxLength={8}
+                  readOnly
+                  disabled
                   className={hasError('ownerDni') ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
                 {getFieldError('ownerDni') && (
@@ -402,33 +533,39 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
                     {getFieldError('ownerDni')}
                   </p>
                 )}
-                <p className="text-xs text-gray-500">8 dígitos numéricos</p>
+                <p className="text-xs text-gray-500">Campo bloqueado: se autocompleta según la matrícula seleccionada.</p>
               </div>
 
-              {/* ID de Licencia del Conductor */}
+              {/* DNI del Conductor */}
               <div className="space-y-2">
-                <Label htmlFor="licenseId" className="flex items-center gap-1">
-                  ID Licencia del Conductor
+                <Label htmlFor="driverDni" className="flex items-center gap-1">
+                  DNI del Conductor
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  id="licenseId"
-                  type="number"
-                  value={formData.licenseId || ''}
-                  onChange={(e) => handleInputChange('licenseId', parseInt(e.target.value) || 0)}
-                  placeholder="Ej: 1, 2, 3..."
-                  min="1"
-                  className={hasError('licenseId') ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                  id="driverDni"
+                  value={formData.driverDni}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 8) {
+                      handleInputChange('driverDni', value);
+                    }
+                  }}
+                  placeholder="12345678"
+                  maxLength={8}
+                  className={hasError('driverDni') ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
-                {getFieldError('licenseId') && (
+                {getFieldError('driverDni') && (
                   <p className="text-xs text-red-600 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    {getFieldError('licenseId')}
+                    {getFieldError('driverDni')}
                   </p>
                 )}
                 <p className="text-xs text-gray-500">
                   <Info className="w-3 h-3 inline mr-1" />
-                  ID interno del conductor en el sistema (consultar en Gestión de Conductores)
+                  {autoFillingVehicleData
+                    ? 'Cargando datos del vehículo seleccionado...'
+                    : 'Ingresa el DNI del conductor; el sistema resolverá automáticamente su licencia vigente.'}
                 </p>
               </div>
             </div>

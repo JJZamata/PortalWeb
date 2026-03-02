@@ -5,16 +5,15 @@ import { useVehiculoDetail } from './hooks/useVehiculoDetail';
 import { useVehicleStats } from './hooks/useVehicleStats';
 import { VehiculosTable } from './components/VehiculosTable';
 import { VehiculoDetailDialog } from './components/VehiculoDetailDialog';
-import { OwnerDetailDialog } from './components/OwnerDetailDialog';
 import { AddVehiculoDialog } from './components/AddVehiculoDialog';
 import { EditVehiculoDialog } from './components/EditVehiculoDialog';
 import { DeleteVehiculoDialog } from './components/DeleteVehiculoDialog';
+import { ManagePropietariosDialog } from '../propietarios/components/ManagePropietariosDialog';
 import { PaginationControls } from './components/PaginationControls';
 import { vehiculosService } from './services/vehiculosService';
-import { propietariosService } from '../propietarios/services/propietariosService';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { XCircle, RefreshCw, Search, Plus } from 'lucide-react';
+import { XCircle, RefreshCw, Search, Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,11 +31,7 @@ const VehiculosView = () => {
   const [editVehiculo, setEditVehiculo] = useState<any>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deletePlate, setDeletePlate] = useState<string | null>(null);
-  const [showOwnerDialog, setShowOwnerDialog] = useState(false);
-  const [ownerDetail, setOwnerDetail] = useState<any>(null);
-  const [ownerPlates, setOwnerPlates] = useState<string[]>([]);
-  const [ownerLoading, setOwnerLoading] = useState(false);
-  const [ownerError, setOwnerError] = useState<string | null>(null);
+  const [showOwnersManager, setShowOwnersManager] = useState(false);
 
   const openEditDialog = (vehiculo: any) => {
     setEditVehiculo(vehiculo);
@@ -48,87 +43,12 @@ const VehiculosView = () => {
     setShowDeleteDialog(true);
   };
 
-  const extractOwnerPlatesFromDetail = (detail: any): string[] => {
-    const possibleArrays = [
-      detail?.vehicles,
-      detail?.vehiculos,
-      detail?.associatedVehicles,
-      detail?.vehiculosAsociados,
-      detail?.mototaxis,
-    ].filter(Array.isArray);
-
-    const plates = possibleArrays.flatMap((list: any[]) =>
-      list
-        .map((item: any) => String(item?.plateNumber ?? item?.placa ?? item?.placa_v ?? item?.placaVehiculo ?? '').trim().toUpperCase())
-        .filter((plate: string) => plate.length > 0)
-    );
-
-    return Array.from(new Set(plates));
-  };
-
-  const openOwnerDialog = async (dni: string) => {
-    if (!dni) {
-      toast({
-        title: 'Propietario no disponible',
-        description: 'Este vehículo no tiene DNI de propietario asociado.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setShowOwnerDialog(true);
-    setOwnerLoading(true);
-    setOwnerError(null);
-    setOwnerDetail(null);
-    setOwnerPlates([]);
-
-    try {
-      const detail = await propietariosService.getPropietarioDetail(dni);
-      setOwnerDetail(detail);
-
-      let plates = extractOwnerPlatesFromDetail(detail);
-
-      if (plates.length === 0) {
-        const firstPage = await vehiculosService.getVehiculos(1, dni);
-        const totalPages = Number(firstPage?.pagination?.totalPages || 1);
-        let allVehicles = Array.isArray(firstPage?.vehicles) ? firstPage.vehicles : [];
-
-        if (totalPages > 1) {
-          const restPages = await Promise.all(
-            Array.from({ length: totalPages - 1 }, (_, index) =>
-              vehiculosService.getVehiculos(index + 2, dni)
-            )
-          );
-
-          restPages.forEach((pageResult) => {
-            if (Array.isArray(pageResult?.vehicles)) {
-              allVehicles = [...allVehicles, ...pageResult.vehicles];
-            }
-          });
-        }
-
-        plates = Array.from(new Set(
-          allVehicles
-            .filter((vehicle: any) => String(vehicle?.propietario?.dni || vehicle?.ownerDni || '').trim() === String(dni).trim())
-            .map((vehicle: any) => String(vehicle?.placa?.plateNumber || vehicle?.placa_v || '').trim().toUpperCase())
-            .filter((plate: string) => plate.length > 0)
-        ));
-      }
-
-      setOwnerPlates(plates);
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message || 'No se pudo cargar el detalle del propietario';
-      setOwnerError(message);
-    } finally {
-      setOwnerLoading(false);
-    }
-  };
-
   const handleDeleteVehiculo = async () => {
     if (deletePlate) {
       await vehiculosService.deleteVehiculo(deletePlate);
     }
   };
+
 
   const refreshVehiculos = () => {
     // Invalidar todas las queries de vehículos para forzar refetch
@@ -215,6 +135,14 @@ const VehiculosView = () => {
                 <CardDescription className="text-gray-600 dark:text-gray-400">Listado completo de mototaxis en el sistema</CardDescription>
               </div>
               <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowOwnersManager(true)}
+                  variant="outline"
+                  className="rounded-xl border-gray-300 dark:border-gray-700"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Gestionar Propietarios
+                </Button>
                 <Button 
                   onClick={() => setShowAddDialog(true)}
                   className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-0"
@@ -239,7 +167,6 @@ const VehiculosView = () => {
               vehiculos={vehiculos}
               loading={loading}
               onView={fetchVehiculoDetail}
-              onViewOwner={openOwnerDialog}
               onEdit={openEditDialog}
               onDelete={openDeleteDialog}
             />
@@ -253,21 +180,6 @@ const VehiculosView = () => {
           vehiculo={vehiculoDetail}
           loading={loadingDetail}
           error={errorDetail}
-        />
-        <OwnerDetailDialog
-          open={showOwnerDialog}
-          onOpenChange={(open) => {
-            setShowOwnerDialog(open);
-            if (!open) {
-              setOwnerDetail(null);
-              setOwnerPlates([]);
-              setOwnerError(null);
-            }
-          }}
-          owner={ownerDetail}
-          vehiclePlates={ownerPlates}
-          loading={ownerLoading}
-          error={ownerError}
         />
         <EditVehiculoDialog
           open={showEditDialog}
@@ -289,6 +201,11 @@ const VehiculosView = () => {
           open={showAddDialog}
           onOpenChange={setShowAddDialog}
           onSuccess={refreshVehiculos}
+        />
+        <ManagePropietariosDialog
+          open={showOwnersManager}
+          onOpenChange={setShowOwnersManager}
+          onDataChange={refreshVehiculos}
         />
       </div>
     </AdminLayout>

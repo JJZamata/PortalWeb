@@ -36,6 +36,9 @@ interface Props {
 
 export const EditVehiculoDialog = ({ open, onOpenChange, vehiculo, onSuccess }: Props) => {
   const { toast } = useToast();
+  const originalOwnerDni = String(vehiculo?.propietario?.dni || vehiculo?.ownerDni || '').trim();
+  const originalCompanyRuc = String(vehiculo?.placa?.companyRuc || vehiculo?.empresa?.ruc || vehiculo?.companyRuc || '').trim();
+
   const form = useForm<VehiculoFormData>({
     resolver: zodResolver(vehiculoSchema),
     defaultValues: { plateNumber: "", companyRuc: "", ownerDni: "", typeId: 1, vehicleStatus: "OPERATIVO", brand: "", model: "", manufacturingYear: new Date().getFullYear() },
@@ -84,7 +87,7 @@ export const EditVehiculoDialog = ({ open, onOpenChange, vehiculo, onSuccess }: 
         <Form {...form}>
           <form onSubmit={form.handleSubmit((values) => mutation.mutate(values))} className="space-y-6">
             {/* Información del Vehículo */}
-            <Card className="border border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/30">
+            <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Car className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -206,52 +209,42 @@ export const EditVehiculoDialog = ({ open, onOpenChange, vehiculo, onSuccess }: 
               </CardContent>
             </Card>
 
-            {/* Información del Propietario y Empresa */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Propietario */}
-              <Card className="border border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <User className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    Propietario
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FormField name="ownerDni" control={form.control} render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">DNI del Propietario</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Ej: 12345678" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-green-500 dark:focus:border-green-400" maxLength={8} />
-                      </FormControl>
-                      <p className="text-xs text-muted-foreground">El propietario debe estar registrado previamente.</p>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </CardContent>
-              </Card>
+            {/* Reasignación conjunta */}
+            <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  Reasignación (Propietario + Empresa)
+                </CardTitle>
+                <p className="text-xs text-gray-600 dark:text-gray-300">
+                  Puedes cambiar propietario o empresa de forma independiente según el caso.
+                </p>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <FormField name="ownerDni" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">DNI del Propietario</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Ej: 12345678" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" maxLength={8} />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">Propietario registrado. Valor actual: {originalOwnerDni || 'N/A'}</p>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-              {/* Empresa */}
-              <Card className="border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/30">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    Empresa Operadora
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <FormField name="companyRuc" control={form.control} render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">RUC de la Empresa</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Ej: 20123456789" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-purple-500 dark:focus:border-purple-400" maxLength={11} />
-                      </FormControl>
-                      <p className="text-xs text-muted-foreground">La empresa debe estar registrada en el sistema.</p>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </CardContent>
-              </Card>
-            </div>
+                <FormField name="companyRuc" control={form.control} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700 dark:text-gray-300">RUC de la Empresa</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Ej: 20123456789" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400" maxLength={11} />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">Empresa registrada. Valor actual: {originalCompanyRuc || 'N/A'}</p>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </CardContent>
+            </Card>
 
             {/* Botones */}
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

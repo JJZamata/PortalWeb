@@ -47,6 +47,9 @@ export const VehiculoDetailDialog = ({ open, onOpenChange, vehiculo, loading, er
     );
   }
 
+  const ownerPhone = vehiculo.propietario?.telefono || vehiculo.propietario?.phone || vehiculo.ownerPhone || 'No registrado';
+  const ownerEmail = vehiculo.propietario?.email || vehiculo.ownerEmail || 'No registrado';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-5xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
@@ -157,6 +160,16 @@ export const VehiculoDetailDialog = ({ open, onOpenChange, vehiculo, loading, er
                   <p className="text-lg font-mono font-semibold text-gray-800 dark:text-gray-200">
                     {vehiculo.propietario?.dni || vehiculo.ownerDni || 'N/A'}
                   </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Teléfono</Label>
+                    <p className="text-sm text-gray-900 dark:text-white">{ownerPhone}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Email</Label>
+                    <p className="text-sm text-gray-900 dark:text-white break-all">{ownerEmail}</p>
+                  </div>
                 </div>
                 {vehiculo.propietario?.nombres && vehiculo.propietario?.apellidos && (
                   <div className="pt-2 border-t border-gray-100 dark:border-gray-700">

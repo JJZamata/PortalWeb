@@ -1,18 +1,17 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2, RefreshCw, Search, User } from "lucide-react";
+import { Eye, Edit, Trash2, RefreshCw, Search } from "lucide-react";
 import { Vehiculo } from "../types";
 
 interface Props {
   vehiculos: Vehiculo[];
   loading: boolean;
   onView: (plate: string) => void;
-  onViewOwner: (dni: string) => void;
   onEdit: (vehiculo: Vehiculo) => void;
   onDelete: (plate: string) => void;
 }
 
-export const VehiculosTable = ({ vehiculos, loading, onView, onViewOwner, onEdit, onDelete }: Props) => {
+export const VehiculosTable = ({ vehiculos, loading, onView, onEdit, onDelete }: Props) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -80,15 +79,6 @@ export const VehiculosTable = ({ vehiculos, loading, onView, onViewOwner, onEdit
                       onClick={() => onView(vehiculo.placa?.plateNumber || vehiculo.placa_v || '')}
                     >
                       <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="hover:bg-green-50 dark:hover:bg-green-900/50 rounded-lg text-gray-600 dark:text-gray-300"
-                      onClick={() => onViewOwner(vehiculo.propietario?.dni || vehiculo.ownerDni || '')}
-                      disabled={!(vehiculo.propietario?.dni || vehiculo.ownerDni)}
-                    >
-                      <User className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="ghost"

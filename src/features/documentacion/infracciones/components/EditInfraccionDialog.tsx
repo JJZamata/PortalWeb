@@ -104,7 +104,7 @@ export const EditInfraccionDialog = ({ open, onOpenChange, violation, onSuccess 
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Edit className="h-6 w-6 text-blue-600" />
+            <Edit className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             Editar Infracción
           </DialogTitle>
           <DialogDescription>

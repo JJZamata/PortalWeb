@@ -129,7 +129,7 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileCheck className="w-6 h-6 text-green-600" />
+            <FileCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
             Detalle de Revisión Técnica
             <Badge variant="secondary" className="ml-2">
               {technicalReview.revision.reviewId}
@@ -163,7 +163,7 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileCheck className="w-5 h-5 text-green-600" />
+                  <FileCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
                   Información de la Revisión
                 </CardTitle>
               </CardHeader>
@@ -194,7 +194,7 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Car className="w-5 h-5 text-green-600" />
+                  <Car className="w-5 h-5 text-green-600 dark:text-green-400" />
                   Información del Vehículo
                 </CardTitle>
               </CardHeader>
@@ -231,7 +231,7 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-green-600" />
+                <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
                 Vigencia de la Revisión
               </CardTitle>
             </CardHeader>
@@ -265,7 +265,7 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-green-600" />
+                <UserCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
                 Estado de la Revisión
               </CardTitle>
             </CardHeader>

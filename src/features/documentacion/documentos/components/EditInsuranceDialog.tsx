@@ -106,7 +106,7 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-blue-600" />
+            <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Editar Seguro AFOCAT
             <Badge variant="secondary" className="ml-2">
               {insurance.seguro.numeroPoliza}

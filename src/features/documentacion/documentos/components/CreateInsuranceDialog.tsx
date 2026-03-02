@@ -9,16 +9,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { documentosService } from '../services/documentosService';
 import { vehiculosService } from '../../../vehiculos/mototaxis/services/vehiculosService';
 import { conductoresService } from '../../../personal/conductores/services/conductoresService';
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Calendar, Car, CreditCard, User, Building2, AlertCircle, FileText, Info } from "lucide-react";
+import { Shield, Calendar, Car, AlertCircle, FileText, Info } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -380,318 +378,237 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Shield className="w-6 h-6 text-blue-600" />
-            </div>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 rounded-2xl bg-white dark:bg-gray-900">
+        <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-700 to-cyan-600 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent flex items-center gap-2">
+            <Shield className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
             Crear Nuevo Seguro AFOCAT
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
+          <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
             Complete los datos para registrar un nuevo seguro AFOCAT en el sistema
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Alerta de errores generales */}
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           {errors.length > 0 && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Por favor corrija los siguientes errores antes de continuar:
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  {errors.map((error, index) => (
-                    <li key={index} className="text-sm">{error.message}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
+            <div className="p-3 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-sm text-red-800 dark:text-red-200">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle className="w-4 h-4" />
+                Corrige los errores para continuar:
+              </div>
+              <ul className="list-disc list-inside space-y-1">
+                {errors.map((error, index) => (
+                  <li key={index}>{error.message}</li>
+                ))}
+              </ul>
+            </div>
           )}
 
-          {/* Información de la Compañía Aseguradora */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-semibold">Información de la Aseguradora</h3>
-            </div>
-            <Separator />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Nombre de la Compañía */}
-              <div className="space-y-2">
-                <Label htmlFor="insuranceCompanyName" className="flex items-center gap-1">
-                  Compañía de Seguros
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="insuranceCompanyName"
-                  value={formData.insuranceCompanyName}
-                  onChange={(e) => handleInputChange('insuranceCompanyName', e.target.value)}
-                  placeholder="Ej: MAPFRE Seguros"
-                  className={hasError('insuranceCompanyName') ? 'border-red-500 focus-visible:ring-red-500' : ''}
-                />
-                {getFieldError('insuranceCompanyName') && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {getFieldError('insuranceCompanyName')}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500">De 2 a 100 caracteres</p>
-              </div>
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                  Información de la Aseguradora
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="insuranceCompanyName" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <Shield className="w-4 h-4" />
+                      Compañía de Seguros *
+                    </Label>
+                    <Input
+                      id="insuranceCompanyName"
+                      value={formData.insuranceCompanyName}
+                      onChange={(e) => handleInputChange('insuranceCompanyName', e.target.value)}
+                      placeholder="Ej: MAPFRE Seguros"
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500 ${hasError('insuranceCompanyName') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    {getFieldError('insuranceCompanyName') && <p className="text-sm text-red-600">{getFieldError('insuranceCompanyName')}</p>}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">De 2 a 100 caracteres.</p>
+                  </div>
 
-              {/* Número de Póliza */}
-              <div className="space-y-2">
-                <Label htmlFor="policyNumber" className="flex items-center gap-1">
-                  Número de Póliza
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="policyNumber"
-                  value={formData.policyNumber}
-                  onChange={(e) => handleInputChange('policyNumber', e.target.value.toUpperCase())}
-                  placeholder="POL-2025-002"
-                  className={hasError('policyNumber') ? 'border-red-500 focus-visible:ring-red-500' : ''}
-                />
-                {getFieldError('policyNumber') && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {getFieldError('policyNumber')}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500">Formato: XXX-YYYY-NNN (5-20 caracteres)</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Información del Vehículo y Conductor */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Car className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-semibold">Información del Vehículo y Conductor</h3>
-            </div>
-            <Separator />
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Placa del Vehículo */}
-              <div className="space-y-2">
-                <Label htmlFor="vehiclePlate" className="flex items-center gap-1">
-                  Placa del Vehículo
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={formData.vehiclePlate}
-                  onValueChange={handleVehicleSelection}
-                  disabled={loadingVehicleOptions}
-                >
-                  <SelectTrigger id="vehiclePlate" className={hasError('vehiclePlate') ? 'border-red-500 focus-visible:ring-red-500' : ''}>
-                    <SelectValue placeholder={loadingVehicleOptions ? 'Cargando matrículas...' : 'Selecciona una matrícula'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vehicleOptions.length > 0 ? (
-                      vehicleOptions.map((vehicle) => (
-                        <SelectItem key={vehicle.plate} value={vehicle.plate}>
-                          {vehicle.plate}
-                          {vehicle.ownerDni ? ` - DNI ${vehicle.ownerDni}` : ''}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="__no-vehicles" disabled>
-                        No hay matrículas disponibles
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-                {getFieldError('vehiclePlate') && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {getFieldError('vehiclePlate')}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500">Selecciona la matrícula para autocompletar propietario y licencia.</p>
-              </div>
-
-              {/* DNI del Propietario */}
-              <div className="space-y-2">
-                <Label htmlFor="ownerDni" className="flex items-center gap-1">
-                  DNI del Propietario
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="ownerDni"
-                  value={formData.ownerDni}
-                  onChange={() => {}}
-                  placeholder="12345678"
-                  maxLength={8}
-                  readOnly
-                  disabled
-                  className={hasError('ownerDni') ? 'border-red-500 focus-visible:ring-red-500' : ''}
-                />
-                {getFieldError('ownerDni') && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {getFieldError('ownerDni')}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500">Campo bloqueado: se autocompleta según la matrícula seleccionada.</p>
-              </div>
-
-              {/* DNI del Conductor */}
-              <div className="space-y-2">
-                <Label htmlFor="driverDni" className="flex items-center gap-1">
-                  DNI del Conductor
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="driverDni"
-                  value={formData.driverDni}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '');
-                    if (value.length <= 8) {
-                      handleInputChange('driverDni', value);
-                    }
-                  }}
-                  placeholder="12345678"
-                  maxLength={8}
-                  className={hasError('driverDni') ? 'border-red-500 focus-visible:ring-red-500' : ''}
-                />
-                {getFieldError('driverDni') && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {getFieldError('driverDni')}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500">
-                  <Info className="w-3 h-3 inline mr-1" />
-                  {autoFillingVehicleData
-                    ? 'Cargando datos del vehículo seleccionado...'
-                    : 'Ingresa el DNI del conductor; el sistema resolverá automáticamente su licencia vigente.'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Período de Cobertura */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-semibold">Período de Cobertura</h3>
-            </div>
-            <Separator />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Fecha de Inicio */}
-              <div className="space-y-2">
-                <Label htmlFor="startDate" className="flex items-center gap-1">
-                  Fecha de Inicio
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  className={hasError('startDate') ? 'border-red-500 focus-visible:ring-red-500' : ''}
-                />
-                {getFieldError('startDate') && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {getFieldError('startDate')}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500">Formato: YYYY-MM-DD</p>
-              </div>
-
-              {/* Fecha de Vencimiento */}
-              <div className="space-y-2">
-                <Label htmlFor="expirationDate" className="flex items-center gap-1">
-                  Fecha de Vencimiento
-                  <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="expirationDate"
-                  type="date"
-                  value={formData.expirationDate}
-                  onChange={(e) => handleInputChange('expirationDate', e.target.value)}
-                  min={formData.startDate || undefined}
-                  className={hasError('expirationDate') ? 'border-red-500 focus-visible:ring-red-500' : ''}
-                />
-                {getFieldError('expirationDate') && (
-                  <p className="text-xs text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {getFieldError('expirationDate')}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500">Debe ser posterior a la fecha de inicio</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Tipo de Cobertura */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-600" />
-              <h3 className="text-lg font-semibold">Tipo de Cobertura</h3>
-            </div>
-            <Separator />
-            
-            <div className="space-y-2">
-              <Label htmlFor="coverage" className="flex items-center gap-1">
-                Cobertura del Seguro
-                <span className="text-red-500">*</span>
-              </Label>
-              <Select 
-                value={formData.coverage} 
-                onValueChange={(value) => handleInputChange('coverage', value)}
-              >
-                <SelectTrigger className={hasError('coverage') ? 'border-red-500 focus-visible:ring-red-500' : ''}>
-                  <SelectValue placeholder="Seleccione el tipo de cobertura" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cobertura completa contra accidentes de tránsito, daños a terceros, lesiones personales y daños materiales">
-                    <div className="flex flex-col gap-1 py-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="default" className="bg-green-600">COMPREHENSIVE</Badge>
-                        <span className="font-semibold">Cobertura Completa</span>
-                      </div>
-                      <span className="text-xs text-gray-600">Accidentes, daños a terceros, lesiones y daños materiales</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="Cobertura básica contra accidentes de tránsito y responsabilidad civil frente a terceros">
-                    <div className="flex flex-col gap-1 py-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="default" className="bg-blue-600">BASIC</Badge>
-                        <span className="font-semibold">Cobertura Básica</span>
-                      </div>
-                      <span className="text-xs text-gray-600">Accidentes de tránsito y responsabilidad civil</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="Cobertura únicamente para responsabilidad civil frente a terceros según normativa vigente">
-                    <div className="flex flex-col gap-1 py-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="default" className="bg-orange-600">THIRD PARTY</Badge>
-                        <span className="font-semibold">Solo Terceros</span>
-                      </div>
-                      <span className="text-xs text-gray-600">Únicamente responsabilidad civil frente a terceros</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              {getFieldError('coverage') && (
-                <p className="text-xs text-red-600 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
-                  {getFieldError('coverage')}
-                </p>
-              )}
-              {formData.coverage && (
-                <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-200 dark:border-blue-800">
-                  <p className="text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
-                    <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span>{formData.coverage}</span>
-                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="policyNumber" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <FileText className="w-4 h-4" />
+                      Número de Póliza *
+                    </Label>
+                    <Input
+                      id="policyNumber"
+                      value={formData.policyNumber}
+                      onChange={(e) => handleInputChange('policyNumber', e.target.value.toUpperCase())}
+                      placeholder="POL-2025-002"
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500 ${hasError('policyNumber') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    {getFieldError('policyNumber') && <p className="text-sm text-red-600">{getFieldError('policyNumber')}</p>}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Formato: XXX-YYYY-NNN (5-20 caracteres).</p>
+                  </div>
                 </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <Car className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                  Información del Vehículo y Conductor
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="vehiclePlate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <Car className="w-4 h-4" />
+                      Placa del Vehículo *
+                    </Label>
+                    <Select
+                      value={formData.vehiclePlate}
+                      onValueChange={handleVehicleSelection}
+                      disabled={loadingVehicleOptions}
+                    >
+                      <SelectTrigger id="vehiclePlate" className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500 ${hasError('vehiclePlate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}>
+                        <SelectValue placeholder={loadingVehicleOptions ? 'Cargando matrículas...' : 'Selecciona una matrícula'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vehicleOptions.length > 0 ? (
+                          vehicleOptions.map((vehicle) => (
+                            <SelectItem key={vehicle.plate} value={vehicle.plate}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="__no-vehicles" disabled>
+                            No hay matrículas disponibles
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {getFieldError('vehiclePlate') && <p className="text-sm text-red-600">{getFieldError('vehiclePlate')}</p>}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Selecciona matrícula para autocompletar el propietario.</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerDni" className="text-gray-700 dark:text-gray-300 font-medium">DNI del Propietario *</Label>
+                    <Input
+                      id="ownerDni"
+                      value={formData.ownerDni}
+                      onChange={() => {}}
+                      placeholder="12345678"
+                      maxLength={8}
+                      readOnly
+                      disabled
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 ${hasError('ownerDni') ? 'border-red-500' : ''}`}
+                    />
+                    {getFieldError('ownerDni') && <p className="text-sm text-red-600">{getFieldError('ownerDni')}</p>}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Campo autocompletado por matrícula.</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="driverDni" className="text-gray-700 dark:text-gray-300 font-medium">DNI del Conductor *</Label>
+                    <Input
+                      id="driverDni"
+                      value={formData.driverDni}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '');
+                        if (value.length <= 8) {
+                          handleInputChange('driverDni', value);
+                        }
+                      }}
+                      placeholder="12345678"
+                      maxLength={8}
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500 ${hasError('driverDni') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    {getFieldError('driverDni') && <p className="text-sm text-red-600">{getFieldError('driverDni')}</p>}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {autoFillingVehicleData
+                        ? 'Cargando datos del vehículo seleccionado...'
+                        : 'Ingresa el DNI; el sistema resolverá automáticamente una licencia vigente.'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                  Período de Cobertura
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="startDate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <Calendar className="w-4 h-4" />
+                      Fecha de Inicio *
+                    </Label>
+                    <Input
+                      id="startDate"
+                      type="date"
+                      value={formData.startDate}
+                      onChange={(e) => handleInputChange('startDate', e.target.value)}
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500 ${hasError('startDate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    {getFieldError('startDate') && <p className="text-sm text-red-600">{getFieldError('startDate')}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="expirationDate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <Calendar className="w-4 h-4" />
+                      Fecha de Vencimiento *
+                    </Label>
+                    <Input
+                      id="expirationDate"
+                      type="date"
+                      value={formData.expirationDate}
+                      onChange={(e) => handleInputChange('expirationDate', e.target.value)}
+                      min={formData.startDate || undefined}
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500 ${hasError('expirationDate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    {getFieldError('expirationDate') && <p className="text-sm text-red-600">{getFieldError('expirationDate')}</p>}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                  Tipo de Cobertura
+                </h3>
+                <div className="space-y-2">
+                  <Label htmlFor="coverage" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <FileText className="w-4 h-4" />
+                    Cobertura del Seguro *
+                  </Label>
+                  <Select
+                    value={formData.coverage}
+                    onValueChange={(value) => handleInputChange('coverage', value)}
+                  >
+                    <SelectTrigger className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500 ${hasError('coverage') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}>
+                      <SelectValue placeholder="Selecciona el tipo de cobertura" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cobertura completa contra accidentes de tránsito, daños a terceros, lesiones personales y daños materiales">
+                        COMPREHENSIVE - Cobertura Completa
+                      </SelectItem>
+                      <SelectItem value="Cobertura básica contra accidentes de tránsito y responsabilidad civil frente a terceros">
+                        BASIC - Cobertura Básica
+                      </SelectItem>
+                      <SelectItem value="Cobertura únicamente para responsabilidad civil frente a terceros según normativa vigente">
+                        THIRD PARTY - Solo Terceros
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {getFieldError('coverage') && <p className="text-sm text-red-600">{getFieldError('coverage')}</p>}
+                </div>
+
+                {formData.coverage && (
+                  <div className="p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
+                    <Info className="w-4 h-4 mt-0.5" />
+                    <span>{formData.coverage}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">

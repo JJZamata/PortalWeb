@@ -51,14 +51,14 @@ export const TUCDetailDialog = ({ tuc, open, onOpenChange, loading = false, erro
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText className="w-6 h-6 text-blue-600" />
+            <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Detalles de TUC
           </DialogTitle>
         </DialogHeader>
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader className="w-6 h-6 animate-spin text-blue-600" />
+            <Loader className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
           </div>
         ) : error ? (
           <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300">

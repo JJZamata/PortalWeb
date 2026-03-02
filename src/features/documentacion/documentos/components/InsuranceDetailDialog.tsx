@@ -109,7 +109,7 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-blue-600" />
+            <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Detalle del Seguro AFOCAT
             <Badge variant="secondary" className="ml-2">
               {insurance.seguro.policyNumber}
@@ -146,7 +146,7 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
+                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   Información del Seguro
                 </CardTitle>
               </CardHeader>
@@ -174,7 +174,7 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Car className="w-5 h-5 text-blue-600" />
+                  <Car className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   Información del Vehículo
                 </CardTitle>
               </CardHeader>
@@ -210,7 +210,7 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-600" />
+                  <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   Información del Propietario
                 </CardTitle>
               </CardHeader>
@@ -239,7 +239,7 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
+                <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 Vigencia del Seguro
               </CardTitle>
             </CardHeader>

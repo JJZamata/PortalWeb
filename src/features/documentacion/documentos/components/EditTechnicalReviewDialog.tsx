@@ -129,7 +129,7 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileCheck className="w-6 h-6 text-green-600" />
+            <FileCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
             Editar Revisión Técnica
             <Badge variant="secondary" className="ml-2">
               {technicalReview.revision.reviewId}
@@ -240,13 +240,13 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
                 <SelectContent>
                   <SelectItem value="APROBADO">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                       APROBADO
                     </div>
                   </SelectItem>
                   <SelectItem value="OBSERVADO">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-yellow-600" />
+                      <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                       OBSERVADO
                     </div>
                   </SelectItem>

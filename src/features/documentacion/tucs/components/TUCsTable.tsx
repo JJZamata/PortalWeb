@@ -124,7 +124,7 @@ export const TUCsTable = ({ tucs, loading, onView, onEdit, onDelete }: Props) =>
                       onClick={() => onDelete(tucNumber)}
                       title="Eliminar"
                     >
-                      <Trash2 className="w-4 h-4 text-red-600" />
+                      <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
                     </Button>
                   </div>
                 </TableCell>

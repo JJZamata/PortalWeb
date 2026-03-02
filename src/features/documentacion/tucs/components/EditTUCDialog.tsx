@@ -153,7 +153,7 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText className="w-6 h-6 text-blue-600" />
+            <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Editar TUC
             <Badge variant="secondary">{tuc.tuc.tucNumber}</Badge>
           </DialogTitle>
@@ -161,7 +161,7 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
 
         {externalLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader className="w-6 h-6 animate-spin text-blue-600" />
+            <Loader className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">

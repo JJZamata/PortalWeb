@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { documentosService } from "../services/documentosService";
 import { useToast } from "@/hooks/use-toast";
@@ -154,18 +154,18 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileCheck className="w-6 h-6 text-green-600" />
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 rounded-2xl bg-white dark:bg-gray-900">
+        <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 dark:from-emerald-400 dark:to-emerald-300 bg-clip-text text-transparent flex items-center gap-2">
+            <FileCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
             Crear Nueva Revisión Técnica
           </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600 dark:text-gray-400">
+          <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
             Complete los datos solicitados. Las fechas de emisión y vencimiento las calcula el sistema automáticamente.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           {errors.length > 0 && (
             <div className="p-3 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-sm text-red-800 dark:text-red-200">
               <div className="flex items-center gap-2 mb-1">
@@ -180,103 +180,119 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* ID de Revisión */}
-            <div className="space-y-2">
-              <Label htmlFor="reviewId" className="flex items-center gap-2">
-                <FileCheck className="w-4 h-4" />
-                ID de Revisión *
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setFormData((prev) => ({ ...prev, reviewId: generateReviewId() }))}
-                  className="ml-2 h-6 px-2 text-xs text-cyan-600 hover:text-cyan-700"
-                >
-                  🔄 Generar
-                </Button>
-              </Label>
-              <Input
-                id="reviewId"
-                value={formData.reviewId}
-                onChange={(e) => handleInputChange("reviewId", e.target.value)}
-                placeholder="Ej: REV-2025-000001"
-                className={`border-gray-200 dark:border-gray-700 ${hasError("reviewId") ? "border-red-500 focus:border-red-500" : ""}`}
-              />
-              {getFieldError("reviewId") && <p className="text-sm text-red-600">{getFieldError("reviewId")}</p>}
-              <p className="text-xs text-gray-500">10-30 caracteres. Debe ser único.</p>
-            </div>
+          <div className="space-y-4">
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  Información de Revisión
+                </h3>
 
-            {/* Placa del Vehículo */}
-            <div className="space-y-2">
-              <Label htmlFor="vehiclePlate" className="flex items-center gap-2">
-                <Car className="w-4 h-4" />
-                Placa del Vehículo *
-              </Label>
-              <Input
-                id="vehiclePlate"
-                value={formData.vehiclePlate}
-                onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
-                placeholder="Ej: ABC123"
-                className={`border-gray-200 dark:border-gray-700 ${hasError("vehiclePlate") ? "border-red-500 focus:border-red-500" : ""}`}
-              />
-              {getFieldError("vehiclePlate") && <p className="text-sm text-red-600">{getFieldError("vehiclePlate")}</p>}
-              <p className="text-xs text-gray-500">6-10 caracteres alfanuméricos.</p>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="reviewId" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <FileCheck className="w-4 h-4" />
+                      ID de Revisión *
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFormData((prev) => ({ ...prev, reviewId: generateReviewId() }))}
+                        className="ml-2 h-6 px-2 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+                      >
+                        🔄 Generar
+                      </Button>
+                    </Label>
+                    <Input
+                      id="reviewId"
+                      value={formData.reviewId}
+                      onChange={(e) => handleInputChange("reviewId", e.target.value)}
+                      placeholder="Ej: REV-2025-000001"
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500 ${hasError("reviewId") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+                    />
+                    {getFieldError("reviewId") && <p className="text-sm text-red-600">{getFieldError("reviewId")}</p>}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">10-30 caracteres. Debe ser único.</p>
+                  </div>
 
-            {/* Empresa Certificadora */}
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="certifyingCompany" className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                Empresa Certificadora *
-              </Label>
-              <Input
-                id="certifyingCompany"
-                value={formData.certifyingCompany}
-                onChange={(e) => handleInputChange("certifyingCompany", e.target.value)}
-                placeholder="Ej: CERTITEC PERU S.A.C."
-                className={`border-gray-200 dark:border-gray-700 ${hasError("certifyingCompany") ? "border-red-500 focus:border-red-500" : ""}`}
-              />
-              {getFieldError("certifyingCompany") && <p className="text-sm text-red-600">{getFieldError("certifyingCompany")}</p>}
-              <p className="text-xs text-gray-500">1-500 caracteres.</p>
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="vehiclePlate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <Car className="w-4 h-4" />
+                      Placa del Vehículo *
+                    </Label>
+                    <Input
+                      id="vehiclePlate"
+                      value={formData.vehiclePlate}
+                      onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
+                      placeholder="Ej: ABC123"
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500 ${hasError("vehiclePlate") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+                    />
+                    {getFieldError("vehiclePlate") && <p className="text-sm text-red-600">{getFieldError("vehiclePlate")}</p>}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">6-10 caracteres alfanuméricos.</p>
+                  </div>
 
-            {/* Resultado de Inspección */}
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="inspectionResult" className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4" />
-                Resultado de Inspección *
-              </Label>
-              <Select
-                value={formData.inspectionResult}
-                onValueChange={(value: "APROBADO" | "OBSERVADO") => handleInputChange("inspectionResult", value)}
-              >
-                <SelectTrigger className={`border-gray-200 dark:border-gray-700 ${hasError("inspectionResult") ? "border-red-500 focus:border-red-500" : ""}`}>
-                  <SelectValue placeholder="Seleccionar resultado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="APROBADO">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      APROBADO
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="OBSERVADO">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-yellow-600" />
-                      OBSERVADO
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              {getFieldError("inspectionResult") && <p className="text-sm text-red-600">{getFieldError("inspectionResult")}</p>}
-              <p className="text-xs text-gray-500">Valores permitidos: APROBADO u OBSERVADO.</p>
-            </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="certifyingCompany" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <Building2 className="w-4 h-4" />
+                      Empresa Certificadora *
+                    </Label>
+                    <Input
+                      id="certifyingCompany"
+                      value={formData.certifyingCompany}
+                      onChange={(e) => handleInputChange("certifyingCompany", e.target.value)}
+                      placeholder="Ej: CERTITEC PERU S.A.C."
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500 ${hasError("certifyingCompany") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+                    />
+                    {getFieldError("certifyingCompany") && <p className="text-sm text-red-600">{getFieldError("certifyingCompany")}</p>}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">1-500 caracteres.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-            <div className="md:col-span-2 p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
-              <Info className="w-4 h-4 mt-0.5" />
-              <span>Las fechas de emisión y vencimiento las calcula el sistema automáticamente al crear la revisión.</span>
-            </div>
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  Resultado de Inspección
+                </h3>
+
+                <div className="space-y-2">
+                  <Label htmlFor="inspectionResult" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <CheckCircle className="w-4 h-4" />
+                    Resultado de Inspección *
+                  </Label>
+                  <Select
+                    value={formData.inspectionResult}
+                    onValueChange={(value: "APROBADO" | "OBSERVADO") => handleInputChange("inspectionResult", value)}
+                  >
+                    <SelectTrigger className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500 ${hasError("inspectionResult") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}>
+                      <SelectValue placeholder="Seleccionar resultado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="APROBADO">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          APROBADO
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="OBSERVADO">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                          OBSERVADO
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {getFieldError("inspectionResult") && <p className="text-sm text-red-600">{getFieldError("inspectionResult")}</p>}
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Valores permitidos: APROBADO u OBSERVADO.</p>
+                </div>
+
+                <div className="p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
+                  <Info className="w-4 h-4 mt-0.5" />
+                  <span>Las fechas de emisión y vencimiento las calcula el sistema automáticamente al crear la revisión.</span>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <DialogFooter>

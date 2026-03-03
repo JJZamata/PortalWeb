@@ -60,6 +60,7 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 	const { technicalReviewDetail, loadingDetail: loadingTechnical, errorDetail: errorTechnical, fetchTechnicalReviewDetail, clearTechnicalReviewDetail } = useTechnicalReviewDetail();
 
 	const handleRefresh = () => {
+		queryClient.invalidateQueries({ queryKey: ['documentos'] });
 		handlePageChange(1);
 	};
 
@@ -124,7 +125,7 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 					description: `El documento ${documento.tipo} número ${documento.numero} ha sido eliminado exitosamente.`,
 				});
 			}
-			handlePageChange(page);
+			handleUpdateSuccess();
 		} catch (error: any) {
 			toast({
 				title: "Error al eliminar",
@@ -391,7 +392,10 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 					<CreateTechnicalReviewDialog
 						open={showCreateTechnicalReviewDialog}
 						onOpenChange={setShowCreateTechnicalReviewDialog}
-						onSuccess={() => handlePageChange(1)}
+						onSuccess={() => {
+							handleUpdateSuccess();
+							handlePageChange(1);
+						}}
 					/>
 				)}
 
@@ -399,7 +403,10 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 					<CreateInsuranceDialog
 						open={showCreateInsuranceDialog}
 						onOpenChange={setShowCreateInsuranceDialog}
-						onSuccess={() => handlePageChange(1)}
+						onSuccess={() => {
+							handleUpdateSuccess();
+							handlePageChange(1);
+						}}
 					/>
 				)}
 			</div>

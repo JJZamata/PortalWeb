@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Edit, Trash2, RefreshCw, Search } from "lucide-react";
 import { Violation } from "../types";
+import { tableStyles } from "@/lib/table-styles";
 
 interface Props {
   violations: Violation[];
@@ -50,31 +51,31 @@ export const InfraccionesTable = ({ violations, loading, fetchViolationDetail, o
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
-        <RefreshCw className="w-8 h-8 animate-spin text-[#812020] dark:text-[#fca5a5]" />
+        <RefreshCw className={tableStyles.loadingSpinnerBlue} />
         <span className="ml-2 text-gray-600 dark:text-gray-400">Cargando infracciones...</span>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
+    <div className={tableStyles.container}>
       <Table>
-        <TableHeader className="bg-red-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <TableHeader className={tableStyles.header}>
           <TableRow>
-            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Código</TableHead>
-            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Descripción</TableHead>
-            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Gravedad</TableHead>
-            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Medida Adm.</TableHead>
-            <TableHead className="font-bold text-[#74140B] dark:text-white py-4">Objetivo</TableHead>
-            <TableHead className="font-bold text-[#74140B] dark:text-white text-right py-4">UIT %</TableHead>
-            <TableHead className="font-bold text-[#74140B] dark:text-white text-center py-4">Acciones</TableHead>
+            <TableHead className={tableStyles.headText}>Código</TableHead>
+            <TableHead className={tableStyles.headText}>Descripción</TableHead>
+            <TableHead className={tableStyles.headText}>Gravedad</TableHead>
+            <TableHead className={tableStyles.headText}>Medida Adm.</TableHead>
+            <TableHead className={tableStyles.headText}>Objetivo</TableHead>
+            <TableHead className={`${tableStyles.headText} text-right`}>UIT %</TableHead>
+            <TableHead className={`${tableStyles.headText} ${tableStyles.actionsHead}`}>Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {violations.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-32 text-center">
-                <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+              <TableCell colSpan={7} className={tableStyles.emptyCell}>
+                <div className={tableStyles.emptyState}>
                   <Search className="w-8 h-8 mb-2" />
                   <p>No hay infracciones registradas o que coincidan con el filtro.</p>
                 </div>
@@ -82,8 +83,8 @@ export const InfraccionesTable = ({ violations, loading, fetchViolationDetail, o
             </TableRow>
           ) : (
             violations.map((v) => (
-              <TableRow key={v.identificacion.id} className="hover:bg-[#812020]/10 dark:hover:bg-[#2d0909]/40 transition-colors">
-                <TableCell className="font-mono font-bold text-[#812020] dark:text-[#fca5a5]">{v.identificacion.codigo}</TableCell>
+              <TableRow key={v.identificacion.id} className={tableStyles.row}>
+                <TableCell className={tableStyles.codeCell}>{v.identificacion.codigo}</TableCell>
                 <TableCell className="max-w-md text-gray-900 dark:text-gray-100">
                   <div className="max-w-md">
                     <p className="text-sm">{v.descripcion.resumen}</p>
@@ -104,34 +105,34 @@ export const InfraccionesTable = ({ violations, loading, fetchViolationDetail, o
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-semibold text-[#812020] dark:text-[#fca5a5]">{v.sancion.porcentajeUIT}</TableCell>
-                <TableCell className="text-center">
-                  <div className="flex items-center justify-center gap-1">
+                <TableCell className={tableStyles.actionsCell}>
+                  <div className={tableStyles.actionsGroup}>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg"
+                      className={tableStyles.actionBlue}
                       onClick={() => fetchViolationDetail(v.identificacion.codigo)}
                       title="Ver detalles"
                     >
-                      <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <Eye className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="hover:bg-green-100 dark:hover:bg-green-900/30 rounded-lg"
+                      className={tableStyles.actionBlue}
                       onClick={() => onEditViolation(v)}
                       title="Editar infracción"
                     >
-                      <Edit className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      <Edit className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg"
+                      className={tableStyles.actionRed}
                       onClick={() => onDeleteViolation(v)}
                       title="Eliminar infracción"
                     >
-                      <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </TableCell>

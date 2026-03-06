@@ -167,7 +167,7 @@ const TUCsPage = () => {
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div>
                 <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  TUCs Registradas
+                  Documentos Registradas
                   {loading && <RefreshCw className="w-5 h-5 animate-spin text-blue-600 dark:text-blue-400" />}
                 </CardTitle>
                 <CardDescription>Listado completo de todas las TUCs registradas</CardDescription>

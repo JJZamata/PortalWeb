@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RefreshCw, Search, Trash2, Eye, Edit, RotateCcw } from "lucide-react";
 import { Documento } from "../types";
+import { tableStyles } from '@/lib/table-styles';
 
 interface Props {
   documentos: Documento[];
@@ -88,31 +89,31 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
-        <RefreshCw className="w-8 h-8 animate-spin text-cyan-600 dark:text-cyan-400" />
+        <RefreshCw className={tableStyles.loadingSpinnerCyan} />
         <span className="ml-2 text-gray-600 dark:text-gray-400">Cargando documentos...</span>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className={tableStyles.container}>
       <Table>
-        <TableHeader className="bg-gradient-to-r from-cyan-50 to-cyan-100/50 dark:from-gray-800 dark:to-gray-800">
+        <TableHeader className={tableStyles.header}>
           <TableRow>
-            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Número</TableHead>
-            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Placa</TableHead>
-            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Entidad/Empresa</TableHead>
-            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Fecha Emisión</TableHead>
-            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Vencimiento</TableHead>
-            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Estado</TableHead>
-            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Acciones</TableHead>
+            <TableHead className={tableStyles.headText}>Número</TableHead>
+            <TableHead className={tableStyles.headText}>Placa</TableHead>
+            <TableHead className={tableStyles.headText}>Entidad/Empresa</TableHead>
+            <TableHead className={tableStyles.headText}>Fecha Emisión</TableHead>
+            <TableHead className={tableStyles.headText}>Vencimiento</TableHead>
+            <TableHead className={tableStyles.headText}>Estado</TableHead>
+            <TableHead className={`${tableStyles.headText} ${tableStyles.actionsHead}`}>Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {documentos.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-32 text-center">
-                <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+              <TableCell colSpan={7} className={tableStyles.emptyCell}>
+                <div className={tableStyles.emptyState}>
                   <Search className="w-8 h-8 mb-2" />
                   <p>No hay documentos disponibles</p>
                 </div>
@@ -128,26 +129,26 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                 return (
               <TableRow 
                 key={index} 
-                className="hover:bg-cyan-50/50 dark:hover:bg-cyan-900/40 transition-colors"
+                className={tableStyles.row}
               >
-                <TableCell className="font-mono text-white">{documento.numero}</TableCell>
-                <TableCell className="font-mono font-semibold text-gray-900 dark:text-white">{documento.placa}</TableCell>
-                <TableCell className="text-gray-600 dark:text-gray-400 font-medium">{documento.entidad_empresa}</TableCell>
-                <TableCell className="text-gray-600 dark:text-gray-400">{documento.fecha_emision}</TableCell>
-                <TableCell className="text-gray-600 dark:text-gray-400">{documento.fecha_vencimiento}</TableCell>
+                <TableCell className={tableStyles.codeCell}>{documento.numero}</TableCell>
+                <TableCell className={tableStyles.plateCell}>{documento.placa}</TableCell>
+                <TableCell className={tableStyles.textCell}>{documento.entidad_empresa}</TableCell>
+                <TableCell className={tableStyles.mutedCell}>{documento.fecha_emision}</TableCell>
+                <TableCell className={tableStyles.mutedCell}>{documento.fecha_vencimiento}</TableCell>
                 <TableCell>
                   <Badge variant="secondary" className={`${getBadgeVariant(documento.estado)} border px-3 py-1 rounded-full font-semibold`}>
                     {documento.estado}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  <div className="flex justify-center gap-1">
+                <TableCell className={tableStyles.actionsCell}>
+                  <div className={tableStyles.actionsGroup}>
                     {/* Botón de ver detalles solo para seguros AFOCAT */}
                     {documento.tipo === 'AFOCAT' && onViewInsuranceDetail && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                        className={tableStyles.actionBlue}
                         onClick={() => onViewInsuranceDetail(documento.numero)}
                         title="Ver detalles"
                       >
@@ -159,7 +160,7 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
+                        className={tableStyles.actionBlue}
                         onClick={() => onViewTechnicalReviewDetail(documento.numero)}
                         title="Ver detalles"
                       >
@@ -171,7 +172,7 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                        className={tableStyles.actionBlue}
                         onClick={() => onEditInsurance(documento.numero)}
                         title="Editar seguro"
                       >
@@ -182,7 +183,7 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="hover:bg-cyan-100 dark:hover:bg-cyan-900/50 rounded-lg text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300"
+                        className={tableStyles.actionCyan}
                         onClick={() => onRenewInsurance(documento)}
                         title="Renovar seguro"
                       >
@@ -190,22 +191,22 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                       </Button>
                     )}
                     {/* Botón de editar revisiones REVISION */}
-                    {documento.tipo === 'REVISION' && onEditTechnicalReview && (
+                    {documento.tipo === 'REVISION' && onEditTechnicalReview && !isTechnicalReviewExpired && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300"
+                        className={tableStyles.actionBlue}
                         onClick={() => onEditTechnicalReview(documento.numero)}
                         title="Editar revisión técnica"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
                     )}
-                    {documento.tipo === 'REVISION' && onRenewTechnicalReview && (
+                    {documento.tipo === 'REVISION' && onRenewTechnicalReview && isTechnicalReviewExpired && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="hover:bg-cyan-100 dark:hover:bg-cyan-900/50 rounded-lg text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300"
+                        className={tableStyles.actionCyan}
                         onClick={() => onRenewTechnicalReview(documento)}
                         title="Renovar revisión técnica"
                       >
@@ -218,7 +219,7 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                          className={tableStyles.actionRed}
                           title="Eliminar documento"
                         >
                           <Trash2 className="w-4 h-4" />

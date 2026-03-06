@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshCw, Plus, Search, FileText, XCircle } from 'lucide-react';
-import { TUCFilters } from '@/features/documentacion/tucs/types';
+import { TUCFilters, TUCData } from '@/features/documentacion/tucs/types';
 
 const TUCsPage = () => {
   const queryClient = useQueryClient();
@@ -35,6 +35,12 @@ const TUCsPage = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [renewalData, setRenewalData] = useState<Partial<{
+    vehiclePlate: string;
+    validityDate: string;
+    registralCode: string;
+    supportDocument: string;
+  }> | null>(null);
 
   // Obtener datos
   const { tucs, pagination, loading, error } = useTUCs({
@@ -96,7 +102,10 @@ const TUCsPage = () => {
     }
   };
 
-  const handleDelete = async (tucNumber: string) => {
+  const handleDelete = async (tuc: TUCData) => {
+    const tucNumber = tuc.tuc?.tucNumber ?? tuc.tucNumber;
+    if (!tucNumber) return;
+
     if (!confirm(`¿Estás seguro de que deseas eliminar la TUC ${tucNumber}?`)) return;
 
     try {
@@ -113,6 +122,22 @@ const TUCsPage = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleRenew = (tuc: TUCData) => {
+    const vehiclePlate = tuc.tuc?.vehiclePlate ?? tuc.vehiclePlate ?? '';
+    const validityDateRaw = tuc.fechas?.vigencia ?? tuc.validityDate ?? '';
+    const validityDate = validityDateRaw ? validityDateRaw.split('T')[0] : '';
+    const registralCode = tuc.tuc?.registralCode ?? tuc.registralCode ?? '';
+    const supportDocument = tuc.tuc?.supportDocument ?? tuc.supportDocument ?? '';
+
+    setRenewalData({
+      vehiclePlate,
+      validityDate,
+      registralCode,
+      supportDocument,
+    });
+    setShowCreateDialog(true);
   };
 
   return (
@@ -185,10 +210,6 @@ const TUCsPage = () => {
                     <SelectItem value="vencido">Vencido</SelectItem>
                   </SelectContent>
                 </Select>
-
-                <Button variant="outline" size="sm" onClick={handleRefresh} title="Actualizar">
-                  <RefreshCw className="w-4 h-4" />
-                </Button>
               </div>
             </div>
 
@@ -199,6 +220,7 @@ const TUCsPage = () => {
               onView={handleViewDetail}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onRenew={handleRenew}
             />
 
             {/* Paginación */}
@@ -214,11 +236,17 @@ const TUCsPage = () => {
         {/* Diálogos */}
         <CreateTUCDialog
           open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
+          onOpenChange={(open) => {
+            setShowCreateDialog(open);
+            if (!open) setRenewalData(null);
+          }}
           onSuccess={() => {
             handleUpdateSuccess();
             setShowCreateDialog(false);
+            setRenewalData(null);
           }}
+          initialData={renewalData || undefined}
+          isRenewal={Boolean(renewalData)}
         />
 
         <EditTUCDialog

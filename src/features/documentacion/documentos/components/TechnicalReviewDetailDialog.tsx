@@ -38,6 +38,8 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
     });
   };
 
+  const remainingDays = Math.max(0, Number(technicalReview?.fechas?.diasRestantes ?? 0));
+
   const getResultColor = (result: string) => {
     switch (result?.toUpperCase()) {
       case 'APROBADO':
@@ -126,9 +128,9 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 rounded-2xl bg-white dark:bg-gray-900">
+        <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 dark:from-emerald-400 dark:to-emerald-300 bg-clip-text text-transparent flex items-center gap-2">
             <FileCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
             Detalle de Revisión Técnica
             <Badge variant="secondary" className="ml-2">
@@ -139,7 +141,7 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
 
         <div className="space-y-6">
           {/* Estado de la Revisión */}
-          <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-green-50/70 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/50">
             <div>
               <p className="text-sm text-green-600 dark:text-green-400">Resultado de la Revisión</p>
               <Badge
@@ -153,14 +155,14 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
             <div className="text-right">
               <p className="text-sm text-gray-600 dark:text-gray-400">Días Restantes</p>
               <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                {technicalReview.fechas.diasRestantes} días
+                {remainingDays} días
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Información de la Revisión */}
-            <Card>
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -191,7 +193,7 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
             </Card>
 
             {/* Información del Vehículo */}
-            <Card>
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Car className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -228,7 +230,7 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
           </div>
 
           {/* Fechas */}
-          <Card>
+          <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -248,10 +250,10 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Días Restantes</p>
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-lg">{technicalReview.fechas.diasRestantes}</p>
+                    <p className="font-semibold text-lg">{remainingDays}</p>
                     <p className="text-sm text-gray-500">días</p>
                   </div>
-                  {technicalReview.fechas.diasRestantes <= 30 && (
+                  {remainingDays > 0 && remainingDays <= 30 && (
                     <Badge variant="outline" className="text-orange-600 border-orange-600">
                       Próximo a vencer
                     </Badge>
@@ -262,7 +264,7 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
           </Card>
 
           {/* Estado */}
-          <Card>
+          <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-green-600 dark:text-green-400" />

@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,11 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { InsuranceDetail } from "../types";
 import { documentosService } from "../services/documentosService";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Calendar, Building, Car, FileText, CreditCard } from "lucide-react";
+import { Shield, Calendar, Building, Car, FileText } from "lucide-react";
 
 interface Props {
   insurance: InsuranceDetail | null;
@@ -30,7 +32,6 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
   // Form state - solo campos editables
   const [formData, setFormData] = useState({
     insuranceCompanyName: "",
-    expirationDate: "",
     coverage: "",
   });
 
@@ -38,15 +39,8 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
   useEffect(() => {
     if (insurance && open) {
       // Extraer solo la fecha (YYYY-MM-DD) de la fecha de vencimiento
-      const expirationDateValue = insurance.fechas?.vencimiento 
-        ? (insurance.fechas.vencimiento.includes('T') 
-            ? insurance.fechas.vencimiento.split('T')[0] 
-            : insurance.fechas.vencimiento.substring(0, 10))
-        : "";
-
       setFormData({
         insuranceCompanyName: insurance.seguro?.insuranceCompanyName || "",
-        expirationDate: expirationDateValue,
         coverage: insurance.seguro?.coverage || "",
       });
     }
@@ -61,7 +55,6 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
     try {
       const updateData = {
         insuranceCompanyName: formData.insuranceCompanyName || undefined,
-        expirationDate: formData.expirationDate || undefined,
         coverage: formData.coverage || undefined,
       };
 
@@ -103,140 +96,111 @@ export const EditInsuranceDialog = ({ insurance, open, onOpenChange, onSuccess }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 rounded-2xl bg-white dark:bg-gray-900">
+        <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-700 to-cyan-600 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent flex items-center gap-2">
             <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Editar Seguro AFOCAT
             <Badge variant="secondary" className="ml-2">
-              {insurance.seguro.numeroPoliza}
+              {insurance.seguro.policyNumber}
             </Badge>
           </DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
+            Actualiza la información del seguro manteniendo consistencia con los datos vinculados.
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Información Actual */}
-            <div className="md:col-span-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">Información Actual</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Propietario:</span>
-                  <p className="font-medium">{insurance.propietario.nombre}</p>
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+          <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+            <CardContent className="p-6 space-y-4">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Campos editables</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="insuranceCompanyName" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <Building className="w-4 h-4" />
+                    Empresa Aseguradora
+                  </Label>
+                  <Input
+                    id="insuranceCompanyName"
+                    placeholder="Nombre de la aseguradora"
+                    value={formData.insuranceCompanyName}
+                    onChange={(e) => handleInputChange("insuranceCompanyName", e.target.value)}
+                    className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500"
+                  />
                 </div>
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Vehículo:</span>
-                  <p className="font-medium">{insurance.vehiculo.placa}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Empresa:</span>
-                  <p className="font-medium">{insurance.seguro.empresaAseguradora}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Fecha de Emisión:</span>
-                  <p className="font-medium">{insurance.fechas.emision?.split('T')[0]}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Estado:</span>
-                  <Badge variant="secondary" className={insurance.estado.color === 'green' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200'}>
-                    {insurance.estado.descripcion}
-                  </Badge>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="coverage" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <Shield className="w-4 h-4" />
+                    Cobertura
+                  </Label>
+                  <Select value={formData.coverage} onValueChange={(value) => handleInputChange("coverage", value)}>
+                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500">
+                      <SelectValue placeholder="Seleccionar cobertura" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cobertura completa contra accidentes de tránsito, daños a terceros, lesiones personales y daños materiales">
+                        COMPREHENSIVE - Cobertura Completa
+                      </SelectItem>
+                      <SelectItem value="Cobertura básica contra accidentes de tránsito y responsabilidad civil frente a terceros">
+                        BASIC - Cobertura Básica
+                      </SelectItem>
+                      <SelectItem value="Cobertura únicamente para responsabilidad civil frente a terceros según normativa vigente">
+                        THIRD PARTY - Solo Terceros
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Campos Editables */}
+          <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+            <CardContent className="p-6 space-y-4">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Datos de referencia</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="policyNumber" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <FileText className="w-4 h-4" />
+                    Número de Póliza
+                  </Label>
+                  <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 min-h-11">
+                    {insurance?.seguro?.policyNumber || 'No disponible'}
+                  </div>
+                </div>
 
-            {/* Empresa Aseguradora */}
-            <div className="space-y-2">
-              <Label htmlFor="insuranceCompanyName" className="flex items-center gap-2">
-                <Building className="w-4 h-4" />
-                Empresa Aseguradora
-              </Label>
-              <Input
-                id="insuranceCompanyName"
-                placeholder="Nombre de la aseguradora"
-                value={formData.insuranceCompanyName}
-                onChange={(e) => handleInputChange("insuranceCompanyName", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vehiclePlate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <Car className="w-4 h-4" />
+                    Placa Vehículo
+                  </Label>
+                  <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 min-h-11">
+                    {insurance?.vehiculo?.placa || 'No disponible'}
+                  </div>
+                </div>
 
-            {/* Número de Póliza */}
-            <div className="space-y-2">
-              <Label htmlFor="policyNumber" className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Número de Póliza
-                <span className="text-xs text-gray-500 dark:text-gray-400">(No editable)</span>
-              </Label>
-              <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-900 dark:text-gray-100">
-                {insurance?.seguro?.policyNumber || 'No disponible'}
+                <div className="space-y-2">
+                  <Label htmlFor="startDate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <Calendar className="w-4 h-4" />
+                    Fecha Inicio
+                  </Label>
+                  <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 min-h-11">
+                    {insurance?.fechas?.inicio ? new Date(insurance.fechas.inicio).toLocaleDateString('es-PE') : 'No disponible'}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="expirationDate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <Calendar className="w-4 h-4" />
+                    Fecha Vencimiento
+                  </Label>
+                  <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 min-h-11">
+                    {insurance?.fechas?.vencimiento ? new Date(insurance.fechas.vencimiento).toLocaleDateString('es-PE') : 'No disponible'}
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Placa Vehículo - No editable */}
-            <div className="space-y-2">
-              <Label htmlFor="vehiclePlate" className="flex items-center gap-2">
-                <Car className="w-4 h-4" />
-                Placa Vehículo
-                <span className="text-xs text-gray-500 dark:text-gray-400">(No editable)</span>
-              </Label>
-              <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-900 dark:text-gray-100">
-                {insurance?.vehiculo?.placa || 'No disponible'}
-              </div>
-            </div>
-
-            {/* Fecha de Inicio */}
-            <div className="space-y-2">
-              <Label htmlFor="startDate" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Fecha Inicio
-                <span className="text-xs text-gray-500 dark:text-gray-400">(No editable)</span>
-              </Label>
-              <div className="flex items-center px-3 py-2 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-md text-gray-900 dark:text-gray-100">
-                {insurance?.fechas?.inicio ? new Date(insurance.fechas.inicio).toLocaleDateString('es-PE') : 'No disponible'}
-              </div>
-            </div>
-
-            {/* Fecha de Vencimiento */}
-            <div className="space-y-2">
-              <Label htmlFor="expirationDate" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Fecha Vencimiento
-              </Label>
-              <Input
-                id="expirationDate"
-                type="date"
-                value={formData.expirationDate}
-                onChange={(e) => handleInputChange("expirationDate", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
-              />
-            </div>
-
-            {/* Cobertura */}
-            <div className="space-y-2">
-              <Label htmlFor="coverage" className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                Cobertura
-              </Label>
-              <Select value={formData.coverage} onValueChange={(value) => handleInputChange("coverage", value)}>
-                <SelectTrigger className="border-gray-200 dark:border-gray-700">
-                  <SelectValue placeholder="Seleccionar cobertura" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cobertura completa contra accidentes de tránsito, daños a terceros, lesiones personales y daños materiales">
-                    COMPREHENSIVE - Cobertura Completa
-                  </SelectItem>
-                  <SelectItem value="Cobertura básica contra accidentes de tránsito y responsabilidad civil frente a terceros">
-                    BASIC - Cobertura Básica
-                  </SelectItem>
-                  <SelectItem value="Cobertura únicamente para responsabilidad civil frente a terceros según normativa vigente">
-                    THIRD PARTY - Solo Terceros
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           <DialogFooter>
             <Button

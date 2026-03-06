@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -126,21 +127,24 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 rounded-2xl bg-white dark:bg-gray-900">
+        <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 dark:from-emerald-400 dark:to-emerald-300 bg-clip-text text-transparent flex items-center gap-2">
             <FileCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
             Editar Revisión Técnica
             <Badge variant="secondary" className="ml-2">
               {technicalReview.revision.reviewId}
             </Badge>
           </DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
+            Modifica los datos editables de la revisión técnica seleccionada.
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Información Actual */}
-            <div className="md:col-span-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <div className="md:col-span-2 p-4 bg-green-50/70 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/50">
               <h4 className="font-semibold text-green-900 dark:text-green-100 mb-3">Información Actual</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -177,7 +181,7 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
                 placeholder="ABC123"
                 value={formData.vehiclePlate}
                 disabled
-                className="border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 cursor-not-allowed"
+                className="bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700 rounded-lg h-11 cursor-not-allowed"
               />
               <p className="text-xs text-gray-500 dark:text-gray-400">Para cambiar la placa crea una nueva revisión técnica.</p>
             </div>
@@ -189,7 +193,7 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
                 Fechas de la Revisión (solo lectura)
               </Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
+                <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
                   <p className="text-gray-600 dark:text-gray-400">Emisión</p>
                   <p className="font-medium">
                     {technicalReview.fechas.emision
@@ -197,7 +201,7 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
                       : 'No disponible'}
                   </p>
                 </div>
-                <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
+                <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
                   <p className="text-gray-600 dark:text-gray-400">Vencimiento</p>
                   <p className="font-medium">
                     {technicalReview.fechas.vencimiento
@@ -220,7 +224,7 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
                 placeholder="Nombre de la certificadora"
                 value={formData.certifyingCompany}
                 onChange={(e) => handleInputChange("certifyingCompany", e.target.value)}
-                className="border-gray-200 dark:border-gray-700"
+                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500"
               />
             </div>
 
@@ -234,7 +238,7 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
                 value={formData.inspectionResult}
                 onValueChange={(value: 'APROBADO' | 'OBSERVADO') => handleInputChange("inspectionResult", value)}
               >
-                <SelectTrigger className="border-gray-200 dark:border-gray-700">
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500">
                   <SelectValue placeholder="Seleccionar resultado" />
                 </SelectTrigger>
                 <SelectContent>

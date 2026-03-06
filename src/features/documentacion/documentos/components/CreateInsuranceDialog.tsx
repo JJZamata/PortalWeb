@@ -22,6 +22,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  initialData?: Partial<FormData>;
+  isRenewal?: boolean;
 }
 
 interface FormData {
@@ -47,7 +49,7 @@ interface VehicleOption {
   ownerName: string;
 }
 
-export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) => {
+export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess, initialData, isRenewal = false }: Props) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
@@ -72,20 +74,25 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
     if (open) {
       const today = new Date().toISOString().split('T')[0];
       const oneYearLater = new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
-      
+
       setFormData({
-        insuranceCompanyName: '',
-        policyNumber: '',
-        vehiclePlate: '',
-        startDate: today,
-        expirationDate: oneYearLater,
-        coverage: '',
-        driverDni: '',
-        ownerDni: '',
+        insuranceCompanyName: initialData?.insuranceCompanyName || '',
+        policyNumber: initialData?.policyNumber || '',
+        vehiclePlate: initialData?.vehiclePlate || '',
+        startDate: initialData?.startDate || today,
+        expirationDate: initialData?.expirationDate || oneYearLater,
+        coverage: initialData?.coverage || '',
+        driverDni: initialData?.driverDni || '',
+        ownerDni: initialData?.ownerDni || '',
       });
       setErrors([]);
     }
-  }, [open]);
+  }, [open, initialData]);
+
+  useEffect(() => {
+    if (!open || !initialData?.vehiclePlate) return;
+    handleVehicleSelection(initialData.vehiclePlate);
+  }, [open, initialData?.vehiclePlate]);
 
   useEffect(() => {
     const loadVehicleOptions = async () => {
@@ -310,6 +317,16 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
 
     setLoading(true);
     try {
+      const insuranceDocuments = await documentosService.getDocumentos(1, 'insurance', formData.vehiclePlate, 'createdAt', 'DESC');
+      const hasActiveInsurance = (insuranceDocuments?.documents || []).some((doc: any) =>
+        String(doc?.placa || '').toUpperCase() === String(formData.vehiclePlate || '').toUpperCase() &&
+        String(doc?.estado || '').toLowerCase() === 'vigente'
+      );
+
+      if (hasActiveInsurance) {
+        throw new Error('Ya existe un AFOCAT vigente para esta placa. Para mantener historial, registra uno nuevo solo cuando el actual esté vencido o por vencer.');
+      }
+
       const conductorDetail = await conductoresService.getConductorDetail(formData.driverDni);
       const licencias = Array.isArray(conductorDetail?.licencias) ? conductorDetail.licencias : [];
 
@@ -382,10 +399,12 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
         <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-700 to-cyan-600 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent flex items-center gap-2">
             <Shield className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
-            Crear Nuevo Seguro AFOCAT
+            {isRenewal ? 'Renovar Seguro AFOCAT' : 'Crear Nuevo Seguro AFOCAT'}
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
-            Complete los datos para registrar un nuevo seguro AFOCAT en el sistema
+            {isRenewal
+              ? 'Se creará un nuevo AFOCAT para mantener el historial del documento anterior.'
+              : 'Complete los datos para registrar un nuevo seguro AFOCAT en el sistema'}
           </DialogDescription>
         </DialogHeader>
 
@@ -633,7 +652,7 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess }: Props) 
               ) : (
                 <>
                   <Shield className="w-4 h-4 mr-2" />
-                  Crear Seguro AFOCAT
+                  {isRenewal ? 'Renovar AFOCAT' : 'Crear Seguro AFOCAT'}
                 </>
               )}
             </Button>

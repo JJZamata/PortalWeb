@@ -42,6 +42,8 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
     });
   };
 
+  const remainingDays = Math.max(0, Number(insurance?.fechas?.diasRestantes ?? 0));
+
   if (error) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,9 +108,9 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 rounded-2xl bg-white dark:bg-gray-900">
+        <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-700 to-cyan-600 dark:from-cyan-400 dark:to-cyan-300 bg-clip-text text-transparent flex items-center gap-2">
             <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Detalle del Seguro AFOCAT
             <Badge variant="secondary" className="ml-2">
@@ -119,7 +121,7 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
 
         <div className="space-y-6">
           {/* Estado del Seguro */}
-          <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-blue-50/70 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50">
             <div>
               <p className="text-sm text-blue-600 dark:text-blue-400">Estado del Seguro</p>
               <Badge
@@ -136,14 +138,14 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
             <div className="text-right">
               <p className="text-sm text-gray-600 dark:text-gray-400">Días Restantes</p>
               <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                {insurance.fechas.diasRestantes} días
+                {remainingDays} días
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Información del Seguro */}
-            <Card>
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -171,7 +173,7 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
             </Card>
 
             {/* Información del Vehículo */}
-            <Card>
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Car className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -207,7 +209,7 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
             </Card>
 
             {/* Información del Propietario */}
-            <Card>
+            <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -236,7 +238,7 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
           </div>
 
           {/* Fechas */}
-          <Card>
+          <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -256,10 +258,10 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Días Restantes</p>
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-lg">{insurance.fechas.diasRestantes}</p>
+                    <p className="font-semibold text-lg">{remainingDays}</p>
                     <p className="text-sm text-gray-500">días</p>
                   </div>
-                  {insurance.fechas.diasRestantes <= 30 && (
+                  {remainingDays > 0 && remainingDays <= 30 && (
                     <Badge variant="outline" className="text-orange-600 border-orange-600">
                       Próximo a vencer
                     </Badge>

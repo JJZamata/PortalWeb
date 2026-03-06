@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { RefreshCw, Search, Trash2, Eye, Edit } from "lucide-react";
+import { RefreshCw, Search, Trash2, Eye, Edit, RotateCcw } from "lucide-react";
 import { Documento } from "../types";
 
 interface Props {
@@ -23,9 +23,58 @@ interface Props {
   onViewTechnicalReviewDetail?: (reviewCode: string) => void;
   onEditInsurance?: (policyNumber: string) => void;
   onEditTechnicalReview?: (reviewId: string) => void;
+  onRenewInsurance?: (documento: Documento) => void;
+  onRenewTechnicalReview?: (documento: Documento) => void;
 }
 
-export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsuranceDetail, onViewTechnicalReviewDetail, onEditInsurance, onEditTechnicalReview }: Props) => {
+export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsuranceDetail, onViewTechnicalReviewDetail, onEditInsurance, onEditTechnicalReview, onRenewInsurance, onRenewTechnicalReview }: Props) => {
+  const parseDateSafe = (dateValue: string) => {
+    const raw = String(dateValue || '').trim();
+    if (!raw) return null;
+
+    const dateOnlyFromIso = raw.includes('T') ? raw.split('T')[0] : raw;
+
+    const yyyymmddFromIso = dateOnlyFromIso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (yyyymmddFromIso) {
+      const [, yyyy, mm, dd] = yyyymmddFromIso;
+      const localDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+      return Number.isNaN(localDate.getTime()) ? null : localDate;
+    }
+
+    const yyyymmdd = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (yyyymmdd) {
+      const [, yyyy, mm, dd] = yyyymmdd;
+      const localDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+      return Number.isNaN(localDate.getTime()) ? null : localDate;
+    }
+
+    const isoParsed = new Date(raw);
+    if (!Number.isNaN(isoParsed.getTime())) return isoParsed;
+
+    const ddmmyyyy = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (ddmmyyyy) {
+      const [, dd, mm, yyyy] = ddmmyyyy;
+      const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    return null;
+  };
+
+  const isDocumentExpired = (documento: Documento) => {
+    const estadoLower = String(documento?.estado || '').toLowerCase();
+    const byStatus = estadoLower.includes('vencido') || estadoLower.includes('expired');
+
+    const expirationDate = parseDateSafe(documento?.fecha_vencimiento || '');
+    if (!expirationDate) return byStatus;
+
+    const today = new Date();
+    const endOfExpiration = new Date(expirationDate);
+    endOfExpiration.setHours(23, 59, 59, 999);
+
+    return byStatus || today > endOfExpiration;
+  };
+
   const getBadgeVariant = (estado: string) => {
     const estadoLower = estado.toLowerCase();
     switch (estadoLower) {
@@ -50,7 +99,6 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
       <Table>
         <TableHeader className="bg-gradient-to-r from-cyan-50 to-cyan-100/50 dark:from-gray-800 dark:to-gray-800">
           <TableRow>
-            <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Tipo</TableHead>
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Número</TableHead>
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Placa</TableHead>
             <TableHead className="font-bold text-cyan-900 dark:text-gray-300">Entidad/Empresa</TableHead>
@@ -63,7 +111,7 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
         <TableBody>
           {documentos.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="h-32 text-center">
+              <TableCell colSpan={7} className="h-32 text-center">
                 <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                   <Search className="w-8 h-8 mb-2" />
                   <p>No hay documentos disponibles</p>
@@ -72,12 +120,17 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
             </TableRow>
           ) : (
             documentos.map((documento, index) => (
+              (() => {
+                const isAfocatExpired = documento.tipo === 'AFOCAT' && isDocumentExpired(documento);
+                const isTechnicalReviewExpired = documento.tipo === 'REVISION' && isDocumentExpired(documento);
+                const shouldHideDeleteAction = isAfocatExpired || isTechnicalReviewExpired;
+
+                return (
               <TableRow 
                 key={index} 
                 className="hover:bg-cyan-50/50 dark:hover:bg-cyan-900/40 transition-colors"
               >
-                <TableCell className="font-semibold text-gray-900 dark:text-white">{documento.tipo}</TableCell>
-                <TableCell className="font-mono text-gray-600 dark:text-gray-400">{documento.numero}</TableCell>
+                <TableCell className="font-mono text-white">{documento.numero}</TableCell>
                 <TableCell className="font-mono font-semibold text-gray-900 dark:text-white">{documento.placa}</TableCell>
                 <TableCell className="text-gray-600 dark:text-gray-400 font-medium">{documento.entidad_empresa}</TableCell>
                 <TableCell className="text-gray-600 dark:text-gray-400">{documento.fecha_emision}</TableCell>
@@ -114,7 +167,7 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                       </Button>
                     )}
                     {/* Botón de editar seguros AFOCAT */}
-                    {documento.tipo === 'AFOCAT' && onEditInsurance && (
+                    {documento.tipo === 'AFOCAT' && onEditInsurance && !isAfocatExpired && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -123,6 +176,17 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                         title="Editar seguro"
                       >
                         <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {documento.tipo === 'AFOCAT' && onRenewInsurance && isAfocatExpired && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-cyan-100 dark:hover:bg-cyan-900/50 rounded-lg text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300"
+                        onClick={() => onRenewInsurance(documento)}
+                        title="Renovar seguro"
+                      >
+                        <RotateCcw className="w-4 h-4" />
                       </Button>
                     )}
                     {/* Botón de editar revisiones REVISION */}
@@ -137,6 +201,18 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                         <Edit className="w-4 h-4" />
                       </Button>
                     )}
+                    {documento.tipo === 'REVISION' && onRenewTechnicalReview && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-cyan-100 dark:hover:bg-cyan-900/50 rounded-lg text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300"
+                        onClick={() => onRenewTechnicalReview(documento)}
+                        title="Renovar revisión técnica"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {!shouldHideDeleteAction && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
@@ -168,9 +244,12 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
+                );
+              })()
             ))
           )}
         </TableBody>

@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Documento } from './types';
 
 type AfocatRevisionMode = 'all' | 'insurance' | 'technicalReview';
 
@@ -55,6 +56,8 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 	const [showEditTechnicalReviewDialog, setShowEditTechnicalReviewDialog] = useState(false);
 	const [showCreateTechnicalReviewDialog, setShowCreateTechnicalReviewDialog] = useState(false);
 	const [showCreateInsuranceDialog, setShowCreateInsuranceDialog] = useState(false);
+	const [insuranceRenewalData, setInsuranceRenewalData] = useState<any | null>(null);
+	const [reviewRenewalData, setReviewRenewalData] = useState<any | null>(null);
 
 	const { insuranceDetail, loadingDetail: loadingInsurance, errorDetail: errorInsurance, fetchInsuranceDetail, clearInsuranceDetail } = useInsuranceDetail();
 	const { technicalReviewDetail, loadingDetail: loadingTechnical, errorDetail: errorTechnical, fetchTechnicalReviewDetail, clearTechnicalReviewDetail } = useTechnicalReviewDetail();
@@ -171,6 +174,28 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 		clearTechnicalReviewDetail();
 	};
 
+	const handleRenewInsurance = (documento: Documento) => {
+		setInsuranceRenewalData({
+			insuranceCompanyName: documento.entidad_empresa || '',
+			vehiclePlate: documento.placa || '',
+			coverage: documento.detalles?.cobertura || '',
+			policyNumber: '',
+		});
+		setShowCreateInsuranceDialog(true);
+	};
+
+	const handleRenewTechnicalReview = (documento: Documento) => {
+		const rawResult = String(documento?.detalles?.inspection_result || documento?.detalles?.resultado_inspeccion || '').toUpperCase();
+		const normalizedResult = rawResult === 'APROBADO' || rawResult === 'OBSERVADO' ? rawResult : '';
+
+		setReviewRenewalData({
+			vehiclePlate: documento.placa || '',
+			certifyingCompany: documento.entidad_empresa || '',
+			inspectionResult: normalizedResult,
+		});
+		setShowCreateTechnicalReviewDialog(true);
+	};
+
 	const getErrorMessage = (error: any) => {
 		if (error?.isValidationError) {
 			return error.backendMessage || 'Error de validación';
@@ -222,7 +247,13 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 				<div className="bg-gradient-to-br from-white to-cyan-50/30 dark:from-[#1a1a1a] dark:to-[#1a2340]/40 p-8 rounded-2xl shadow-lg border border-cyan-200/40 dark:border-cyan-900/40">
 					<div className="flex items-center justify-between">
 						<div>
-							<h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-800 to-cyan-600 bg-clip-text text-transparent dark:from-cyan-400 dark:to-cyan-500 mb-2">
+							<h1
+								className={`text-4xl font-bold bg-gradient-to-r bg-clip-text text-transparent mb-2 ${
+									isTechnicalMode
+										? 'from-green-800 to-green-600 dark:from-green-400 dark:to-green-500'
+										: 'from-cyan-800 to-cyan-600 dark:from-cyan-400 dark:to-cyan-500'
+								}`}
+							>
 								{isInsuranceMode
 									? 'Gestión de Seguros AFOCAT'
 									: isTechnicalMode
@@ -239,7 +270,13 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 						</div>
 						<div className="flex items-center gap-6">
 							<div className="text-center">
-								<p className="text-4xl font-bold text-emerald-700 dark:text-emerald-400">
+								<p
+									className={`text-4xl font-bold ${
+										isTechnicalMode
+											? 'text-green-700 dark:text-green-400'
+											: 'text-cyan-700 dark:text-cyan-400'
+									}`}
+								>
 									{loading ? '-' : pagination.totalItems}
 								</p>
 								<p className="text-sm text-gray-600 dark:text-gray-400">Total Documentos</p>
@@ -353,6 +390,8 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 							onViewTechnicalReviewDetail={handleViewTechnicalReviewDetail}
 							onEditInsurance={handleEditInsurance}
 							onEditTechnicalReview={handleEditTechnicalReview}
+							onRenewInsurance={handleRenewInsurance}
+							onRenewTechnicalReview={handleRenewTechnicalReview}
 						/>
 						{pagination && <PaginationControls pagination={pagination} onPageChange={handlePageChange} searchTerm={searchTerm} tipoFiltro={tipoFiltro} />}
 					</CardContent>
@@ -391,22 +430,34 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 				{!isInsuranceMode && (
 					<CreateTechnicalReviewDialog
 						open={showCreateTechnicalReviewDialog}
-						onOpenChange={setShowCreateTechnicalReviewDialog}
+						onOpenChange={(open) => {
+							setShowCreateTechnicalReviewDialog(open);
+							if (!open) setReviewRenewalData(null);
+						}}
 						onSuccess={() => {
 							handleUpdateSuccess();
 							handlePageChange(1);
+							setReviewRenewalData(null);
 						}}
+						initialData={reviewRenewalData || undefined}
+						isRenewal={Boolean(reviewRenewalData)}
 					/>
 				)}
 
 				{!isTechnicalMode && (
 					<CreateInsuranceDialog
 						open={showCreateInsuranceDialog}
-						onOpenChange={setShowCreateInsuranceDialog}
+						onOpenChange={(open) => {
+							setShowCreateInsuranceDialog(open);
+							if (!open) setInsuranceRenewalData(null);
+						}}
 						onSuccess={() => {
 							handleUpdateSuccess();
 							handlePageChange(1);
+							setInsuranceRenewalData(null);
 						}}
+						initialData={insuranceRenewalData || undefined}
+						isRenewal={Boolean(insuranceRenewalData)}
 					/>
 				)}
 			</div>

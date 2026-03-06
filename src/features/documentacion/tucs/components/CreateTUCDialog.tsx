@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  initialData?: Partial<FormData>;
+  isRenewal?: boolean;
 }
 
 interface FormData {
@@ -34,7 +36,7 @@ interface ValidationError {
   message: string;
 }
 
-export const CreateTUCDialog = ({ open, onOpenChange, onSuccess }: Props) => {
+export const CreateTUCDialog = ({ open, onOpenChange, onSuccess, initialData, isRenewal = false }: Props) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
@@ -46,6 +48,19 @@ export const CreateTUCDialog = ({ open, onOpenChange, onSuccess }: Props) => {
     registralCode: '',
     supportDocument: '',
   });
+
+  useEffect(() => {
+    if (!open) return;
+
+    setFormData(() => ({
+      tucNumber: '',
+      vehiclePlate: initialData?.vehiclePlate ?? '',
+      validityDate: initialData?.validityDate ?? '',
+      registralCode: initialData?.registralCode ?? '',
+      supportDocument: initialData?.supportDocument ?? '',
+    }));
+    setErrors([]);
+  }, [open, initialData]);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
@@ -158,10 +173,12 @@ export const CreateTUCDialog = ({ open, onOpenChange, onSuccess }: Props) => {
         <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-600 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent flex items-center gap-2">
             <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            Crear Nueva TUC
+            {isRenewal ? 'Renovar TUC' : 'Crear Nueva TUC'}
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
-            Complete la información para registrar una nueva Tarjeta Única de Circulación.
+            {isRenewal
+              ? 'Registra la renovación de la Tarjeta Única de Circulación manteniendo el historial.'
+              : 'Complete la información para registrar una nueva Tarjeta Única de Circulación.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -276,7 +293,7 @@ export const CreateTUCDialog = ({ open, onOpenChange, onSuccess }: Props) => {
               Cancelar
             </Button>
             <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
-              {loading ? 'Creando...' : 'Crear TUC'}
+              {loading ? (isRenewal ? 'Renovando...' : 'Creando...') : (isRenewal ? 'Renovar TUC' : 'Crear TUC')}
             </Button>
           </DialogFooter>
         </form>

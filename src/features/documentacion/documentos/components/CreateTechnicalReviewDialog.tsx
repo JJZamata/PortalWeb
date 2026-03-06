@@ -20,6 +20,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  initialData?: Partial<FormData>;
+  isRenewal?: boolean;
 }
 
 interface FormData {
@@ -35,7 +37,7 @@ interface ValidationError {
   value?: any;
 }
 
-export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: Props) => {
+export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess, initialData, isRenewal = false }: Props) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
@@ -56,14 +58,14 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
   useEffect(() => {
     if (open) {
       setFormData({
-        reviewId: generateReviewId(),
-        vehiclePlate: "",
-        inspectionResult: "",
-        certifyingCompany: "",
+        reviewId: initialData?.reviewId || generateReviewId(),
+        vehiclePlate: initialData?.vehiclePlate || "",
+        inspectionResult: initialData?.inspectionResult || "",
+        certifyingCompany: initialData?.certifyingCompany || "",
       });
       setErrors([]);
     }
-  }, [open]);
+  }, [open, initialData]);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
@@ -120,6 +122,16 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
 
     setLoading(true);
     try {
+      const reviewDocuments = await documentosService.getDocumentos(1, 'technicalReview', formData.vehiclePlate, 'createdAt', 'DESC');
+      const hasActiveReview = (reviewDocuments?.documents || []).some((doc: any) =>
+        String(doc?.placa || '').toUpperCase() === String(formData.vehiclePlate || '').toUpperCase() &&
+        String(doc?.estado || '').toLowerCase() === 'vigente'
+      );
+
+      if (hasActiveReview) {
+        throw new Error('Ya existe una revisión técnica vigente para esta placa. Para mantener historial, registra una nueva cuando la actual venza.');
+      }
+
       const response = await documentosService.createTechnicalReview({
         reviewId: formData.reviewId,
         vehiclePlate: formData.vehiclePlate,
@@ -158,10 +170,12 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
         <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 dark:from-emerald-400 dark:to-emerald-300 bg-clip-text text-transparent flex items-center gap-2">
             <FileCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
-            Crear Nueva Revisión Técnica
+            {isRenewal ? 'Renovar Revisión Técnica' : 'Crear Nueva Revisión Técnica'}
           </DialogTitle>
           <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
-            Complete los datos solicitados. Las fechas de emisión y vencimiento las calcula el sistema automáticamente.
+            {isRenewal
+              ? 'Se creará una nueva revisión técnica para conservar el historial de la anterior.'
+              : 'Complete los datos solicitados. Las fechas de emisión y vencimiento las calcula el sistema automáticamente.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -300,7 +314,7 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess }: P
               Cancelar
             </Button>
             <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
-              {loading ? "Creando..." : "Crear Revisión"}
+              {loading ? "Creando..." : isRenewal ? "Renovar Revisión" : "Crear Revisión"}
             </Button>
           </DialogFooter>
         </form>

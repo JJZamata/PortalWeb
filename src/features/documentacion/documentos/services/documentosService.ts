@@ -56,7 +56,7 @@ const handleDocumentosError = (error: any) => {
 };
 
 export const documentosService = {
-  // Método unificado para obtener documentos usando el nuevo endpoint V2
+  // Método unificado para obtener documentos usando endpoints separados /insurance y /technicalreviews
   getDocumentos: async (
     page: number = 1,
     tipoFiltro: string = 'all',
@@ -65,127 +65,295 @@ export const documentosService = {
     sortOrder: string = 'DESC'
   ) => {
     try {
-      // Construir parámetros según la especificación V2 del backend
-      const params = new URLSearchParams();
-      params.append('page', page.toString());
-      params.append('limit', '6'); // Límite según especificación
+      const limit = 6;
 
-      const hasSearch = searchTerm && searchTerm.trim().length >= 3; // Cambiado a 3 según backend
-      // Normalizar el tipo: convertir 'all' y otros valores a los correctos
-      let normalizedType = tipoFiltro.toLowerCase();
+      const parseDateSafe = (dateValue: string) => {
+        const raw = String(dateValue || '').trim();
+        if (!raw) return null;
 
-      // Mapear valores del frontend a valores del backend
-      const typeMapping: { [key: string]: string } = {
-        'all': 'all',
-        'revision': 'technicalReview',
-        'afocat': 'insurance',
-        'insurance': 'insurance',
-        'technicalreview': 'technicalReview',
-        'technicalReview': 'technicalReview'
+        const dateOnlyFromIso = raw.includes('T') ? raw.split('T')[0] : raw;
+
+        const yyyymmddFromIso = dateOnlyFromIso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (yyyymmddFromIso) {
+          const [, yyyy, mm, dd] = yyyymmddFromIso;
+          const localDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+          return Number.isNaN(localDate.getTime()) ? null : localDate;
+        }
+
+        const parsed = new Date(raw);
+        if (!Number.isNaN(parsed.getTime())) return parsed;
+
+        const ddmmyyyy = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (ddmmyyyy) {
+          const [, dd, mm, yyyy] = ddmmyyyy;
+          const alt = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+          return Number.isNaN(alt.getTime()) ? null : alt;
+        }
+
+        return null;
       };
 
-      normalizedType = typeMapping[normalizedType] || 'all';
+      const normalizeEstado = (backendEstado: string, fechaVencimiento: string) => {
+        const estado = String(backendEstado || '').toLowerCase().trim();
 
-      // Agregar parámetros de filtrado (solo si son válidos)
-      if (hasSearch) params.append('search', searchTerm.trim());
-      if (normalizedType && normalizedType !== 'all') {
-        params.append('type', normalizedType);
-      }
+        const expirationDate = parseDateSafe(fechaVencimiento);
+        if (expirationDate) {
+          const endOfExpiration = new Date(expirationDate);
+          endOfExpiration.setHours(23, 59, 59, 999);
+          const now = new Date();
+          const diffMs = endOfExpiration.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-      // Agregar parámetros de ordenamiento
-      params.append('sortBy', sortBy);
-      params.append('sortOrder', sortOrder);
+          if (diffDays < 0) return 'vencido';
+          if (diffDays <= 30) return 'por vencer';
+          return 'vigente';
+        }
 
-      // Usar endpoint unificado V2
-      const response = await axiosInstance.get(`/documents?${params.toString()}`);
+        if (estado.includes('venc')) return 'vencido';
+        if (estado.includes('por vencer') || estado.includes('por_vencer') || estado.includes('soon')) return 'por vencer';
+        if (estado.includes('vigente') || estado.includes('active') || estado.includes('activo')) return 'vigente';
+        return 'sin_fecha';
+      };
 
-      if (response.data.success) {
-        const responseData = response.data.data;
+      const normalizeTipo = (tipoFiltroValue: string) => {
+        const normalized = tipoFiltroValue.toLowerCase();
+        if (['insurance', 'afocat'].includes(normalized)) return 'insurance';
+        if (['technicalreview', 'technicalreviews', 'revision', 'revisiones', 'technicalReview'.toLowerCase()].includes(normalized)) return 'technicalReview';
+        return 'all';
+      };
 
-        // Los datos están en responseData.data según la estructura del backend
-        const documentsList = responseData.data || [];
+      const safeSortOrder = String(sortOrder || 'ASC').toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+      const hasSearch = Boolean(searchTerm && searchTerm.trim().length >= 3);
 
-        // Transformar documentos al formato esperado por el frontend
-        const documentsTransformed = documentsList.map((doc: any, index: number) => {
-          // Extraer información del vehículo anidado
-          const vehicle = doc.vehicle || {};
-
-          // Lógica simplificada: si hay filtro, usar ese tipo. Si no, usar el campo type del documento
-          let tipoFinal;
-          if (normalizedType === 'insurance') {
-            tipoFinal = 'AFOCAT';  // Filtro de seguros → tipo fijo
-          } else if (normalizedType === 'technicalReview') {
-            tipoFinal = 'REVISION'; // Filtro de revisiones → tipo fijo
-          } else if (doc.type === 'INSURANCE') {
-            tipoFinal = 'AFOCAT';  // Sin filtro, usar campo type del backend
-          } else if (doc.type === 'TECHNICALREVIEW') {
-            tipoFinal = 'REVISION'; // Sin filtro, usar campo type del backend
-          } else {
-            // Último recurso: inferir por campos específicos
-            if (doc.policyNumber || doc.insuranceCompanyName || doc.coverage) {
-              tipoFinal = 'AFOCAT';
-            } else if (doc.reviewCode || doc.certifyingCompany || doc.inspectionResult) {
-              tipoFinal = 'REVISION';
-            } else {
-              tipoFinal = 'DESCONOCIDO';
-            }
-          }
-
-          const transformedDoc = {
-            tipo: tipoFinal,
-            numero: doc.policyNumber || doc.reviewCode || doc.reviewId || doc.numero || '',
-            placa: vehicle?.plate || doc.vehiclePlate || doc.placa || '',
-            entidad_empresa: doc.insuranceCompanyName || doc.certifyingCompany || doc.entidad_empresa || '',
-            fecha_emision: doc.startDate || doc.issueDate || doc.reviewDate || doc.fecha_emision || '',
-            fecha_vencimiento:
-              doc.type === 'INSURANCE' ? (doc.endDate || doc.expirationDate || doc.fecha_vencimiento || '') :
-              doc.type === 'TECHNICALREVIEW' ? (doc.nextReviewDate || doc.fecha_vencimiento || '') :
-              doc.fecha_vencimiento || '',
-            estado: doc.status || 'ACTIVE',
-            detalles: {
-              inspection_result: doc.inspectionResult || doc.resultado_inspeccion,
-              resultado_inspeccion: doc.inspectionResult || doc.resultado_inspeccion,
-              cobertura: doc.type === 'INSURANCE' ? (doc.coverage || '') : '',
-              clase_vehiculo: vehicle?.brand || doc.vehicleClass || doc.clase_vehiculo,
-              marca: vehicle?.brand || '',
-              modelo: vehicle?.model || '',
-              anio: vehicle?.year || '',
-              inspector: doc.inspector?.name || '',
-              driver: doc.driver?.name || '',
-              resultado: doc.type === 'TECHNICALREVIEW' ? (doc.inspectionResult || '') : ''
-            },
-            // Mantener campos adicionales para compatibilidad
-            id: doc.id,
-            type: doc.type,
-            createdAt: doc.createdAt,
-            // Información anidada
-            vehicle: vehicle,
-            driver: doc.driver,
-            inspector: doc.inspector
-          };
-
-          return transformedDoc;
-        });
-
-        // Transformar estructura de paginación
-        const paginationTransformed = {
-          current_page: responseData.pagination?.currentPage || page,
-          total_pages: responseData.pagination?.totalPages || 1,
-          total_records: responseData.pagination?.totalItems || 0,
-          records_per_page: responseData.pagination?.itemsPerPage || 6,
-          has_next: responseData.pagination?.hasNextPage || false,
-          has_previous: responseData.pagination?.hasPreviousPage || responseData.pagination?.hasPrevPage || (page > 1)
+      const mapInsuranceSortBy = (value: string) => {
+        const map: Record<string, string> = {
+          createdAt: 'createdAt',
+          updatedAt: 'updatedAt',
+          expirationDate: 'expirationDate',
+          vehiclePlate: 'vehiclePlate',
+          policyNumber: 'policyNumber',
+          insuranceCompanyName: 'insuranceCompanyName',
+          startDate: 'startDate',
         };
+        return map[value] || 'expirationDate';
+      };
+
+      const mapReviewSortBy = (value: string) => {
+        const map: Record<string, string> = {
+          createdAt: 'createdAt',
+          updatedAt: 'updatedAt',
+          expirationDate: 'expirationDate',
+          vehiclePlate: 'vehiclePlate',
+          reviewId: 'reviewId',
+          issueDate: 'issueDate',
+          inspectionResult: 'inspectionResult',
+          certifyingCompany: 'certifyingCompany',
+        };
+        return map[value] || 'expirationDate';
+      };
+
+      const mapInsuranceItem = (item: any) => {
+        const seguro = item?.seguro || {};
+        const vehiculo = item?.vehiculo || {};
+        const propietario = item?.propietario || {};
+        const fechas = item?.fechas || {};
+        const estado = item?.estado || {};
+
+        const fechaVencimiento = fechas?.vencimiento || seguro?.expirationDate || '';
 
         return {
-          documents: documentsTransformed,
-          pagination: paginationTransformed,
-          appliedFilters: responseData.appliedFilters,
-          sorting: responseData.sorting
+          tipo: 'AFOCAT',
+          numero: seguro?.policyNumber || item?.numero || '',
+          placa: vehiculo?.placa || seguro?.vehiclePlate || '',
+          entidad_empresa: seguro?.insuranceCompanyName || item?.entidad_empresa || '',
+          fecha_emision: fechas?.inicio || item?.fecha_emision || '',
+          fecha_vencimiento: fechaVencimiento,
+          estado: normalizeEstado(estado?.codigo || estado?.descripcion || item?.estado || item?.status || '', fechaVencimiento),
+          detalles: {
+            cobertura: seguro?.coverage || item?.detalles?.cobertura || '',
+            clase_vehiculo: vehiculo?.tipo?.categoria || item?.detalles?.clase_vehiculo || '',
+            vehicleInfo: vehiculo?.vehicleInfo || item?.detalles?.vehicleInfo || '',
+          },
+          id: seguro?.id || item?.id,
+          type: 'INSURANCE',
+          createdAt: item?.auditoria?.fechaCreacion || item?.createdAt,
+          updatedAt: item?.auditoria?.fechaActualizacion || item?.updatedAt,
+          seguro,
+          vehiculo,
+          propietario,
+          fechas,
+        };
+      };
+
+      const mapTechnicalItem = (item: any) => {
+        const revision = item?.revision || {};
+        const vehiculo = item?.vehiculo || {};
+        const fechas = item?.fechas || {};
+        const estado = item?.estado || {};
+
+        const fechaVencimiento = fechas?.vencimiento || revision?.expirationDate || item?.fecha_vencimiento || '';
+
+        return {
+          tipo: 'REVISION',
+          numero: revision?.reviewId || item?.numero || item?.reviewId || '',
+          placa: vehiculo?.placa || revision?.vehiclePlate || item?.placa || '',
+          entidad_empresa: revision?.certifyingCompany || item?.entidad_empresa || '',
+          fecha_emision: fechas?.emision || revision?.issueDate || item?.fecha_emision || '',
+          fecha_vencimiento: fechaVencimiento,
+          estado: normalizeEstado(estado?.codigo || estado?.descripcion || item?.estado || item?.status || '', fechaVencimiento),
+          detalles: {
+            inspection_result: revision?.inspectionResult || item?.detalles?.inspection_result || item?.detalles?.resultado_inspeccion || '',
+            resultado_inspeccion: revision?.inspectionResult || item?.detalles?.resultado_inspeccion || item?.detalles?.inspection_result || '',
+            clase_vehiculo: vehiculo?.tipo?.categoria || item?.detalles?.clase_vehiculo || '',
+            vehicleInfo: vehiculo?.vehicleInfo || item?.detalles?.vehicleInfo || '',
+          },
+          id: revision?.id || item?.id,
+          type: 'TECHNICALREVIEW',
+          createdAt: item?.auditoria?.fechaCreacion || item?.createdAt,
+          updatedAt: item?.auditoria?.fechaActualizacion || item?.updatedAt,
+          revision,
+          vehiculo,
+          fechas,
+        };
+      };
+
+      const fetchInsurance = async (targetPage: number, targetLimit: number) => {
+        const params = new URLSearchParams();
+        params.append('page', String(targetPage));
+        params.append('limit', String(targetLimit));
+        params.append('sortBy', mapInsuranceSortBy(sortBy));
+        params.append('sortOrder', safeSortOrder);
+        if (hasSearch) params.append('search', searchTerm.trim());
+
+        const response = await axiosInstance.get(`/insurance?${params.toString()}`);
+        if (!response?.data?.success) throw new Error('No se pudo obtener listado de seguros');
+
+        const payload = response.data.data || {};
+        const rows = Array.isArray(payload?.data) ? payload.data : [];
+        const pagination = payload?.pagination || {};
+
+        return {
+          rows: rows.map(mapInsuranceItem),
+          pagination,
+          meta: response.data.meta || {},
+        };
+      };
+
+      const fetchTechnicalReviews = async (targetPage: number, targetLimit: number) => {
+        const params = new URLSearchParams();
+        params.append('page', String(targetPage));
+        params.append('limit', String(targetLimit));
+        params.append('sortBy', mapReviewSortBy(sortBy));
+        params.append('sortOrder', safeSortOrder);
+        if (hasSearch) params.append('search', searchTerm.trim());
+
+        const response = await axiosInstance.get(`/technicalreviews?${params.toString()}`);
+        if (!response?.data?.success) throw new Error('No se pudo obtener listado de revisiones técnicas');
+
+        const payload = response.data.data || {};
+        const rows = Array.isArray(payload?.data) ? payload.data : [];
+        const pagination = payload?.pagination || {};
+
+        return {
+          rows: rows.map(mapTechnicalItem),
+          pagination,
+          meta: response.data.meta || {},
+        };
+      };
+
+      const normalizedType = normalizeTipo(tipoFiltro);
+
+      if (normalizedType === 'insurance') {
+        const insuranceResult = await fetchInsurance(page, limit);
+        const pag = insuranceResult.pagination;
+
+        return {
+          documents: insuranceResult.rows,
+          pagination: {
+            current_page: pag.currentPage || page,
+            total_pages: pag.totalPages || 1,
+            total_records: pag.totalItems || insuranceResult.rows.length,
+            records_per_page: pag.itemsPerPage || limit,
+            has_next: Boolean(pag.hasNextPage),
+            has_previous: Boolean(pag.hasPreviousPage),
+          },
+          appliedFilters: insuranceResult.meta?.appliedFilters || null,
+          sorting: insuranceResult.meta?.sorting || { sortBy: mapInsuranceSortBy(sortBy), sortOrder: safeSortOrder },
         };
       }
 
-      throw new Error('Error en la respuesta del servidor');
+      if (normalizedType === 'technicalReview') {
+        const technicalResult = await fetchTechnicalReviews(page, limit);
+        const pag = technicalResult.pagination;
+
+        return {
+          documents: technicalResult.rows,
+          pagination: {
+            current_page: pag.currentPage || page,
+            total_pages: pag.totalPages || 1,
+            total_records: pag.totalItems || technicalResult.rows.length,
+            records_per_page: pag.itemsPerPage || limit,
+            has_next: Boolean(pag.hasNextPage),
+            has_previous: Boolean(pag.hasPreviousPage),
+          },
+          appliedFilters: technicalResult.meta?.appliedFilters || null,
+          sorting: technicalResult.meta?.sorting || { sortBy: mapReviewSortBy(sortBy), sortOrder: safeSortOrder },
+        };
+      }
+
+      const allFetchSize = Math.min(100, Math.max(limit, page * limit));
+      const [insuranceAll, technicalAll] = await Promise.all([
+        fetchInsurance(1, allFetchSize),
+        fetchTechnicalReviews(1, allFetchSize),
+      ]);
+
+      let combinedRows = [...insuranceAll.rows, ...technicalAll.rows];
+
+      const getComparableValue = (item: any) => {
+        switch (sortBy) {
+          case 'expirationDate': return item?.fecha_vencimiento || '';
+          case 'vehiclePlate': return item?.placa || '';
+          case 'type': return item?.tipo || '';
+          case 'createdAt':
+          default:
+            return item?.updatedAt || item?.createdAt || item?.fecha_emision || '';
+        }
+      };
+
+      combinedRows.sort((left, right) => {
+        const leftValue = String(getComparableValue(left) || '').toLowerCase();
+        const rightValue = String(getComparableValue(right) || '').toLowerCase();
+
+        if (leftValue < rightValue) return safeSortOrder === 'ASC' ? -1 : 1;
+        if (leftValue > rightValue) return safeSortOrder === 'ASC' ? 1 : -1;
+        return 0;
+      });
+
+      const totalItems = Number(insuranceAll.pagination?.totalItems || 0) + Number(technicalAll.pagination?.totalItems || 0);
+      const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+      const start = (page - 1) * limit;
+      const end = start + limit;
+      const pagedRows = combinedRows.slice(start, end);
+
+      return {
+        documents: pagedRows,
+        pagination: {
+          current_page: page,
+          total_pages: totalPages,
+          total_records: totalItems,
+          records_per_page: limit,
+          has_next: page < totalPages,
+          has_previous: page > 1,
+        },
+        appliedFilters: {
+          search: hasSearch ? searchTerm.trim() : null,
+          type: 'all',
+        },
+        sorting: {
+          sortBy,
+          sortOrder: safeSortOrder,
+        },
+      };
     } catch (error) {
       // Manejar errores específicos del endpoint
       throw handleDocumentosError(error);

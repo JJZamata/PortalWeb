@@ -26,14 +26,12 @@ export interface AuditLog {
 }
 
 export interface PaginationData {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  itemsPerPage: number;
-  offset: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-  nextPage: number | null;
+  current_page: number;
+  total_pages: number;
+  total_records: number;
+  records_per_page?: number;
+  has_next: boolean;
+  has_previous: boolean;
 }
 
 export interface EstadisticasAuditoria {

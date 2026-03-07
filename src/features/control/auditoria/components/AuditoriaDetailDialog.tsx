@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { AuditLog } from "../types";
 import React from "react";
 import { AuditActionIconKey, translateAuditAction } from "../utils/auditActionTranslator";
+import { getActionTypeBadgeClass, getActionTypeLabel, getStatusBadgeClass, getStatusLabel } from "../utils/auditUiLabels";
 
 interface Props {
   open: boolean;
@@ -18,7 +19,7 @@ interface Props {
 export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog }: Props) => {
   if (!auditLog) return null;
 
-  const action = translateAuditAction(auditLog.method, auditLog.url);
+  const action = translateAuditAction(auditLog.method, auditLog.url, auditLog);
 
   const getActionIcon = (iconKey: AuditActionIconKey) => {
     switch (iconKey) {
@@ -37,34 +38,6 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
     }
   };
 
-  const getMethodColor = (method: string) => {
-    switch (method) {
-      case 'GET':
-        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300';
-      case 'POST':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300';
-      case 'PUT':
-        return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300';
-      case 'DELETE':
-        return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300';
-      case 'PATCH':
-        return 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-200';
-    }
-  };
-
-  const getStatusColor = (statusCode: number) => {
-    if (statusCode >= 200 && statusCode < 300) {
-      return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300';
-    } else if (statusCode >= 300 && statusCode < 400) {
-      return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300';
-    } else if (statusCode >= 400 && statusCode < 500) {
-      return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300';
-    } else {
-      return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300';
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,22 +66,14 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
                 <div className="space-y-4">
                   <div>
                     <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                      Método HTTP
+                      Tipo de acción
                     </Label>
                     <Badge 
                       variant="secondary" 
-                      className={`${getMethodColor(auditLog.method)} font-semibold rounded-full border mt-1`}
+                      className={`${getActionTypeBadgeClass(auditLog.method)} font-semibold rounded-full border mt-1`}
                     >
-                      {auditLog.method}
+                      {getActionTypeLabel(auditLog.method)}
                     </Badge>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                      Endpoint
-                    </Label>
-                    <p className="text-sm font-mono font-semibold text-gray-900 dark:text-white mt-1 break-all">
-                      {auditLog.url}
-                    </p>
                   </div>
                   <div>
                     <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -121,13 +86,13 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
                   </div>
                   <div>
                     <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                      Código de Estado
+                      Resultado de la operación
                     </Label>
                     <Badge 
                       variant="secondary" 
-                      className={`${getStatusColor(auditLog.statusCode)} font-semibold rounded-full border mt-1`}
+                      className={`${getStatusBadgeClass(auditLog.statusCode)} font-semibold rounded-full border mt-1`}
                     >
-                      {auditLog.statusCode}
+                      {getStatusLabel(auditLog.statusCode)} ({auditLog.statusCode})
                     </Badge>
                   </div>
                 </div>
@@ -179,15 +144,15 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Duración (ms)
+                    Tiempo de respuesta
                   </Label>
                   <p className="text-base font-mono font-semibold text-gray-900 dark:text-white mt-1">
-                    {auditLog.durationMs}ms
+                    {auditLog.durationMs} ms
                   </p>
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Correlación
+                    Código de seguimiento
                   </Label>
                   <p className="text-xs font-mono text-gray-900 dark:text-white mt-1 break-all">
                     {auditLog.correlation || '-'}
@@ -203,7 +168,7 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
               <CardContent className="p-4">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-3">
                   <Monitor className="w-4 h-4" />
-                  User Agent
+                  Navegador o dispositivo
                 </Label>
                 <ScrollArea className="h-20 w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
                   <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">

@@ -21,7 +21,7 @@ import { useActasDiarias } from '@/features/actas/hooks/useActasDiarias';
 import { actasService } from '@/features/actas/services/actasService';
 import { infraccionesService } from '@/features/documentacion/infracciones/services/infraccionesService';
 import { auditoriaService } from '@/features/control/auditoria/services/auditoriaService';
-import { translateAuditAction } from '@/features/control/auditoria/utils/auditActionTranslator';
+import { translateAuditAction } from '../features/control/auditoria/utils/auditActionTranslator';
 
 // Funciones de utilidad (fuera del componente para evitar recreaciones)
 const formatTimeAgo = (timestamp: string): string => {
@@ -120,8 +120,12 @@ const AdminPanel = () => {
       // Escanear solo hasta obtener suficientes registros filtrados o alcanzar el límite
       while (hasNextPage && page <= maxPagesToScan && filteredLogs.length < targetCount) {
         const response = await auditoriaService.getAuditLogs(page, 50);
-        const logs = response?.data?.logs || [];
-        const pagination = response?.data?.pagination || {};
+        if (!response.success || !('data' in response)) {
+          break;
+        }
+
+        const logs = response.data.logs || [];
+        const pagination = response.data.pagination || {};
 
         // Filtrar y agregar solo los necesarios
         const filtered = logs.filter((log: any) => 
@@ -134,7 +138,7 @@ const AdminPanel = () => {
         // Detenerse si ya tenemos suficientes
         if (filteredLogs.length >= targetCount) break;
 
-        hasNextPage = Boolean(pagination.has_next ?? pagination.hasNextPage ?? false);
+        hasNextPage = Boolean(pagination.has_next ?? false);
         page += 1;
       }
 
@@ -143,7 +147,7 @@ const AdminPanel = () => {
         .slice(0, targetCount)
         .map((log: any) => {
           const method = String(log.method || '').toUpperCase();
-          const action = translateAuditAction(method, log.url || '');
+          const action = translateAuditAction(method, log.url || '', log);
 
           let tipo: 'success' | 'warning' | 'error' | 'info' = 'info';
           let icono = Eye;

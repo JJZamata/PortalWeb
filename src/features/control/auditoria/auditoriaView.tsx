@@ -6,7 +6,7 @@ import { AuditoriaDetailDialog } from './components/AuditoriaDetailDialog';
 import { PaginationControls } from './components/PaginationControls';
 import { AuditLog } from './types';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Search, Filter, Download, RefreshCw, XCircle, X } from 'lucide-react';
+import { Shield, Search, Filter, RefreshCw, XCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ const AuditoriaView = () => {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
 
-  const { auditLogs, pagination, estadisticas, loading, error, page, handlePageChange, refetch } = useAuditoria(searchTerm, actionFilter);
+  const { auditLogs, pagination, estadisticas, loading, error, handlePageChange, refetch } = useAuditoria(searchTerm, actionFilter);
   const { toast } = useToast();
 
   const clearFilters = () => {
@@ -34,14 +34,6 @@ const AuditoriaView = () => {
   const handleViewLog = (log: AuditLog) => {
     setSelectedLog(log);
     setShowDetailDialog(true);
-  };
-
-  const handleExport = () => {
-    toast({
-      title: "Exportación iniciada",
-      description: "Se está generando el archivo de exportación",
-      variant: "default",
-    });
   };
 
   if (error) {
@@ -112,7 +104,7 @@ const AuditoriaView = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                 <Input
-                  placeholder="Buscar por tabla, usuario o ID..."
+                  placeholder="Buscar por acción, usuario o área..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-indigo-500 focus:ring-indigo-500/20 pr-10 bg-white dark:bg-gray-800 dark:text-white"
@@ -124,15 +116,14 @@ const AuditoriaView = () => {
                   <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                   <Select value={actionFilter} onValueChange={setActionFilter}>
                     <SelectTrigger className="h-12 pl-10 border-gray-200 dark:border-gray-700 rounded-xl focus:border-indigo-500 focus:ring-indigo-500/20 bg-white dark:bg-gray-800 dark:text-white">
-                      <SelectValue placeholder="Método HTTP" />
+                      <SelectValue placeholder="Tipo de acción" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todos los métodos</SelectItem>
-                      <SelectItem value="GET">GET (Lectura)</SelectItem>
-                      <SelectItem value="POST">POST (Creación)</SelectItem>
-                      <SelectItem value="PUT">PUT (Actualización)</SelectItem>
-                      <SelectItem value="DELETE">DELETE (Eliminación)</SelectItem>
-                      <SelectItem value="PATCH">PATCH (Modificación)</SelectItem>
+                      <SelectItem value="all">Todas las acciones</SelectItem>
+                      <SelectItem value="POST">Creaciones</SelectItem>
+                      <SelectItem value="PUT">Actualizaciones</SelectItem>
+                      <SelectItem value="DELETE">Eliminaciones</SelectItem>
+                      <SelectItem value="PATCH">Modificaciones</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -162,8 +153,6 @@ const AuditoriaView = () => {
               <PaginationControls 
                 pagination={pagination} 
                 onPageChange={handlePageChange}
-                searchTerm={searchTerm}
-                actionFilter={actionFilter}
               />
             )}
           </CardContent>

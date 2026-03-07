@@ -5,11 +5,9 @@ import { PaginationData } from "../types";
 interface Props {
   pagination: PaginationData;
   onPageChange: (page: number) => void;
-  searchTerm?: string;
-  actionFilter?: string;
 }
 
-export const PaginationControls = ({ pagination, onPageChange, searchTerm, actionFilter }: Props) => {
+export const PaginationControls = ({ pagination, onPageChange }: Props) => {
   return (
     <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
       <div className="text-sm text-gray-600 dark:text-gray-400">

@@ -6,7 +6,7 @@ import { useScrollPreservation } from '@/hooks/useScrollPreservation';
 export const useAuditoria = (searchTerm: string, actionFilter: string) => {
   const [page, setPage] = useState(1);
   const lastPageChangeRef = useRef<number>(0);
-  const limit = 10;
+  const limit = 6;
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['auditoria', page, searchTerm, actionFilter],
@@ -41,7 +41,6 @@ export const useAuditoria = (searchTerm: string, actionFilter: string) => {
     estadisticas: data?.data?.estadisticas || null,
     loading: isLoading,
     error: error?.message || null,
-    page,
     handlePageChange,
     refetch
   };

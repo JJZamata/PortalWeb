@@ -1,9 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Shield, User, Calendar, Monitor, AlertTriangle, CheckCircle2, UserCircle2, FileText, Car, Sparkles } from "lucide-react";
+import { Shield, User, Calendar, Monitor, AlertTriangle, CheckCircle2, UserCircle2, FileText, Car, Sparkles, MessageSquareQuote } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { AuditLog } from "../types";
 import React from "react";
@@ -20,6 +19,72 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
   if (!auditLog) return null;
 
   const action = translateAuditAction(auditLog.method, auditLog.url, auditLog);
+
+  const actionReason =
+    (auditLog as any)?.reason ||
+    (auditLog as any)?.actionReason ||
+    (auditLog as any)?.motivo ||
+    (auditLog as any)?.reasonText ||
+    null;
+
+  const shouldShowReasonPrompt = ['PUT', 'PATCH', 'DELETE'].includes(String(auditLog.method || '').toUpperCase());
+
+  const formatJsonBlock = (value: unknown): string => {
+    if (value === null || value === undefined) return '-';
+    if (typeof value === 'string') return value;
+
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  };
+
+  const parseUserAgentInfo = (ua: string) => {
+    const normalized = String(ua || '');
+    const lower = normalized.toLowerCase();
+
+    let browser = 'Navegador no identificado';
+    if (lower.includes('edg/')) {
+      browser = 'Microsoft Edge';
+    } else if (lower.includes('opr/') || lower.includes('opera')) {
+      browser = 'Opera';
+    } else if (lower.includes('chrome/') && !lower.includes('edg/')) {
+      browser = 'Google Chrome';
+    } else if (lower.includes('firefox/')) {
+      browser = 'Mozilla Firefox';
+    } else if (lower.includes('safari/') && !lower.includes('chrome/')) {
+      browser = 'Safari';
+    }
+
+    let operatingSystem = 'Sistema no identificado';
+    if (lower.includes('windows nt')) {
+      operatingSystem = 'Windows';
+    } else if (lower.includes('android')) {
+      operatingSystem = 'Android';
+    } else if (lower.includes('iphone') || lower.includes('ipad') || lower.includes('ios')) {
+      operatingSystem = 'iOS';
+    } else if (lower.includes('mac os x') || lower.includes('macintosh')) {
+      operatingSystem = 'macOS';
+    } else if (lower.includes('linux')) {
+      operatingSystem = 'Linux';
+    }
+
+    let deviceType = 'Computadora';
+    if (lower.includes('ipad') || lower.includes('tablet')) {
+      deviceType = 'Tablet';
+    } else if (lower.includes('mobile') || lower.includes('iphone') || lower.includes('android')) {
+      deviceType = 'Celular';
+    }
+
+    return {
+      browser,
+      operatingSystem,
+      deviceType,
+    };
+  };
+
+  const userAgentInfo = auditLog.userAgent ? parseUserAgentInfo(auditLog.userAgent) : null;
 
   const getActionIcon = (iconKey: AuditActionIconKey) => {
     switch (iconKey) {
@@ -67,7 +132,7 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
                   <div>
                     <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Tipo de acción
-                    </Label>
+                    </Label><br />
                     <Badge 
                       variant="secondary" 
                       className={`${getActionTypeBadgeClass(auditLog.method)} font-semibold rounded-full border mt-1`}
@@ -87,7 +152,7 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
                   <div>
                     <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Resultado de la operación
-                    </Label>
+                    </Label><br />
                     <Badge 
                       variant="secondary" 
                       className={`${getStatusBadgeClass(auditLog.statusCode)} font-semibold rounded-full border mt-1`}
@@ -124,10 +189,40 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
                       {auditLog.ip}
                     </p>
                   </div>
+                  <div>
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      Endpoint tecnico
+                    </Label>
+                    <p className="text-xs font-mono text-gray-900 dark:text-white mt-1 break-all">
+                      {auditLog.url || '-'}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
+
+          <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <CardContent className="p-4 space-y-3">
+              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <MessageSquareQuote className="w-4 h-4" />
+                Razon de la accion
+              </Label>
+              {actionReason ? (
+                <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-3">
+                  <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{String(actionReason)}</p>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/70 dark:bg-gray-900 p-3">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {shouldShowReasonPrompt
+                      ? 'Sin motivo registrado. Este espacio queda preparado para guardar la razon al actualizar o eliminar en futuras versiones.'
+                      : 'No aplica para este tipo de accion.'}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Información Adicional */}
           <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -144,15 +239,31 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Tiempo de respuesta
+                    Operacion interna
                   </Label>
-                  <p className="text-base font-mono font-semibold text-gray-900 dark:text-white mt-1">
-                    {auditLog.durationMs} ms
+                  <p className="text-sm font-mono font-semibold text-gray-900 dark:text-white mt-1">
+                    {auditLog.operation || '-'}
                   </p>
                 </div>
                 <div>
                   <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Código de seguimiento
+                    Registro afectado
+                  </Label>
+                  <p className="text-sm font-mono text-gray-900 dark:text-white mt-1 break-all">
+                    {auditLog.record_id || '-'}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    Tabla/Modulo
+                  </Label>
+                  <p className="text-sm font-mono text-gray-900 dark:text-white mt-1 break-all">
+                    {auditLog.table_name || '-'}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    Codigo de seguimiento
                   </Label>
                   <p className="text-xs font-mono text-gray-900 dark:text-white mt-1 break-all">
                     {auditLog.correlation || '-'}
@@ -162,6 +273,34 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
             </CardContent>
           </Card>
 
+          {(auditLog.old_values || auditLog.new_values) && (
+            <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <CardContent className="p-4">
+                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 block">
+                  Cambios registrados
+                </Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Antes</Label>
+                    <ScrollArea className="h-28 w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900 mt-1">
+                      <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                        {formatJsonBlock(auditLog.old_values)}
+                      </pre>
+                    </ScrollArea>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Despues</Label>
+                    <ScrollArea className="h-28 w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900 mt-1">
+                      <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                        {formatJsonBlock(auditLog.new_values)}
+                      </pre>
+                    </ScrollArea>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* User Agent */}
           {auditLog.userAgent && (
             <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
@@ -170,11 +309,31 @@ export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog 
                   <Monitor className="w-4 h-4" />
                   Navegador o dispositivo
                 </Label>
-                <ScrollArea className="h-20 w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
-                  <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                    {auditLog.userAgent}
-                  </pre>
-                </ScrollArea>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Navegador</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{userAgentInfo?.browser}</p>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sistema operativo</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{userAgentInfo?.operatingSystem}</p>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tipo de equipo</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{userAgentInfo?.deviceType}</p>
+                  </div>
+                </div>
+
+                <details className="rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-3">
+                  <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-300">
+                    Ver detalle tecnico
+                  </summary>
+                  <ScrollArea className="h-20 w-full mt-2">
+                    <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                      {auditLog.userAgent}
+                    </pre>
+                  </ScrollArea>
+                </details>
               </CardContent>
             </Card>
           )}

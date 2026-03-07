@@ -125,7 +125,7 @@ const AdminPanel = () => {
         }
 
         const logs = response.data.logs || [];
-        const pagination = response.data.pagination || {};
+        const pagination = (response.data.pagination || {}) as { has_next?: boolean };
 
         // Filtrar y agregar solo los necesarios
         const filtered = logs.filter((log: any) => 

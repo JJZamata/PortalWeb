@@ -106,7 +106,7 @@ export const TUCsTable = ({ tucs, loading, onView, onEdit, onDelete, onRenew }: 
   return (
     <div className={tableStyles.container}>
       <Table>
-        <TableHeader className={tableStyles.header}>
+        <TableHeader className={tableStyles.headerBlue}>
           <TableRow>
             <TableHead className={tableStyles.headText}>TUC</TableHead>
             <TableHead className={tableStyles.headText}>Vehículo</TableHead>

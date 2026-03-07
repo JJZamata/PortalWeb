@@ -22,14 +22,40 @@ export const useEmpresas = () => {
 
   useEffect(() => {
     if (data) {
-      const companiesArray = data.companies || data || []; // Intentar diferentes estructuras
-      
-      const empresasRaw = companiesArray.filter((c: any) => {
-        return c && (c.ruc || c.id) && c.name && typeof c.name === 'string';
-      });
-      
+      // Normalizar payload para soportar multiples formas de respuesta del backend
+      const extractCompaniesArray = (payload: any): any[] => {
+        if (Array.isArray(payload)) return payload;
+        if (!payload || typeof payload !== 'object') return [];
+
+        const candidates = [
+          payload.companies,
+          payload.data,
+          payload.items,
+          payload.results,
+          payload.rows,
+          payload.data?.companies,
+          payload.data?.items,
+          payload.data?.results,
+        ];
+
+        for (const candidate of candidates) {
+          if (Array.isArray(candidate)) return candidate;
+        }
+
+        return [];
+      };
+
+      const companiesArray = extractCompaniesArray(data);
+
+      const empresasRaw = companiesArray
+        .filter((c: any) => c && typeof c.name === 'string' && c.name.trim().length > 0)
+        .map((c: any) => ({
+          ruc: String(c.ruc || c.id || c.name).trim(),
+          name: String(c.name).trim(),
+        }));
+
       const empresasUnicas = Array.from(
-        new Map(empresasRaw.map((c: any) => [c.ruc || c.id, c])).values()
+        new Map(empresasRaw.map((c: any) => [c.ruc || c.name, c])).values()
       );
       setEmpresas(empresasUnicas as { ruc: string; name: string }[]);
     } else if (error) {

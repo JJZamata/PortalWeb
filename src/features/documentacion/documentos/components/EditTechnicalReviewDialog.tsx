@@ -101,17 +101,6 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
     }));
   };
 
-  const getResultColor = (result: string) => {
-    switch (result?.toUpperCase()) {
-      case 'APROBADO':
-        return 'text-green-600 bg-green-100 border-green-200 dark:text-green-400 dark:bg-green-900/30 dark:border-green-700';
-      case 'OBSERVADO':
-        return 'text-yellow-700 bg-yellow-100 border-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/30 dark:border-yellow-700';
-      default:
-        return 'text-gray-600 bg-gray-100 border-gray-200 dark:text-gray-400 dark:bg-gray-900/30 dark:border-gray-700';
-    }
-  };
-
   const getIconForResult = (result: string) => {
     switch (result?.toUpperCase()) {
       case 'APROBADO':
@@ -141,33 +130,11 @@ export const EditTechnicalReviewDialog = ({ technicalReview, open, onOpenChange,
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+        <form
+          onSubmit={handleSubmit}
+          className="mt-4 space-y-6 rounded-xl border border-gray-200 bg-gray-50/80 p-4 md:p-5 dark:border-gray-700 dark:bg-gray-800/40"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Información Actual */}
-            <div className="md:col-span-2 p-4 bg-green-50/70 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800/50">
-              <h4 className="font-semibold text-green-900 dark:text-green-100 mb-3">Información Actual</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Vehículo:</span>
-                  <p className="font-medium">{technicalReview.vehiculo.placa} ({technicalReview.vehiculo.marca} {technicalReview.vehiculo.modelo})</p>
-                </div>
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Empresa Actual:</span>
-                  <p className="font-medium">{technicalReview.revision.certifyingCompany}</p>
-                </div>
-                <div>
-                  <span className="text-gray-600 dark:text-gray-400">Resultado Actual:</span>
-                  <Badge
-                    variant="secondary"
-                    className={`${getResultColor(technicalReview.revision.inspectionResult)} flex items-center gap-1 w-fit`}
-                  >
-                    {getIconForResult(technicalReview.revision.inspectionResult)}
-                    {technicalReview.revision.inspectionResult}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
             {/* Campos Editables */}
 
             {/* Placa Vehículo */}

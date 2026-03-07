@@ -4,7 +4,6 @@ import { useInfraccionesLegacyQuery } from './queries/useInfraccionesQuery';
 import { useInfraccionDetailQuery } from './queries/useInfraccionDetailQuery';
 import { useInfraccionesStatsQuery } from './queries/useInfraccionDetailQuery';
 import { InfraccionesFilters } from './components/InfraccionesFilters';
-import { InfraccionesSorting } from './components/InfraccionesSorting';
 import { InfraccionesTable } from './components/InfraccionesTable';
 import { InfraccionDetailDialog } from './components/InfraccionDetailDialog';
 import { CreateInfraccionDialog } from './components/CreateInfraccionDialog';
@@ -54,9 +53,8 @@ const InfraccionesView = () => {
     setCurrentPage(1);
   };
 
-  const handleSortChange = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+  const handleSortChange = (newSortBy: string) => {
     setSortBy(newSortBy);
-    setSortOrder(newSortOrder);
     setCurrentPage(1); // Resetear a la primera página cuando se cambia el ordenamiento
   };
 
@@ -169,7 +167,7 @@ const InfraccionesView = () => {
               </div>
               <Button
                 onClick={() => setShowCreateDialog(true)}
-                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                className="bg-gradient-to-r from-[#74140B] to-red-600 hover:from-[#5f1009] hover:to-red-700 dark:from-[#5f1009] dark:to-red-500 dark:hover:from-[#4a0c08] dark:hover:to-red-600 text-white flex items-center gap-2"
                 disabled={loading}
               >
                 <Plus className="w-4 h-4" />
@@ -183,15 +181,10 @@ const InfraccionesView = () => {
               setSearchTerm={setSearchTerm}
               severityFilter={severityFilter}
               setSeverityFilter={setSeverityFilter}
+              sortBy={sortBy}
+              onSortChange={handleSortChange}
               clearFilters={clearFilters}
               loading={loading}
-            />
-
-            <InfraccionesSorting
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              onSortChange={handleSortChange}
-              disabled={loading}
             />
 
             <InfraccionesTable

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, XCircle, Filter } from "lucide-react";
+import { Search, XCircle, Filter, ArrowUpDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -10,6 +10,8 @@ interface Props {
   setSearchTerm: (value: string) => void;
   severityFilter: string;
   setSeverityFilter: (value: string) => void;
+  sortBy: string;
+  onSortChange: (sortBy: string) => void;
   clearFilters: () => void;
   loading: boolean;
 }
@@ -21,11 +23,23 @@ const severities = [
   { value: "very_serious", label: "Muy Grave" },
 ];
 
+const sortOptions = [
+  { value: 'code', label: 'Código' },
+  { value: 'description', label: 'Descripción' },
+  { value: 'severity', label: 'Gravedad' },
+  { value: 'uitPercentage', label: 'Porcentaje UIT' },
+  { value: 'target', label: 'Objetivo' },
+  { value: 'createdAt', label: 'Fecha de Creación' },
+  { value: 'updatedAt', label: 'Última Actualización' }
+];
+
 export const InfraccionesFilters = ({
   searchTerm,
   setSearchTerm,
   severityFilter,
   setSeverityFilter,
+  sortBy,
+  onSortChange,
   clearFilters,
   loading
 }: Props) => {
@@ -48,7 +62,7 @@ export const InfraccionesFilters = ({
     setLocalSearchTerm(searchTerm);
   }, [searchTerm]);
   return (
-    <div className="flex flex-col lg:flex-row gap-4 mb-10">
+    <div className="flex flex-col lg:flex-row gap-4 mb-6">
       <div className="relative flex-1">
         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
         <Input
@@ -70,8 +84,8 @@ export const InfraccionesFilters = ({
         )}
       </div>
       
-      <div className="flex gap-2 min-w-[250px]">
-        <div className="relative flex-1">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 min-w-[250px] lg:min-w-[420px]">
+        <div className="relative">
           <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
           <Select value={severityFilter} onValueChange={setSeverityFilter}>
             <SelectTrigger className="h-12 pl-10 border-gray-200 dark:border-gray-700 rounded-xl focus:border-[#812020] focus:ring-[#812020]/20 bg-white dark:bg-gray-800 dark:text-white">
@@ -84,8 +98,29 @@ export const InfraccionesFilters = ({
             </SelectContent>
           </Select>
         </div>
-        
-        {(severityFilter !== 'ALL' || localSearchTerm.length > 0) && (
+
+        <div className="relative">
+          <ArrowUpDown className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
+          <Select
+            value={sortBy}
+            onValueChange={onSortChange}
+            disabled={loading}
+          >
+            <SelectTrigger className="h-12 pl-10 border-gray-200 dark:border-gray-700 rounded-xl focus:border-[#812020] focus:ring-[#812020]/20 bg-white dark:bg-gray-800 dark:text-white">
+              <SelectValue placeholder="Ordenar por" />
+            </SelectTrigger>
+            <SelectContent>
+              {sortOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex gap-2">
+          {(severityFilter !== 'ALL' || localSearchTerm.length > 0) && (
           <Button
             variant="outline"
             size="sm"
@@ -96,7 +131,8 @@ export const InfraccionesFilters = ({
           >
             <XCircle className="w-4 h-4" />
           </Button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

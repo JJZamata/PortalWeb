@@ -19,6 +19,7 @@ import { tableStyles } from '@/lib/table-styles';
 interface Props {
   documentos: Documento[];
   loading: boolean;
+  headerClassName?: string;
   onDelete: (documento: Documento) => void;
   onViewInsuranceDetail?: (policyNumber: string) => void;
   onViewTechnicalReviewDetail?: (reviewCode: string) => void;
@@ -28,7 +29,7 @@ interface Props {
   onRenewTechnicalReview?: (documento: Documento) => void;
 }
 
-export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsuranceDetail, onViewTechnicalReviewDetail, onEditInsurance, onEditTechnicalReview, onRenewInsurance, onRenewTechnicalReview }: Props) => {
+export const DocumentosTable = ({ documentos, loading, headerClassName, onDelete, onViewInsuranceDetail, onViewTechnicalReviewDetail, onEditInsurance, onEditTechnicalReview, onRenewInsurance, onRenewTechnicalReview }: Props) => {
   const parseDateSafe = (dateValue: string) => {
     const raw = String(dateValue || '').trim();
     if (!raw) return null;
@@ -98,7 +99,7 @@ export const DocumentosTable = ({ documentos, loading, onDelete, onViewInsurance
   return (
     <div className={tableStyles.container}>
       <Table>
-        <TableHeader className={tableStyles.header}>
+        <TableHeader className={headerClassName || tableStyles.headerCyan}>
           <TableRow>
             <TableHead className={tableStyles.headText}>Número</TableHead>
             <TableHead className={tableStyles.headText}>Placa</TableHead>

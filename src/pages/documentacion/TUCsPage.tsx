@@ -186,7 +186,7 @@ const TUCsPage = () => {
             {/* Filtros */}
             <div className="flex flex-col lg:flex-row gap-4 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                 <Input
                   placeholder="Buscar por TUC, placa o propietario..."
                   value={searchTerm}
@@ -194,13 +194,13 @@ const TUCsPage = () => {
                     setSearchTerm(e.target.value);
                     setFilters({ ...filters, page: 1 });
                   }}
-                  className="pl-12 h-12 border-gray-200 dark:border-gray-700 rounded-xl"
+                  className="pl-12 h-12 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 bg-white dark:bg-gray-800 dark:text-white"
                 />
               </div>
 
               <div className="flex gap-2 items-center">
                 <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setFilters({ ...filters, page: 1 }); }}>
-                  <SelectTrigger className="h-12 w-[200px] border-gray-200 dark:border-gray-700 rounded-xl">
+                  <SelectTrigger className="h-12 w-[200px] border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 bg-white dark:bg-gray-800 dark:text-white">
                     <SelectValue placeholder="Estado" />
                   </SelectTrigger>
                   <SelectContent>

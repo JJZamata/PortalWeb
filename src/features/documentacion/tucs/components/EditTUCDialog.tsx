@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Calendar, AlertCircle, Loader } from 'lucide-react';
 import tucService from '../services/tucService';
-import { TUCData, Propietario } from '../types';
+import { TUCData } from '../types';
 
 interface Props {
   tuc: TUCData | null;
@@ -33,13 +34,6 @@ interface ValidationError {
   field: string;
   message: string;
 }
-
-// Función auxiliar para obtener el nombre del propietario
-const getPropietarioName = (propietario: Propietario | string | undefined): string => {
-  if (!propietario) return 'N/A';
-  if (typeof propietario === 'string') return propietario;
-  return propietario.nombreCompleto || propietario.nombre || 'N/A';
-};
 
 export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: externalLoading = false }: Props) => {
   const { toast } = useToast();
@@ -150,13 +144,16 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 rounded-2xl bg-white dark:bg-gray-900">
+        <DialogHeader className="pb-6 border-b border-gray-100 dark:border-gray-800">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent flex items-center gap-2">
             <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             Editar TUC
-            <Badge variant="secondary">{tuc.tuc.tucNumber}</Badge>
+            <Badge variant="secondary" className="ml-2">{tuc.tuc.tucNumber}</Badge>
           </DialogTitle>
+          <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
+            Modifica los datos editables de la TUC seleccionada.
+          </DialogDescription>
         </DialogHeader>
 
         {externalLoading ? (
@@ -164,7 +161,10 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
             <Loader className="w-6 h-6 animate-spin text-blue-600 dark:text-blue-400" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-4 space-y-6 rounded-xl border border-gray-200 bg-gray-50/80 p-4 md:p-5 dark:border-gray-700 dark:bg-gray-800/40"
+          >
             {errors.length > 0 && (
               <div className="p-3 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-sm text-red-800 dark:text-red-200">
                 <div className="flex items-center gap-2 mb-1">
@@ -180,29 +180,6 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Información Actual (solo lectura) */}
-              <div className="md:col-span-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3">Información Actual</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Número de TUC:</span>
-                    <p className="font-medium">{tuc.tuc.tucNumber}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Vehículo:</span>
-                    <p className="font-medium">{tuc.vehiculo.vehicleInfo}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Placa:</span>
-                    <p className="font-medium">{tuc.tuc.vehiclePlate}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Propietario:</span>
-                    <p className="font-medium">{getPropietarioName(tuc.propietario)}</p>
-                  </div>
-                </div>
-              </div>
-
               {/* Fecha de Vigencia */}
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="validityDate" className="flex items-center gap-2">
@@ -214,7 +191,7 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
                   type="date"
                   value={formData.validityDate}
                   onChange={(e) => handleInputChange('validityDate', e.target.value)}
-                  className={`border-gray-200 dark:border-gray-700 ${hasError('validityDate') ? 'border-red-500' : ''}`}
+                  className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500 ${hasError('validityDate') ? 'border-red-500' : ''}`}
                 />
                 {getFieldError('validityDate') && <p className="text-sm text-red-600">{getFieldError('validityDate')}</p>}
               </div>
@@ -231,7 +208,7 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
                   onChange={(e) => handleInputChange('registralCode', e.target.value)}
                   placeholder="REG123"
                   maxLength={50}
-                  className={`border-gray-200 dark:border-gray-700 ${hasError('registralCode') ? 'border-red-500' : ''}`}
+                  className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500 ${hasError('registralCode') ? 'border-red-500' : ''}`}
                 />
                 {getFieldError('registralCode') && <p className="text-sm text-red-600">{getFieldError('registralCode')}</p>}
               </div>
@@ -248,7 +225,7 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
                   onChange={(e) => handleInputChange('supportDocument', e.target.value)}
                   placeholder="DOC456"
                   maxLength={50}
-                  className={`border-gray-200 dark:border-gray-700 ${hasError('supportDocument') ? 'border-red-500' : ''}`}
+                  className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500 ${hasError('supportDocument') ? 'border-red-500' : ''}`}
                 />
                 {getFieldError('supportDocument') && <p className="text-sm text-red-600">{getFieldError('supportDocument')}</p>}
               </div>

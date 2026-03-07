@@ -60,7 +60,7 @@ export const InfraccionesTable = ({ violations, loading, fetchViolationDetail, o
   return (
     <div className={tableStyles.container}>
       <Table>
-        <TableHeader className={tableStyles.header}>
+        <TableHeader className={tableStyles.headerRed}>
           <TableRow>
             <TableHead className={tableStyles.headText}>Código</TableHead>
             <TableHead className={tableStyles.headText}>Descripción</TableHead>

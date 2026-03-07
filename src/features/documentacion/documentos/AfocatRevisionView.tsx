@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Documento } from './types';
+import { tableStyles } from '@/lib/table-styles';
 
 type AfocatRevisionMode = 'all' | 'insurance' | 'technicalReview';
 
@@ -385,6 +386,7 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 						<DocumentosTable
 							documentos={documentos}
 							loading={loading}
+							headerClassName={isTechnicalMode ? tableStyles.headerGreen : tableStyles.headerCyan}
 							onDelete={handleDelete}
 							onViewInsuranceDetail={handleViewInsuranceDetail}
 							onViewTechnicalReviewDetail={handleViewTechnicalReviewDetail}

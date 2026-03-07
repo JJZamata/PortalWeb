@@ -29,7 +29,6 @@ const TUCsPage = () => {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Diálogos
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -46,7 +45,6 @@ const TUCsPage = () => {
   const { tucs, pagination, loading, error } = useTUCs({
     ...filters,
     search: searchTerm || undefined,
-    status: statusFilter !== 'all' ? (statusFilter as any) : undefined,
   });
 
   const { tuc: selectedTUC, loading: loadingDetail, fetchTUCDetail, clearTUCDetail } = useTUCDetail();
@@ -199,15 +197,29 @@ const TUCsPage = () => {
               </div>
 
               <div className="flex gap-2 items-center">
-                <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setFilters({ ...filters, page: 1 }); }}>
+                <Select
+                  value={filters.sortBy || 'createdAt'}
+                  onValueChange={(value) => setFilters({ ...filters, sortBy: value as TUCFilters['sortBy'], page: 1 })}
+                >
                   <SelectTrigger className="h-12 w-[200px] border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 bg-white dark:bg-gray-800 dark:text-white">
-                    <SelectValue placeholder="Estado" />
+                    <SelectValue placeholder="Ordenar por" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos los estados</SelectItem>
-                    <SelectItem value="vigente">Vigente</SelectItem>
-                    <SelectItem value="por_vencer">Por Vencer</SelectItem>
-                    <SelectItem value="vencido">Vencido</SelectItem>
+                    <SelectItem value="createdAt">Fecha emisión</SelectItem>
+                    <SelectItem value="validityDate">Fecha vencimiento</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={filters.sortOrder || 'DESC'}
+                  onValueChange={(value) => setFilters({ ...filters, sortOrder: value as TUCFilters['sortOrder'], page: 1 })}
+                >
+                  <SelectTrigger className="h-12 w-[180px] border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 bg-white dark:bg-gray-800 dark:text-white">
+                    <SelectValue placeholder="Orden" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="DESC">Más recientes</SelectItem>
+                    <SelectItem value="ASC">Más antiguos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

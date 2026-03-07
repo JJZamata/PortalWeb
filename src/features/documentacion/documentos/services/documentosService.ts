@@ -129,6 +129,7 @@ export const documentosService = {
         const map: Record<string, string> = {
           createdAt: 'createdAt',
           updatedAt: 'updatedAt',
+          issueDate: 'startDate',
           expirationDate: 'expirationDate',
           vehiclePlate: 'vehiclePlate',
           policyNumber: 'policyNumber',
@@ -311,6 +312,7 @@ export const documentosService = {
 
       const getComparableValue = (item: any) => {
         switch (sortBy) {
+          case 'issueDate': return item?.fecha_emision || '';
           case 'expirationDate': return item?.fecha_vencimiento || '';
           case 'vehiclePlate': return item?.placa || '';
           case 'type': return item?.tipo || '';

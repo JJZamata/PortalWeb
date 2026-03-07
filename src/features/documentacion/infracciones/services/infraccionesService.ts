@@ -147,12 +147,13 @@ export const infraccionesService = {
 
 // Métodos de compatibilidad con código existente (deprecated)
 export const infraccionesServiceLegacy = {
-  getInfracciones: async (page: number, limit: number, severity: string, searchTerm: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
+  getInfracciones: async (page: number, limit: number, severity: string, target: string, searchTerm: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
     const params: ViolationsListParams = {
       page,
       limit,
       search: searchTerm.length >= 2 ? searchTerm : undefined,
       severity: severity !== 'ALL' ? severity as any : undefined,
+      target: target !== 'ALL' ? target as any : undefined,
       sortBy: sortBy as any || 'code',
       sortOrder: (sortOrder?.toUpperCase() as any) || 'ASC'
     };

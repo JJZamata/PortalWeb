@@ -32,7 +32,7 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 	const queryClient = useQueryClient();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [tipoFiltro, setTipoFiltro] = useState<AfocatRevisionMode>(mode);
-	const [sortBy, setSortBy] = useState('createdAt');
+	const [sortBy, setSortBy] = useState('issueDate');
 	const [sortOrder, setSortOrder] = useState('DESC');
 
 	useEffect(() => {
@@ -362,10 +362,8 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 											<SelectValue placeholder="Ordenar por" />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="createdAt">Fecha creación</SelectItem>
+											<SelectItem value="issueDate">Fecha emisión</SelectItem>
 											<SelectItem value="expirationDate">Fecha vencimiento</SelectItem>
-											<SelectItem value="vehiclePlate">Placa vehicular</SelectItem>
-											<SelectItem value="type">Tipo de documento</SelectItem>
 										</SelectContent>
 									</Select>
 								</div>
@@ -376,8 +374,8 @@ const AfocatRevisionView = ({ mode = 'all' }: AfocatRevisionViewProps) => {
 											<SelectValue placeholder="Orden" />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="DESC">Descendente</SelectItem>
-											<SelectItem value="ASC">Ascendente</SelectItem>
+											<SelectItem value="DESC">Más recientes</SelectItem>
+											<SelectItem value="ASC">Más antiguos</SelectItem>
 										</SelectContent>
 									</Select>
 								</div>

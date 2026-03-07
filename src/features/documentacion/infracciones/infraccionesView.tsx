@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 const InfraccionesView = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [severityFilter, setSeverityFilter] = useState('ALL');
+  const [objectiveFilter, setObjectiveFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('code');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -30,7 +31,7 @@ const InfraccionesView = () => {
   const limit = 6;
 
   // Queries
-  const { data: violationsData, isLoading: loading, error, refetch: refreshViolations } = useInfraccionesLegacyQuery(currentPage, limit, severityFilter, searchTerm, sortBy, sortOrder);
+  const { data: violationsData, isLoading: loading, error, refetch: refreshViolations } = useInfraccionesLegacyQuery(currentPage, limit, severityFilter, objectiveFilter, searchTerm, sortBy, sortOrder);
   const { data: statsData, isLoading: loadingStats } = useInfraccionesStatsQuery();
   const { data: violationDetailData, isLoading: loadingDetail, error: detailError } = useInfraccionDetailQuery(selectedViolationCode || '', showDetailDialog);
 
@@ -49,6 +50,7 @@ const InfraccionesView = () => {
 
   const clearFilters = () => {
     setSeverityFilter('ALL');
+    setObjectiveFilter('ALL');
     setSearchTerm('');
     setCurrentPage(1);
   };
@@ -181,8 +183,11 @@ const InfraccionesView = () => {
               setSearchTerm={setSearchTerm}
               severityFilter={severityFilter}
               setSeverityFilter={setSeverityFilter}
-              sortBy={sortBy}
-              onSortChange={handleSortChange}
+              objectiveFilter={objectiveFilter}
+              setObjectiveFilter={(value) => {
+                setObjectiveFilter(value);
+                setCurrentPage(1);
+              }}
               clearFilters={clearFilters}
               loading={loading}
             />

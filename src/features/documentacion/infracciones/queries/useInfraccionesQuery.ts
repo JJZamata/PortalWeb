@@ -18,19 +18,28 @@ export const useInfraccionesQuery = (params: ViolationsListParams = {}) => {
 /**
  * Hook para obtener listado de infracciones con formato legacy (para compatibilidad)
  */
-export const useInfraccionesLegacyQuery = (currentPage: number, limit: number, severityFilter: string, searchTerm: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => {
+export const useInfraccionesLegacyQuery = (
+  currentPage: number,
+  limit: number,
+  severityFilter: string,
+  objectiveFilter: string,
+  searchTerm: string,
+  sortBy?: string,
+  sortOrder?: 'asc' | 'desc'
+) => {
   const params: ViolationsListParams = {
     page: currentPage,
     limit,
     search: searchTerm.length >= 2 ? searchTerm : undefined,
     severity: severityFilter !== 'ALL' ? severityFilter as any : undefined,
+    target: objectiveFilter !== 'ALL' ? objectiveFilter as any : undefined,
     sortBy: sortBy as any || 'code',
     sortOrder: sortOrder?.toUpperCase() as any || 'ASC'
   };
 
   return useQuery({
-    queryKey: ['violations', 'legacy', currentPage, severityFilter, searchTerm, sortBy, sortOrder],
-    queryFn: () => infraccionesServiceLegacy.getInfracciones(currentPage, limit, severityFilter, searchTerm, sortBy, sortOrder),
+    queryKey: ['violations', 'legacy', currentPage, severityFilter, objectiveFilter, searchTerm, sortBy, sortOrder],
+    queryFn: () => infraccionesServiceLegacy.getInfracciones(currentPage, limit, severityFilter, objectiveFilter, searchTerm, sortBy, sortOrder),
     staleTime: 30 * 1000, // 30 segundos en lugar de 5 minutos
     refetchOnWindowFocus: false,
     retry: 2

@@ -78,7 +78,7 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess, initialDa
       setFormData({
         insuranceCompanyName: initialData?.insuranceCompanyName || '',
         policyNumber: initialData?.policyNumber || '',
-        vehiclePlate: initialData?.vehiclePlate || '',
+        vehiclePlate: String(initialData?.vehiclePlate || '').toUpperCase().trim(),
         startDate: initialData?.startDate || today,
         expirationDate: initialData?.expirationDate || oneYearLater,
         coverage: initialData?.coverage || '',
@@ -393,6 +393,13 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess, initialDa
     return errors.some(err => err.field === field);
   };
 
+  const selectedPlate = String(formData.vehiclePlate || '').toUpperCase().trim();
+  const plateExistsInOptions = vehicleOptions.some((vehicle) => vehicle.plate === selectedPlate);
+  const vehicleOptionsForSelect =
+    selectedPlate && !plateExistsInOptions
+      ? [{ plate: selectedPlate, ownerDni: formData.ownerDni || '', ownerName: '' }, ...vehicleOptions]
+      : vehicleOptions;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-0 rounded-2xl bg-white dark:bg-gray-900">
@@ -478,30 +485,43 @@ export const CreateInsuranceDialog = ({ open, onOpenChange, onSuccess, initialDa
                       <Car className="w-4 h-4" />
                       Placa del Vehículo *
                     </Label>
-                    <Select
-                      value={formData.vehiclePlate}
-                      onValueChange={handleVehicleSelection}
-                      disabled={loadingVehicleOptions}
-                    >
-                      <SelectTrigger id="vehiclePlate" className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500 ${hasError('vehiclePlate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}>
-                        <SelectValue placeholder={loadingVehicleOptions ? 'Cargando matrículas...' : 'Selecciona una matrícula'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vehicleOptions.length > 0 ? (
-                          vehicleOptions.map((vehicle) => (
-                            <SelectItem key={vehicle.plate} value={vehicle.plate}>
-                              {vehicle.plate}
+                    {isRenewal ? (
+                      <Input
+                        id="vehiclePlate"
+                        value={selectedPlate}
+                        disabled
+                        className="bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700 rounded-lg h-11 cursor-not-allowed text-gray-900 dark:text-white"
+                      />
+                    ) : (
+                      <Select
+                        value={formData.vehiclePlate}
+                        onValueChange={handleVehicleSelection}
+                        disabled={loadingVehicleOptions}
+                      >
+                        <SelectTrigger id="vehiclePlate" className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-cyan-500 focus:ring-cyan-500 ${hasError('vehiclePlate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}>
+                          <SelectValue placeholder={loadingVehicleOptions ? 'Cargando matrículas...' : 'Selecciona una matrícula'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vehicleOptionsForSelect.length > 0 ? (
+                            vehicleOptionsForSelect.map((vehicle) => (
+                              <SelectItem key={vehicle.plate} value={vehicle.plate}>
+                                {vehicle.plate}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="__no-vehicles" disabled>
+                              No hay matrículas disponibles
                             </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="__no-vehicles" disabled>
-                            No hay matrículas disponibles
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
                     {getFieldError('vehiclePlate') && <p className="text-sm text-red-600">{getFieldError('vehiclePlate')}</p>}
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Selecciona matrícula para autocompletar el propietario.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {isRenewal
+                        ? 'Matrícula bloqueada en renovación para mantener historial del documento.'
+                        : 'Selecciona matrícula para autocompletar el propietario.'}
+                    </p>
                   </div>
 
                   <div className="space-y-2">

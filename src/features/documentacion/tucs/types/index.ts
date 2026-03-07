@@ -101,6 +101,8 @@ export interface TUCDetailResponse {
 
 export interface CreateTUCPayload {
   tucNumber: string;
+  issueDate?: string; // YYYY-MM-DD
+  expirationDate?: string; // YYYY-MM-DD
   validityDate: string; // YYYY-MM-DD
   registralCode: string;
   supportDocument: string;

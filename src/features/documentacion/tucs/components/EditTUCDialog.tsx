@@ -73,17 +73,6 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
   const validateForm = (): boolean => {
     const newErrors: ValidationError[] = [];
 
-    if (!formData.validityDate) {
-      newErrors.push({ field: 'validityDate', message: 'La fecha de vigencia es obligatoria' });
-    } else {
-      const date = new Date(formData.validityDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (date < today) {
-        newErrors.push({ field: 'validityDate', message: 'La fecha no puede ser pasada' });
-      }
-    }
-
     if (formData.registralCode.length > 50) {
       newErrors.push({ field: 'registralCode', message: 'Máximo 50 caracteres' });
     }
@@ -184,16 +173,16 @@ export const EditTUCDialog = ({ tuc, open, onOpenChange, onSuccess, loading: ext
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="validityDate" className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  Fecha de Vigencia *
+                  Fecha de Vencimiento (solo lectura)
                 </Label>
                 <Input
                   id="validityDate"
                   type="date"
                   value={formData.validityDate}
-                  onChange={(e) => handleInputChange('validityDate', e.target.value)}
-                  className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500 ${hasError('validityDate') ? 'border-red-500' : ''}`}
+                  disabled
+                  className="bg-gray-50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700 rounded-lg h-11 cursor-not-allowed"
                 />
-                {getFieldError('validityDate') && <p className="text-sm text-red-600">{getFieldError('validityDate')}</p>}
+                <p className="text-xs text-gray-500 dark:text-gray-400">La fecha de vencimiento se administra automáticamente.</p>
               </div>
 
               {/* Código Registral */}

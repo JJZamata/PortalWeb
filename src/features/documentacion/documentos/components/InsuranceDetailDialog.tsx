@@ -42,6 +42,17 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
     });
   };
 
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return 'No disponible';
+    const parsed = new Date(dateString);
+    if (Number.isNaN(parsed.getTime())) return 'No disponible';
+    return parsed.toLocaleDateString('es-PE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
   const remainingDays = Math.max(0, Number(insurance?.fechas?.diasRestantes ?? 0));
 
   if (error) {
@@ -266,6 +277,27 @@ export const InsuranceDetailDialog = ({ insurance, open, onOpenChange, loading =
                       Próximo a vencer
                     </Badge>
                   )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                Auditoría
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Fecha de creación</p>
+                  <p className="font-semibold">{formatDateTime(insurance.auditoria?.fechaCreacion)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Última actualización</p>
+                  <p className="font-semibold">{formatDateTime(insurance.auditoria?.fechaActualizacion)}</p>
                 </div>
               </div>
             </CardContent>

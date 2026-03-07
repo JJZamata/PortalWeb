@@ -13,8 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import { documentosService } from "../services/documentosService";
+import { vehiculosService } from "../../../vehiculos/mototaxis/services/vehiculosService";
 import { useToast } from "@/hooks/use-toast";
-import { FileCheck, Car, CheckCircle, Clock, Building2, AlertCircle, Info } from "lucide-react";
+import { FileCheck, Car, CheckCircle, Clock, Building2, AlertCircle, Info, Calendar } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -27,6 +28,8 @@ interface Props {
 interface FormData {
   reviewId: string;
   vehiclePlate: string;
+  issueDate: string;
+  expirationDate: string;
   inspectionResult: "APROBADO" | "OBSERVADO" | "";
   certifyingCompany: string;
 }
@@ -37,14 +40,22 @@ interface ValidationError {
   value?: any;
 }
 
+interface VehicleOption {
+  plate: string;
+}
+
 export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess, initialData, isRenewal = false }: Props) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([]);
+  const [loadingVehicleOptions, setLoadingVehicleOptions] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     reviewId: "",
     vehiclePlate: "",
+    issueDate: "",
+    expirationDate: "",
     inspectionResult: "",
     certifyingCompany: "",
   });
@@ -57,15 +68,68 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess, ini
 
   useEffect(() => {
     if (open) {
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const oneYearLater = new Date(today);
+      oneYearLater.setFullYear(today.getFullYear() + 1);
+      const oneYearLaterStr = oneYearLater.toISOString().split('T')[0];
+
       setFormData({
         reviewId: initialData?.reviewId || generateReviewId(),
         vehiclePlate: initialData?.vehiclePlate || "",
+        issueDate: initialData?.issueDate || todayStr,
+        expirationDate: initialData?.expirationDate || oneYearLaterStr,
         inspectionResult: initialData?.inspectionResult || "",
         certifyingCompany: initialData?.certifyingCompany || "",
       });
       setErrors([]);
     }
   }, [open, initialData]);
+
+  useEffect(() => {
+    const loadVehicleOptions = async () => {
+      if (!open) return;
+
+      setLoadingVehicleOptions(true);
+      try {
+        const firstPage = await vehiculosService.getVehiculos(1, '');
+        const totalPages = Number(firstPage?.pagination?.totalPages || 1);
+        let vehicles = Array.isArray(firstPage?.vehicles) ? firstPage.vehicles : [];
+
+        if (totalPages > 1) {
+          const restPages = await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, index) =>
+              vehiculosService.getVehiculos(index + 2, '')
+            )
+          );
+
+          restPages.forEach((pageResult: any) => {
+            if (Array.isArray(pageResult?.vehicles)) {
+              vehicles = [...vehicles, ...pageResult.vehicles];
+            }
+          });
+        }
+
+        const mappedOptions = vehicles
+          .map((vehicle: any) => ({
+            plate: String(vehicle?.placa?.plateNumber || vehicle?.placa_v || '').trim().toUpperCase(),
+          }))
+          .filter((item: VehicleOption) => item.plate.length > 0)
+          .filter((item: VehicleOption, index: number, array: VehicleOption[]) =>
+            array.findIndex((target: VehicleOption) => target.plate === item.plate) === index
+          )
+          .sort((a: VehicleOption, b: VehicleOption) => a.plate.localeCompare(b.plate));
+
+        setVehicleOptions(mappedOptions);
+      } catch (error) {
+        setVehicleOptions([]);
+      } finally {
+        setLoadingVehicleOptions(false);
+      }
+    };
+
+    loadVehicleOptions();
+  }, [open]);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
@@ -96,6 +160,16 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess, ini
 
     if (!formData.inspectionResult) {
       newErrors.push({ field: "inspectionResult", message: "El resultado es obligatorio" });
+    }
+
+    if (!formData.issueDate) {
+      newErrors.push({ field: "issueDate", message: "La fecha de emisión es obligatoria" });
+    }
+
+    if (!formData.expirationDate) {
+      newErrors.push({ field: "expirationDate", message: "La fecha de vencimiento es obligatoria" });
+    } else if (formData.issueDate && new Date(formData.expirationDate) <= new Date(formData.issueDate)) {
+      newErrors.push({ field: "expirationDate", message: "La fecha de vencimiento debe ser posterior a la emisión" });
     }
 
     if (!formData.certifyingCompany.trim()) {
@@ -135,6 +209,8 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess, ini
       const response = await documentosService.createTechnicalReview({
         reviewId: formData.reviewId,
         vehiclePlate: formData.vehiclePlate,
+        issueDate: formData.issueDate,
+        expirationDate: formData.expirationDate,
         inspectionResult: formData.inspectionResult as "APROBADO" | "OBSERVADO",
         certifyingCompany: formData.certifyingCompany,
       });
@@ -175,7 +251,7 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess, ini
           <DialogDescription className="text-gray-600 dark:text-gray-400 text-base">
             {isRenewal
               ? 'Se creará una nueva revisión técnica para conservar el historial de la anterior.'
-              : 'Complete los datos solicitados. Las fechas de emisión y vencimiento las calcula el sistema automáticamente.'}
+              : 'Complete los datos solicitados para registrar una nueva revisión técnica.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -233,15 +309,30 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess, ini
                       <Car className="w-4 h-4" />
                       Placa del Vehículo *
                     </Label>
-                    <Input
-                      id="vehiclePlate"
+                    <Select
                       value={formData.vehiclePlate}
-                      onChange={(e) => handleInputChange("vehiclePlate", e.target.value.toUpperCase())}
-                      placeholder="Ej: ABC123"
-                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500 ${hasError("vehiclePlate") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
-                    />
+                      onValueChange={(value) => handleInputChange("vehiclePlate", value)}
+                      disabled={loadingVehicleOptions}
+                    >
+                      <SelectTrigger id="vehiclePlate" className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500 ${hasError("vehiclePlate") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}>
+                        <SelectValue placeholder={loadingVehicleOptions ? 'Cargando matrículas...' : 'Selecciona una matrícula'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vehicleOptions.length > 0 ? (
+                          vehicleOptions.map((vehicle) => (
+                            <SelectItem key={vehicle.plate} value={vehicle.plate}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="__no-vehicles" disabled>
+                            No hay matrículas disponibles
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
                     {getFieldError("vehiclePlate") && <p className="text-sm text-red-600">{getFieldError("vehiclePlate")}</p>}
-                    <p className="text-xs text-gray-500 dark:text-gray-400">6-10 caracteres alfanuméricos.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Selecciona una matrícula registrada en el sistema.</p>
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
@@ -258,6 +349,37 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess, ini
                     />
                     {getFieldError("certifyingCompany") && <p className="text-sm text-red-600">{getFieldError("certifyingCompany")}</p>}
                     <p className="text-xs text-gray-500 dark:text-gray-400">1-500 caracteres.</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="issueDate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <Calendar className="w-4 h-4" />
+                      Fecha de Emisión *
+                    </Label>
+                    <Input
+                      id="issueDate"
+                      type="date"
+                      value={formData.issueDate}
+                      onChange={(e) => handleInputChange("issueDate", e.target.value)}
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500 ${hasError("issueDate") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+                    />
+                    {getFieldError("issueDate") && <p className="text-sm text-red-600">{getFieldError("issueDate")}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="expirationDate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <Calendar className="w-4 h-4" />
+                      Fecha de Vencimiento *
+                    </Label>
+                    <Input
+                      id="expirationDate"
+                      type="date"
+                      value={formData.expirationDate}
+                      min={formData.issueDate || undefined}
+                      onChange={(e) => handleInputChange("expirationDate", e.target.value)}
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-emerald-500 focus:ring-emerald-500 ${hasError("expirationDate") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+                    />
+                    {getFieldError("expirationDate") && <p className="text-sm text-red-600">{getFieldError("expirationDate")}</p>}
                   </div>
                 </div>
               </CardContent>
@@ -299,11 +421,6 @@ export const CreateTechnicalReviewDialog = ({ open, onOpenChange, onSuccess, ini
                   </Select>
                   {getFieldError("inspectionResult") && <p className="text-sm text-red-600">{getFieldError("inspectionResult")}</p>}
                   <p className="text-xs text-gray-500 dark:text-gray-400">Valores permitidos: APROBADO u OBSERVADO.</p>
-                </div>
-
-                <div className="p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-200 flex items-start gap-2">
-                  <Info className="w-4 h-4 mt-0.5" />
-                  <span>Las fechas de emisión y vencimiento las calcula el sistema automáticamente al crear la revisión.</span>
                 </div>
               </CardContent>
             </Card>

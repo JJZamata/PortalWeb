@@ -419,6 +419,8 @@ export const documentosService = {
   createTechnicalReview: async (data: {
     reviewId: string;
     vehiclePlate: string;
+    issueDate: string;
+    expirationDate: string;
     inspectionResult: 'APROBADO' | 'OBSERVADO';
     certifyingCompany: string;
   }) => {

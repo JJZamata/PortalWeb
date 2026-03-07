@@ -49,6 +49,19 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
     return map[target] || 'Desconocido';
   };
 
+  const formatDateTime = (dateValue?: string | null) => {
+    if (!dateValue) return 'No disponible';
+    const parsed = new Date(dateValue);
+    if (Number.isNaN(parsed.getTime())) return 'No disponible';
+    return parsed.toLocaleString('es-PE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   if (errorDetail) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -121,7 +134,7 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-2xl bg-white dark:bg-gray-900">
+      <DialogContent className="shadow-xl border border-gray-200 dark:border-gray-700 rounded-xl max-w-4xl bg-white dark:bg-gray-900">
         <DialogHeader className="pb-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-red-50 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
@@ -139,20 +152,26 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Header principal */}
-          <div className="flex items-center gap-4 p-4 bg-red-50/50 dark:bg-red-950/20 rounded-xl border border-red-200/40 dark:border-red-800/30">
-            <div className="w-16 h-16 flex items-center justify-center bg-red-100 dark:bg-red-900/40 rounded-2xl">
-              <AlertTriangle className="w-10 h-10 text-[#74140B] dark:text-red-400" />
+          <div className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-red-50/60 dark:bg-red-950/20 rounded-xl border border-red-200/40 dark:border-red-800/30">
+            <div className="w-14 h-14 flex items-center justify-center bg-red-100 dark:bg-red-900/40 rounded-2xl">
+              <AlertTriangle className="w-8 h-8 text-[#74140B] dark:text-red-400" />
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-[#74140B] dark:text-red-400 mb-1">{selectedViolation.identificacion.codigo}</h2>
-              <p className="text-gray-700 dark:text-gray-300 font-medium">{selectedViolation.descripcion.texto}</p>
+              <p className="text-gray-700 dark:text-gray-300 font-medium">{selectedViolation.descripcion.resumen || selectedViolation.descripcion.texto}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">ID interno: {selectedViolation.identificacion.id}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getSeverityBadge(selectedViolation.clasificacion.gravedad)}`}>
+                {selectedViolation.clasificacion.gravedadTexto || translateSeverity(selectedViolation.clasificacion.gravedad)}
+              </Badge>
+              <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getTargetBadge(selectedViolation.clasificacion.objetivo)}`}>
+                {selectedViolation.clasificacion.objetivoTexto || translateTarget(selectedViolation.clasificacion.objetivo)}
+              </Badge>
             </div>
           </div>
 
-          {/* Información detallada en grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Gravedad */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3 mb-2">
@@ -160,34 +179,24 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
                   <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Gravedad</span>
                 </div>
                 <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getSeverityBadge(selectedViolation.clasificacion.gravedad)}`}>
-                  {translateSeverity(selectedViolation.clasificacion.gravedad)}
+                  {selectedViolation.clasificacion.gravedadTexto || translateSeverity(selectedViolation.clasificacion.gravedad)}
                 </Badge>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Código: {selectedViolation.clasificacion.gravedad}</p>
               </CardContent>
             </Card>
 
-            {/* Medida Administrativa */}
-            <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Medida Administrativa</span>
-                </div>
-                <span className="text-base font-semibold text-gray-900 dark:text-white">{selectedViolation.sancion.medidaAdministrativa}</span>
-              </CardContent>
-            </Card>
-
-            {/* Objetivo */}
             <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Objetivo</span>
                 </div>
                 <Badge variant="secondary" className={`border font-semibold rounded-full px-3 py-1 ${getTargetBadge(selectedViolation.clasificacion.objetivo)}`}>
-                  {translateTarget(selectedViolation.clasificacion.objetivo)}
+                  {selectedViolation.clasificacion.objetivoTexto || translateTarget(selectedViolation.clasificacion.objetivo)}
                 </Badge>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Código: {selectedViolation.clasificacion.objetivo}</p>
               </CardContent>
             </Card>
 
-            {/* UIT % */}
             <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3 mb-2">
@@ -196,53 +205,73 @@ export const InfraccionDetailDialog = React.memo(({ open, onOpenChange, selected
                 <span className="text-base font-semibold text-gray-900 dark:text-white">{selectedViolation.sancion.porcentajeUIT}</span>
               </CardContent>
             </Card>
+
+            <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">ID Registro</span>
+                </div>
+                <span className="text-base font-semibold text-gray-900 dark:text-white">#{selectedViolation.identificacion.id}</span>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Fechas si existen */}
-          {selectedViolation.fechas && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Fecha de creación */}
-              {selectedViolation.fechas.creacion && (
-                <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Fecha de Creación</span>
-                    </div>
-                    <span className="text-sm text-gray-900 dark:text-white">
-                      {new Date(selectedViolation.fechas.creacion).toLocaleString('es-PE', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
-                  </CardContent>
-                </Card>
-              )}
+          <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <CardContent className="p-5 space-y-3">
+              <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Descripción de la Infracción</h3>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Resumen</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{selectedViolation.descripcion.resumen || 'No disponible'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Texto completo</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{selectedViolation.descripcion.texto || 'No disponible'}</p>
+              </div>
+            </CardContent>
+          </Card>
 
-              {/* Fecha de actualización */}
-              {selectedViolation.fechas.actualizacion && (
-                <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Última Actualización</span>
-                    </div>
-                    <span className="text-sm text-gray-900 dark:text-white">
-                      {new Date(selectedViolation.fechas.actualizacion).toLocaleString('es-PE', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <CardContent className="p-5 space-y-3">
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Sanción</h3>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Medida administrativa</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedViolation.sancion.medidaAdministrativa || 'No disponible'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Porcentaje UIT</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedViolation.sancion.porcentajeUIT || 'No disponible'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Monto referencial</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{selectedViolation.sancion.montoReferencial || 'No disponible'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {(selectedViolation.fechas?.creacion || selectedViolation.fechas?.actualizacion) && (
+              <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <CardContent className="p-5 space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">Trazabilidad</h3>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Fecha de creación</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatDateTime(selectedViolation.fechas?.creacion)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Última actualización</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{formatDateTime(selectedViolation.fechas?.actualizacion)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
+
+        <DialogFooter className="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cerrar
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

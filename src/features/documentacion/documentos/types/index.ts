@@ -98,6 +98,10 @@ export interface InsuranceDetail {
     color: string;
     icon: string;
   };
+  auditoria?: {
+    fechaCreacion?: string;
+    fechaActualizacion?: string;
+  };
 }
 
 // Tipos para el endpoint específico de revisiones técnicas (estructura real del backend)
@@ -129,5 +133,9 @@ export interface TechnicalReviewDetail {
     descripcion: string;
     color: string;
     icon: string;
+  };
+  auditoria?: {
+    fechaCreacion?: string;
+    fechaActualizacion?: string;
   };
 }

@@ -10,10 +10,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Car, Calendar, Building2, AlertCircle } from 'lucide-react';
 import tucService from '../services/tucService';
+import { vehiculosService } from '../../../vehiculos/mototaxis/services/vehiculosService';
 
 interface Props {
   open: boolean;
@@ -26,6 +28,8 @@ interface Props {
 interface FormData {
   tucNumber: string;
   vehiclePlate: string;
+  issueDate: string;
+  expirationDate: string;
   validityDate: string;
   registralCode: string;
   supportDocument: string;
@@ -36,14 +40,22 @@ interface ValidationError {
   message: string;
 }
 
+interface VehicleOption {
+  plate: string;
+}
+
 export const CreateTUCDialog = ({ open, onOpenChange, onSuccess, initialData, isRenewal = false }: Props) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([]);
+  const [loadingVehicleOptions, setLoadingVehicleOptions] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     tucNumber: '',
     vehiclePlate: '',
+    issueDate: '',
+    expirationDate: '',
     validityDate: '',
     registralCode: '',
     supportDocument: '',
@@ -52,15 +64,68 @@ export const CreateTUCDialog = ({ open, onOpenChange, onSuccess, initialData, is
   useEffect(() => {
     if (!open) return;
 
+    const today = new Date();
+    const issueDate = today.toISOString().split('T')[0];
+    const oneYearLater = new Date(today);
+    oneYearLater.setFullYear(today.getFullYear() + 1);
+    const expirationDate = oneYearLater.toISOString().split('T')[0];
+
     setFormData(() => ({
       tucNumber: '',
       vehiclePlate: initialData?.vehiclePlate ?? '',
-      validityDate: initialData?.validityDate ?? '',
+      issueDate: initialData?.issueDate ?? issueDate,
+      expirationDate: initialData?.expirationDate ?? initialData?.validityDate ?? expirationDate,
+      validityDate: initialData?.validityDate ?? initialData?.expirationDate ?? expirationDate,
       registralCode: initialData?.registralCode ?? '',
       supportDocument: initialData?.supportDocument ?? '',
     }));
     setErrors([]);
   }, [open, initialData]);
+
+  useEffect(() => {
+    const loadVehicleOptions = async () => {
+      if (!open) return;
+
+      setLoadingVehicleOptions(true);
+      try {
+        const firstPage = await vehiculosService.getVehiculos(1, '');
+        const totalPages = Number(firstPage?.pagination?.totalPages || 1);
+        let vehicles = Array.isArray(firstPage?.vehicles) ? firstPage.vehicles : [];
+
+        if (totalPages > 1) {
+          const restPages = await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, index) =>
+              vehiculosService.getVehiculos(index + 2, '')
+            )
+          );
+
+          restPages.forEach((pageResult: any) => {
+            if (Array.isArray(pageResult?.vehicles)) {
+              vehicles = [...vehicles, ...pageResult.vehicles];
+            }
+          });
+        }
+
+        const mappedOptions = vehicles
+          .map((vehicle: any) => ({
+            plate: String(vehicle?.placa?.plateNumber || vehicle?.placa_v || '').trim().toUpperCase(),
+          }))
+          .filter((item: VehicleOption) => item.plate.length > 0)
+          .filter((item: VehicleOption, index: number, array: VehicleOption[]) =>
+            array.findIndex((target: VehicleOption) => target.plate === item.plate) === index
+          )
+          .sort((a: VehicleOption, b: VehicleOption) => a.plate.localeCompare(b.plate));
+
+        setVehicleOptions(mappedOptions);
+      } catch (error) {
+        setVehicleOptions([]);
+      } finally {
+        setLoadingVehicleOptions(false);
+      }
+    };
+
+    loadVehicleOptions();
+  }, [open]);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
@@ -87,14 +152,15 @@ export const CreateTUCDialog = ({ open, onOpenChange, onSuccess, initialData, is
       newErrors.push({ field: 'vehiclePlate', message: 'La placa debe tener entre 6 y 10 caracteres' });
     }
 
-    if (!formData.validityDate) {
-      newErrors.push({ field: 'validityDate', message: 'La fecha de vigencia es obligatoria' });
+    if (!formData.issueDate) {
+      newErrors.push({ field: 'issueDate', message: 'La fecha de emisión es obligatoria' });
+    }
+
+    if (!formData.expirationDate) {
+      newErrors.push({ field: 'expirationDate', message: 'La fecha de vencimiento es obligatoria' });
     } else {
-      const date = new Date(formData.validityDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (date < today) {
-        newErrors.push({ field: 'validityDate', message: 'La fecha no puede ser pasada' });
+      if (formData.issueDate && new Date(formData.expirationDate) <= new Date(formData.issueDate)) {
+        newErrors.push({ field: 'expirationDate', message: 'La fecha de vencimiento debe ser posterior a la emisión' });
       }
     }
 
@@ -131,7 +197,9 @@ export const CreateTUCDialog = ({ open, onOpenChange, onSuccess, initialData, is
       await tucService.createTUC({
         tucNumber: formData.tucNumber,
         vehiclePlate: formData.vehiclePlate.toUpperCase(),
-        validityDate: formData.validityDate,
+        issueDate: formData.issueDate,
+        expirationDate: formData.expirationDate,
+        validityDate: formData.expirationDate,
         registralCode: formData.registralCode,
         supportDocument: formData.supportDocument,
       });
@@ -145,6 +213,8 @@ export const CreateTUCDialog = ({ open, onOpenChange, onSuccess, initialData, is
       setFormData({
         tucNumber: '',
         vehiclePlate: '',
+        issueDate: '',
+        expirationDate: '',
         validityDate: '',
         registralCode: '',
         supportDocument: '',
@@ -226,30 +296,60 @@ export const CreateTUCDialog = ({ open, onOpenChange, onSuccess, initialData, is
                       <Car className="w-4 h-4" />
                       Placa del Vehículo *
                     </Label>
-                    <Input
-                      id="vehiclePlate"
+                    <Select
                       value={formData.vehiclePlate}
-                      onChange={(e) => handleInputChange('vehiclePlate', e.target.value.toUpperCase())}
-                      placeholder="ABC123"
-                      maxLength={10}
-                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500 ${hasError('vehiclePlate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
-                    />
+                      onValueChange={(value) => handleInputChange('vehiclePlate', value)}
+                      disabled={loadingVehicleOptions}
+                    >
+                      <SelectTrigger id="vehiclePlate" className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500 ${hasError('vehiclePlate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}>
+                        <SelectValue placeholder={loadingVehicleOptions ? 'Cargando matrículas...' : 'Selecciona una matrícula'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vehicleOptions.length > 0 ? (
+                          vehicleOptions.map((vehicle) => (
+                            <SelectItem key={vehicle.plate} value={vehicle.plate}>
+                              {vehicle.plate}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="__no-vehicles" disabled>
+                            No hay matrículas disponibles
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
                     {getFieldError('vehiclePlate') && <p className="text-sm text-red-600">{getFieldError('vehiclePlate')}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="validityDate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <Label htmlFor="issueDate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
                       <Calendar className="w-4 h-4" />
-                      Fecha de Vigencia *
+                      Fecha de Emisión *
                     </Label>
                     <Input
-                      id="validityDate"
+                      id="issueDate"
                       type="date"
-                      value={formData.validityDate}
-                      onChange={(e) => handleInputChange('validityDate', e.target.value)}
-                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500 ${hasError('validityDate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                      value={formData.issueDate}
+                      onChange={(e) => handleInputChange('issueDate', e.target.value)}
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500 ${hasError('issueDate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     />
-                    {getFieldError('validityDate') && <p className="text-sm text-red-600">{getFieldError('validityDate')}</p>}
+                    {getFieldError('issueDate') && <p className="text-sm text-red-600">{getFieldError('issueDate')}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="expirationDate" className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-medium">
+                      <Calendar className="w-4 h-4" />
+                      Fecha de Vencimiento *
+                    </Label>
+                    <Input
+                      id="expirationDate"
+                      type="date"
+                      value={formData.expirationDate}
+                      min={formData.issueDate || undefined}
+                      onChange={(e) => handleInputChange('expirationDate', e.target.value)}
+                      className={`bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500 ${hasError('expirationDate') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    {getFieldError('expirationDate') && <p className="text-sm text-red-600">{getFieldError('expirationDate')}</p>}
                   </div>
 
                   <div className="space-y-2">

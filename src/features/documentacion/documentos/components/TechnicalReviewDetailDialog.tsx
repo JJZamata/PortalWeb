@@ -13,8 +13,6 @@ import {
   Calendar,
   FileCheck,
   Car,
-  Building2,
-  UserCheck,
   CheckCircle,
   XCircle,
   Clock,
@@ -32,6 +30,17 @@ interface Props {
 export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChange, loading = false, error }: Props) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return 'No disponible';
+    const parsed = new Date(dateString);
+    if (Number.isNaN(parsed.getTime())) return 'No disponible';
+    return parsed.toLocaleDateString('es-PE', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -263,38 +272,27 @@ export const TechnicalReviewDetailDialog = ({ technicalReview, open, onOpenChang
             </CardContent>
           </Card>
 
-          {/* Estado */}
           <Card className="border border-gray-100 dark:border-gray-800 shadow-sm bg-gray-50/50 dark:bg-gray-800/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
-                Estado de la Revisión
+                <FileCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
+                Auditoría
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Código</p>
-                  <p className="font-semibold">{technicalReview.estado.codigo}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Fecha de creación</p>
+                  <p className="font-semibold">{formatDateTime(technicalReview.auditoria?.fechaCreacion)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Estado</p>
-                  <Badge
-                    variant="secondary"
-                    className={`${
-                      technicalReview.estado.color === 'green'
-                        ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
-                        : technicalReview.estado.color === 'red'
-                        ? 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
-                        : 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700'
-                    }`}
-                  >
-                    {technicalReview.estado.descripcion}
-                  </Badge>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Última actualización</p>
+                  <p className="font-semibold">{formatDateTime(technicalReview.auditoria?.fechaActualizacion)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+
         </div>
       </DialogContent>
     </Dialog>

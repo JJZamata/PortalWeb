@@ -345,11 +345,11 @@ const UsuariosView = () => {
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{loadingFiscalizadoresConTelefono ? '-' : fiscalizadoresConTelefono}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Fiscalizadores con Teléfono</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Fiscalizadores</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{loadingAdministradoresConTelefono ? '-' : administradoresConTelefono}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Administradores con Teléfono</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Administradores</p>
               </div>
             </div>
           </div>

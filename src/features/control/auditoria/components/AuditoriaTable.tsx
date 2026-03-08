@@ -1,9 +1,10 @@
+import { useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, RefreshCw, Search, Calendar, User, AlertTriangle, CheckCircle2, UserCircle2, FileText, Car, Sparkles } from "lucide-react";
 import { AuditLog } from "../types";
-import { AuditActionIconKey, translateAuditAction } from "../utils/auditActionTranslator";
+import { AuditActionIconKey, translateAuditAction } from "@/features/control/auditoria/utils/auditActionTranslator";
 import { getActionTypeBadgeClass, getActionTypeLabel, getStatusBadgeClass, getStatusLabel } from "../utils/auditUiLabels";
 
 interface Props {
@@ -13,37 +14,45 @@ interface Props {
   searchTerm: string;
 }
 
-export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props) => {
-  const getActionIcon = (iconKey: AuditActionIconKey) => {
-    switch (iconKey) {
-      case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
-      case 'success':
-        return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
-      case 'user':
-        return <UserCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />;
-      case 'document':
-        return <FileText className="w-4 h-4 text-orange-600 dark:text-orange-400" />;
-      case 'vehicle':
-        return <Car className="w-4 h-4 text-gray-600 dark:text-gray-300" />;
-      default:
-        return <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />;
-    }
-  };
+const getActionIcon = (iconKey: AuditActionIconKey) => {
+  switch (iconKey) {
+    case 'warning':
+      return <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
+    case 'success':
+      return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+    case 'user':
+      return <UserCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />;
+    case 'document':
+      return <FileText className="w-4 h-4 text-orange-600 dark:text-orange-400" />;
+    case 'vehicle':
+      return <Car className="w-4 h-4 text-gray-600 dark:text-gray-300" />;
+    default:
+      return <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />;
+  }
+};
 
-  const filteredLogs = auditLogs.filter(log => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    const action = translateAuditAction(log.method, log.url, log);
-    const actionType = getActionTypeLabel(log.method).toLowerCase();
-    return (
-      actionType.includes(searchLower) ||
-      (log.url && log.url.toLowerCase().includes(searchLower)) ||
-      action.title.toLowerCase().includes(searchLower) ||
-      (log.user?.username && log.user.username.toLowerCase().includes(searchLower)) ||
-      (log.ip && log.ip.toLowerCase().includes(searchLower))
-    );
-  });
+export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props) => {
+  const filteredLogs = useMemo(() => {
+    const searchLower = searchTerm.trim().toLowerCase();
+
+    return auditLogs
+      .map((log) => ({
+        log,
+        action: translateAuditAction(log.method, log.url, log),
+        actionType: getActionTypeLabel(log.method),
+      }))
+      .filter(({ log, action, actionType }) => {
+        if (!searchLower) return true;
+
+        return (
+          actionType.toLowerCase().includes(searchLower) ||
+          (log.url && log.url.toLowerCase().includes(searchLower)) ||
+          action.title.toLowerCase().includes(searchLower) ||
+          (log.user?.username && log.user.username.toLowerCase().includes(searchLower)) ||
+          (log.ip && log.ip.toLowerCase().includes(searchLower))
+        );
+      });
+  }, [auditLogs, searchTerm]);
 
   if (loading) {
     return (
@@ -79,13 +88,8 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
                 </TableCell>
               </TableRow>
             ) : (
-              filteredLogs.map((log) => (
+              filteredLogs.map(({ log, action, actionType }) => (
                 <TableRow key={log.id} className="hover:bg-indigo-50/50 dark:hover:bg-gray-800 transition-colors border-b border-gray-200 dark:border-gray-700">
-                  {(() => {
-                    const action = translateAuditAction(log.method, log.url, log);
-
-                    return (
-                      <>
                   <TableCell className="py-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -104,7 +108,7 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
                       variant="secondary" 
                       className={`${getActionTypeBadgeClass(log.method)} font-semibold rounded-full border`}
                     >
-                      {getActionTypeLabel(log.method)}
+                      {actionType}
                     </Badge>
                   </TableCell>
                   <TableCell className="py-4">
@@ -137,9 +141,6 @@ export const AuditoriaTable = ({ auditLogs, loading, onView, searchTerm }: Props
                       <Eye className="w-4 h-4" />
                     </Button>
                   </TableCell>
-                      </>
-                    );
-                  })()}
                 </TableRow>
               ))
             )}

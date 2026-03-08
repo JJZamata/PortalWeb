@@ -6,7 +6,7 @@ import { Shield, User, Calendar, Monitor, AlertTriangle, CheckCircle2, UserCircl
 import { Label } from "@/components/ui/label";
 import { AuditLog } from "../types";
 import React from "react";
-import { AuditActionIconKey, translateAuditAction } from "../utils/auditActionTranslator";
+import { AuditActionIconKey, translateAuditAction } from "@/features/control/auditoria/utils/auditActionTranslator";
 import { getActionTypeBadgeClass, getActionTypeLabel, getStatusBadgeClass, getStatusLabel } from "../utils/auditUiLabels";
 
 interface Props {
@@ -15,94 +15,98 @@ interface Props {
   auditLog: AuditLog | null;
 }
 
+const formatJsonBlock = (value: unknown): string => {
+  if (value === null || value === undefined) return '-';
+  if (typeof value === 'string') return value;
+
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+};
+
+const parseUserAgentInfo = (ua: string) => {
+  const normalized = String(ua || '');
+  const lower = normalized.toLowerCase();
+
+  let browser = 'Navegador no identificado';
+  if (lower.includes('edg/')) {
+    browser = 'Microsoft Edge';
+  } else if (lower.includes('opr/') || lower.includes('opera')) {
+    browser = 'Opera';
+  } else if (lower.includes('chrome/') && !lower.includes('edg/')) {
+    browser = 'Google Chrome';
+  } else if (lower.includes('firefox/')) {
+    browser = 'Mozilla Firefox';
+  } else if (lower.includes('safari/') && !lower.includes('chrome/')) {
+    browser = 'Safari';
+  }
+
+  let operatingSystem = 'Sistema no identificado';
+  if (lower.includes('windows nt')) {
+    operatingSystem = 'Windows';
+  } else if (lower.includes('android')) {
+    operatingSystem = 'Android';
+  } else if (lower.includes('iphone') || lower.includes('ipad') || lower.includes('ios')) {
+    operatingSystem = 'iOS';
+  } else if (lower.includes('mac os x') || lower.includes('macintosh')) {
+    operatingSystem = 'macOS';
+  } else if (lower.includes('linux')) {
+    operatingSystem = 'Linux';
+  }
+
+  let deviceType = 'Computadora';
+  if (lower.includes('ipad') || lower.includes('tablet')) {
+    deviceType = 'Tablet';
+  } else if (lower.includes('mobile') || lower.includes('iphone') || lower.includes('android')) {
+    deviceType = 'Celular';
+  }
+
+  return {
+    browser,
+    operatingSystem,
+    deviceType,
+  };
+};
+
+const getActionIcon = (iconKey: AuditActionIconKey) => {
+  switch (iconKey) {
+    case 'warning':
+      return <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
+    case 'success':
+      return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
+    case 'user':
+      return <UserCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />;
+    case 'document':
+      return <FileText className="w-4 h-4 text-orange-600 dark:text-orange-400" />;
+    case 'vehicle':
+      return <Car className="w-4 h-4 text-gray-600 dark:text-gray-300" />;
+    default:
+      return <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />;
+  }
+};
+
+const getActionReason = (auditLog: AuditLog): string | null => {
+  const withReason = auditLog as AuditLog & {
+    reason?: string;
+    actionReason?: string;
+    motivo?: string;
+    reasonText?: string;
+  };
+
+  return withReason.reason || withReason.actionReason || withReason.motivo || withReason.reasonText || null;
+};
+
 export const AuditoriaDetailDialog = React.memo(({ open, onOpenChange, auditLog }: Props) => {
   if (!auditLog) return null;
 
   const action = translateAuditAction(auditLog.method, auditLog.url, auditLog);
-
-  const actionReason =
-    (auditLog as any)?.reason ||
-    (auditLog as any)?.actionReason ||
-    (auditLog as any)?.motivo ||
-    (auditLog as any)?.reasonText ||
-    null;
+  const actionReason = getActionReason(auditLog);
 
   const shouldShowReasonPrompt = ['PUT', 'PATCH', 'DELETE'].includes(String(auditLog.method || '').toUpperCase());
 
-  const formatJsonBlock = (value: unknown): string => {
-    if (value === null || value === undefined) return '-';
-    if (typeof value === 'string') return value;
-
-    try {
-      return JSON.stringify(value, null, 2);
-    } catch {
-      return String(value);
-    }
-  };
-
-  const parseUserAgentInfo = (ua: string) => {
-    const normalized = String(ua || '');
-    const lower = normalized.toLowerCase();
-
-    let browser = 'Navegador no identificado';
-    if (lower.includes('edg/')) {
-      browser = 'Microsoft Edge';
-    } else if (lower.includes('opr/') || lower.includes('opera')) {
-      browser = 'Opera';
-    } else if (lower.includes('chrome/') && !lower.includes('edg/')) {
-      browser = 'Google Chrome';
-    } else if (lower.includes('firefox/')) {
-      browser = 'Mozilla Firefox';
-    } else if (lower.includes('safari/') && !lower.includes('chrome/')) {
-      browser = 'Safari';
-    }
-
-    let operatingSystem = 'Sistema no identificado';
-    if (lower.includes('windows nt')) {
-      operatingSystem = 'Windows';
-    } else if (lower.includes('android')) {
-      operatingSystem = 'Android';
-    } else if (lower.includes('iphone') || lower.includes('ipad') || lower.includes('ios')) {
-      operatingSystem = 'iOS';
-    } else if (lower.includes('mac os x') || lower.includes('macintosh')) {
-      operatingSystem = 'macOS';
-    } else if (lower.includes('linux')) {
-      operatingSystem = 'Linux';
-    }
-
-    let deviceType = 'Computadora';
-    if (lower.includes('ipad') || lower.includes('tablet')) {
-      deviceType = 'Tablet';
-    } else if (lower.includes('mobile') || lower.includes('iphone') || lower.includes('android')) {
-      deviceType = 'Celular';
-    }
-
-    return {
-      browser,
-      operatingSystem,
-      deviceType,
-    };
-  };
-
   const userAgentInfo = auditLog.userAgent ? parseUserAgentInfo(auditLog.userAgent) : null;
-
-  const getActionIcon = (iconKey: AuditActionIconKey) => {
-    switch (iconKey) {
-      case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />;
-      case 'success':
-        return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />;
-      case 'user':
-        return <UserCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />;
-      case 'document':
-        return <FileText className="w-4 h-4 text-orange-600 dark:text-orange-400" />;
-      case 'vehicle':
-        return <Car className="w-4 h-4 text-gray-600 dark:text-gray-300" />;
-      default:
-        return <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />;
-    }
-  };
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -37,6 +37,8 @@ export const ResetDeviceDialog = memo(({ open, onOpenChange, usuario, loading, o
         return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800';
       case 'web_operator':
         return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800';
+      case 'dispositivoGPS':
+        return 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border-cyan-800';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700';
     }
@@ -47,7 +49,8 @@ export const ResetDeviceDialog = memo(({ open, onOpenChange, usuario, loading, o
       'admin': 'Administrador',
       'web_admin': 'Admin Web',
       'fiscalizador': 'Fiscalizador',
-      'web_operator': 'Operador Web'
+      'web_operator': 'Operador Web',
+      'dispositivoGPS': 'Dispositivo GPS'
     };
     return roleNames[role as keyof typeof roleNames] || 'Sin Rol';
   };

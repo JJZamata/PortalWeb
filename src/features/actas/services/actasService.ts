@@ -21,33 +21,16 @@ export const actasService = {
       const VALID_TYPES = ['conforme', 'noconforme', 'all'];
       const SEARCH_MIN_LENGTH = 2;
       const SORT_FIELDS = ['inspectionDateTime', 'createdAt', 'updatedAt', 'id'];
+      const UI_PAGE_SIZE = 6;
+      const MAX_BACKEND_PAGES_TO_SCAN = 30;
 
-      // Construir parámetros query según documentación
-      const params = new URLSearchParams();
-      params.append('page', page.toString());
-      params.append('limit', '6'); // Límite fijo según backend
+      const safePage = Math.max(1, Number(page || 1));
 
       const hasSearch = searchTerm && searchTerm.length >= SEARCH_MIN_LENGTH;
       const hasValidType = recordType && VALID_TYPES.includes(recordType);
       const hasValidSort = sortBy && SORT_FIELDS.includes(sortBy);
 
-      // Agregar parámetros si aplican
-      if (hasSearch) params.append('search', searchTerm);
-      if (hasValidType && recordType !== 'all') params.append('type', recordType);
-      if (hasValidSort) {
-        params.append('sortBy', sortBy);
-        params.append('sortOrder', sortOrder);
-      }
-
-      // Usar endpoint /records con parámetros query
-      const response = await axiosInstance.get(`/records?${params.toString()}`);
-
-      if (response.data.success) {
-        // Acceder a estructura real: data.data (como en otros módulos)
-        const records = response.data.data.data || [];
-
-        // Transform records para mantener compatibilidad con tipos existentes
-        const recordsTransformados = records.map((record: any) => ({
+      const transformRecord = (record: any) => ({
           id: record.id || 0,
           recordType: record.type?.toLowerCase() || record.recordType?.toLowerCase() || 'conforme',
           type: record.type || record.recordType?.toUpperCase() || 'CONFORME', // Campo principal para separación
@@ -66,16 +49,81 @@ export const actasService = {
           photosCount: record.photosCount || 0,
           violations: record.violations || [],
           violationsCount: record.violationsCount || 0
-        }));
+      });
 
+      const fetchBackendPage = async (backendPage: number) => {
+        const params = new URLSearchParams();
+        params.append('page', String(backendPage));
+        params.append('limit', String(UI_PAGE_SIZE));
+
+        if (hasSearch) params.append('search', searchTerm);
+        if (hasValidType && recordType !== 'all') params.append('type', recordType);
+        if (hasValidSort) {
+          params.append('sortBy', sortBy);
+          params.append('sortOrder', sortOrder);
+        }
+
+        const response = await axiosInstance.get(`/records?${params.toString()}`);
+        if (!response.data.success) {
+          throw new Error('Error en la respuesta del servidor');
+        }
+
+        const payload = response.data.data || {};
         return {
-          records: recordsTransformados,
-          pagination: response.data.data.pagination || null,
-          summary: response.data.data.summary || null
+          rows: Array.isArray(payload.data) ? payload.data.map(transformRecord) : [],
+          pagination: payload.pagination || {},
+          summary: payload.summary || null,
         };
+      };
+
+      const visibleRecordsNeeded = safePage * UI_PAGE_SIZE;
+      const collectedRecords: any[] = [];
+      let backendPage = 1;
+      let scannedPages = 0;
+      let hasNextBackendPage = true;
+      let lastPagination: any = {};
+      let lastSummary: any = null;
+
+      while (
+        hasNextBackendPage &&
+        scannedPages < MAX_BACKEND_PAGES_TO_SCAN &&
+        collectedRecords.length < visibleRecordsNeeded
+      ) {
+        const backendResult = await fetchBackendPage(backendPage);
+        collectedRecords.push(...backendResult.rows);
+        lastPagination = backendResult.pagination;
+        lastSummary = backendResult.summary;
+
+        hasNextBackendPage = Boolean(
+          backendResult.pagination?.hasNextPage ?? backendResult.pagination?.has_next ?? false
+        );
+        backendPage += 1;
+        scannedPages += 1;
       }
 
-      throw new Error('Error en la respuesta del servidor');
+      const startIndex = (safePage - 1) * UI_PAGE_SIZE;
+      const endIndex = startIndex + UI_PAGE_SIZE;
+      const pageRecords = collectedRecords.slice(startIndex, endIndex);
+      const hasNextVisiblePage = collectedRecords.length > endIndex || hasNextBackendPage;
+      const backendTotalItems = Number(lastPagination?.totalItems || lastPagination?.total_items || 0);
+      const estimatedTotalItems = hasNextBackendPage
+        ? Math.max(backendTotalItems, endIndex + 1)
+        : Math.max(backendTotalItems, collectedRecords.length);
+
+      return {
+        records: pageRecords,
+        pagination: {
+          currentPage: safePage,
+          totalPages: Math.max(1, Math.ceil(estimatedTotalItems / UI_PAGE_SIZE)),
+          totalItems: Math.max(estimatedTotalItems, pageRecords.length),
+          itemsPerPage: UI_PAGE_SIZE,
+          hasNextPage: hasNextVisiblePage,
+          hasPreviousPage: safePage > 1,
+          nextPage: hasNextVisiblePage ? safePage + 1 : null,
+          prevPage: safePage > 1 ? safePage - 1 : null,
+        },
+        summary: lastSummary,
+      };
     } catch (error) {
       throw error;
     }

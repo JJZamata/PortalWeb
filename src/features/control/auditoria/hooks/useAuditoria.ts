@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { auditoriaService } from '../services/auditoriaService';
 import { useScrollPreservation } from '@/hooks/useScrollPreservation';
 
-const AUTO_REFRESH_MS = 15000;
+const AUTO_REFRESH_MS = 30000;
 
 export const useAuditoria = (searchTerm: string, actionFilter: string) => {
   const [page, setPage] = useState(1);
@@ -13,12 +13,12 @@ export const useAuditoria = (searchTerm: string, actionFilter: string) => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['auditoria', page, searchTerm, actionFilter],
     queryFn: () => auditoriaService.getAuditLogs(page, limit, searchTerm, actionFilter),
-    staleTime: 0,
+    staleTime: 15000,
     refetchInterval: AUTO_REFRESH_MS,
-    refetchIntervalInBackground: true,
-    refetchOnWindowFocus: 'always',
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
     refetchOnMount: 'always',
-    refetchOnReconnect: 'always',
+    refetchOnReconnect: true,
   });
 
   const { preparePageChange } = useScrollPreservation({ isLoading });

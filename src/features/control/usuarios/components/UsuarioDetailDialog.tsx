@@ -167,7 +167,7 @@ export const UsuarioDetailDialog = React.memo(({ open, onOpenChange, usuario, lo
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Dispositivo</Label>
+                  <Label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Version Aplicion Movil</Label>
                   <p className="text-sm text-gray-900 dark:text-white">
                     {usuario.lastLoginDevice || 'No disponible'}
                   </p>

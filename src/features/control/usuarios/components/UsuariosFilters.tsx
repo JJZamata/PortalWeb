@@ -28,17 +28,7 @@ const statusOptions = [
 const roleOptions = [
   { value: "admin", label: "Administrador" },
   { value: "fiscalizador", label: "Fiscalizador" },
-];
-
-const sortOptions = [
-  { value: "id", label: "ID" },
-  { value: "username", label: "Usuario" },
-  { value: "email", label: "Email" },
-  { value: "isActive", label: "Estado" },
-  { value: "lastLogin", label: "Último Acceso" },
-  { value: "deviceConfigured", label: "Dispositivo Configurado" },
-  { value: "createdAt", label: "Fecha de Creación" },
-  { value: "updatedAt", label: "Última Actualización" },
+  { value: "dispositivoGPS", label: "Dispositivo GPS" },
 ];
 
 export const UsuariosFilters = ({ filters, onFiltersChange, onClearFilters, loading }: Props) => {
@@ -93,7 +83,7 @@ export const UsuariosFilters = ({ filters, onFiltersChange, onClearFilters, load
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Filtro de Estado */}
           <div className="space-y-2">
             <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -165,43 +155,6 @@ export const UsuariosFilters = ({ filters, onFiltersChange, onClearFilters, load
             </div>
           </div>
 
-          {/* Filtro de Ordenamiento */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-              Ordenar por
-            </Label>
-            <div className="flex gap-1">
-              <Select
-                value={filters.sortBy || "id"}
-                onValueChange={(value) => handleFilterChange("sortBy", value)}
-                disabled={loading}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={filters.sortOrder || "ASC"}
-                onValueChange={(value) => handleFilterChange("sortOrder", value)}
-                disabled={loading}
-              >
-                <SelectTrigger className="h-9 w-20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ASC">↑</SelectItem>
-                  <SelectItem value="DESC">↓</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>

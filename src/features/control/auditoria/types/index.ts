@@ -39,6 +39,8 @@ export interface EstadisticasAuditoria {
   total_inserts: number;
   total_updates: number;
   total_deletes: number;
-  tablas_afectadas: number;
-  usuarios_activos: number;
+  error_logs?: number;
+  avg_duration_ms?: number;
+  tablas_afectadas?: number;
+  usuarios_activos?: number;
 }

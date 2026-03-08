@@ -56,6 +56,24 @@ const formatDateTime = (dateValue?: string): string => {
   }).format(parsedDate);
 };
 
+const getActivityActorName = (log: any): string => {
+  const candidates = [
+    log?.user?.username,
+    log?.username,
+    log?.user?.email,
+    log?.user?.id ? `Usuario #${log.user.id}` : null,
+  ];
+
+  for (const value of candidates) {
+    const normalized = String(value || '').trim();
+    if (normalized.length > 0) {
+      return normalized;
+    }
+  }
+
+  return 'Sistema';
+};
+
 // Estilos compartidos para tooltips de gráficos
 const CHART_TOOLTIP_STYLE = {
   backgroundColor: 'hsl(var(--background))',
@@ -166,7 +184,7 @@ const AdminPanel = () => {
           return {
             id: log.id,
             accion: action.title,
-            detalles: `${method} ${log.url || '/api'}${log.user?.username ? ` · ${log.user.username}` : ''}`,
+            usuario: getActivityActorName(log),
             tiempo: formatTimeAgo(log.timestamp),
             tipo,
             icono,
@@ -515,7 +533,7 @@ const AdminPanel = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm text-foreground">{actividad.accion}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{actividad.detalles}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Por: {actividad.usuario}</p>
                       <div className="flex items-center mt-2">
                         <Clock className="w-3 h-3 mr-1 text-muted-foreground" />
                         <p className="text-xs text-muted-foreground">{actividad.tiempo}</p>

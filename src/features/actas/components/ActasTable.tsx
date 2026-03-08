@@ -40,17 +40,6 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
     });
   };
 
-  const getRecordTypeColor = (type: string) => {
-    switch (type) {
-      case 'conforme':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-700';
-      case 'noconforme':
-        return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700/30 dark:text-gray-400 dark:border-gray-600';
-    }
-  };
-
   const getRecordTypeIcon = (type: string) => {
     switch (type) {
       case 'CONFORME':
@@ -88,7 +77,6 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
         <Table>
           <TableHeader className="bg-red-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <TableRow>
-              <TableHead className="font-bold text-red-900 dark:text-white py-4">ID</TableHead>
               <TableHead className="font-bold text-red-900 dark:text-white py-4">Tipo</TableHead>
               <TableHead className="font-bold text-red-900 dark:text-white py-4">Placa</TableHead>
               <TableHead className="font-bold text-red-900 dark:text-white py-4">Inspector</TableHead>
@@ -102,7 +90,7 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
           <TableBody>
             {records.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-32 text-center border-b border-gray-200 dark:border-gray-700">
+                <TableCell colSpan={8} className="h-32 text-center border-b border-gray-200 dark:border-gray-700">
                   <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-8">
                     <FileBarChart className="w-8 h-8 mb-2" />
                     {searchTerm.length >= 2 ? (
@@ -119,7 +107,6 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
             ) : (
               records.map((record) => (
                 <TableRow key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-200 dark:border-gray-700">
-                  <TableCell className="font-mono font-semibold text-red-600 dark:text-red-400 py-4">{record.id}</TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"

@@ -1,8 +1,8 @@
 import axiosInstance from '@/lib/axios';
 import { AuditLog } from '../types';
 
-const MAX_BACKEND_PAGES_TO_SCAN = 20;
-const BACKEND_PAGE_SIZE = 100;
+const MAX_BACKEND_PAGES_TO_SCAN = 8;
+const BACKEND_PAGE_SIZE = 50;
 
 interface AuditPagination {
   current_page: number;
@@ -75,8 +75,10 @@ export const auditoriaService = {
       };
 
       const buildUiResponse = (logs: AuditLog[], statistics: AuditStatistics | undefined, pagination: AuditPagination) => {
+        const globalTotalLogs = Number(statistics?.total_logs || 0);
+
         const estadisticas = {
-          total_registros: pagination.total_records ?? statistics?.total_logs ?? logs.length,
+          total_registros: globalTotalLogs > 0 ? globalTotalLogs : (pagination.total_records ?? logs.length),
           total_inserts: 0,
           total_updates: 0,
           total_deletes: 0,
@@ -105,7 +107,8 @@ export const auditoriaService = {
       };
 
       const backendMethod = normalizedMethodFilter === 'all' ? undefined : normalizedMethodFilter;
-      const visibleLogsNeeded = requestedPage * requestedLimit + requestedLimit;
+      // Collect exactly what we need for current page plus one extra item to know if next page exists.
+      const visibleLogsNeeded = requestedPage * requestedLimit + 1;
       const collectedVisibleLogs: AuditLog[] = [];
 
       let backendPage = 1;
@@ -125,6 +128,10 @@ export const auditoriaService = {
 
         lastStatistics = pageData.statistics;
         const logs = pageData.logs || [];
+        if (logs.length === 0) {
+          break;
+        }
+
         const visibleLogs = logs.filter((log) => shouldIncludeLog(log, normalizedMethodFilter));
         collectedVisibleLogs.push(...visibleLogs);
 

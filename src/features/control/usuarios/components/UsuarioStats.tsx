@@ -38,7 +38,8 @@ export const UsuarioStats = ({ stats, loading, error, groupBy, onGroupByChange, 
   const getRoleDisplayName = (role: string) => {
     const roleNames = {
       'admin': 'Administradores',
-      'fiscalizador': 'Fiscalizadores'
+      'fiscalizador': 'Fiscalizadores',
+      'dispositivoGPS': 'Dispositivos GPS'
     };
     return roleNames[role as keyof typeof roleNames] || role;
   };
@@ -175,7 +176,7 @@ export const UsuarioStats = ({ stats, loading, error, groupBy, onGroupByChange, 
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(stats.byRole).map(([role, count]) => (
+                  {(Object.entries(stats.byRole) as Array<[string, number]>).map(([role, count]) => (
                     <div key={role} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
                       <div className="flex items-center gap-3">
                         <Badge
@@ -183,7 +184,9 @@ export const UsuarioStats = ({ stats, loading, error, groupBy, onGroupByChange, 
                           className={`${
                             role === 'admin'
                               ? 'border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-950/30 dark:text-purple-400'
-                              : 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+                              : role === 'fiscalizador'
+                                ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+                                : 'border-cyan-300 bg-cyan-50 text-cyan-700 dark:border-cyan-700 dark:bg-cyan-950/30 dark:text-cyan-400'
                           }`}
                         >
                           {getRoleDisplayName(role)}

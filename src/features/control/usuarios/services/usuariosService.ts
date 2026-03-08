@@ -25,6 +25,32 @@ import {
   ChangePasswordFormData
 } from '../types';
 
+const normalizeRoleValue = (value: string) => value.toLowerCase().replace(/[\s_-]/g, '');
+
+const roleAliases: Record<string, string[]> = {
+  admin: ['admin'],
+  fiscalizador: ['fiscalizador'],
+  dispositivogps: ['dispositivogps', 'dispositivo_gps', 'dispositivo gps', 'dispositivogps', 'gpsdevice', 'gps_device']
+};
+
+const getNormalizedRoleAliases = (role: string) => {
+  const normalizedRole = normalizeRoleValue(role);
+  const aliases = roleAliases[normalizedRole] ?? [normalizedRole];
+  return aliases.map((alias) => normalizeRoleValue(alias));
+};
+
+const userHasRole = (rolesValue: string, targetRole: string) => {
+  if (!rolesValue) return false;
+
+  const targetAliases = getNormalizedRoleAliases(targetRole);
+  const userRoles = rolesValue
+    .split(',')
+    .map((role) => normalizeRoleValue(role.trim()))
+    .filter(Boolean);
+
+  return userRoles.some((userRole) => targetAliases.includes(userRole));
+};
+
 export const usuariosService = {
   getUsuarios: async (params: UsuariosQueryParams = {}) => {
     try {
@@ -39,31 +65,120 @@ export const usuariosService = {
         sortOrder = 'ASC'
       } = params;
 
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-        sortBy,
-        sortOrder
-      });
+      const buildQueryString = ({
+        roleValue,
+        pageValue,
+        limitValue
+      }: {
+        roleValue?: string;
+        pageValue?: number;
+        limitValue?: number;
+      } = {}) => {
+        const queryParams = new URLSearchParams({
+          page: (pageValue ?? page).toString(),
+          limit: (limitValue ?? limit).toString(),
+          sortBy,
+          sortOrder
+        });
 
-      if (search && search.trim().length >= 2) {
-        queryParams.append('search', search.trim());
-      }
+        if (search && search.trim().length >= 2) {
+          queryParams.append('search', search.trim());
+        }
 
-      if (status) {
-        queryParams.append('status', status);
+        if (status) {
+          queryParams.append('status', status);
+        }
+
+        if (roleValue) {
+          queryParams.append('role', roleValue);
+        }
+
+        if (deviceConfigured !== undefined) {
+          queryParams.append('deviceConfigured', deviceConfigured.toString());
+        }
+
+        return queryParams.toString();
+      };
+
+      const queryString = buildQueryString({ roleValue: role });
+      const response = await axiosInstance.get<UsuariosApiResponse>(`/users?${queryString}`);
+      let finalResponse = response;
+
+      // Compatibilidad con distintos nombres de rol GPS del backend.
+      if (role === 'dispositivoGPS' && (response.data?.data?.pagination?.totalItems ?? 0) === 0) {
+        const fallbackRoles = ['dispositivoGps', 'dispositivo_gps', 'gps_device'];
+
+        for (const fallbackRole of fallbackRoles) {
+          const fallbackQueryString = buildQueryString({ roleValue: fallbackRole });
+          const fallbackResponse = await axiosInstance.get<UsuariosApiResponse>(`/users?${fallbackQueryString}`);
+
+          if ((fallbackResponse.data?.data?.pagination?.totalItems ?? 0) > 0) {
+            finalResponse = fallbackResponse;
+            break;
+          }
+        }
       }
 
       if (role) {
-        queryParams.append('role', role);
+        const users = finalResponse.data?.data?.data ?? [];
+        const serverAppliedRoleFilter = users.every((user) => userHasRole(user.rol, role));
+
+        if (!serverAppliedRoleFilter) {
+          const SCAN_PAGE_SIZE = 100;
+          const MAX_SCAN_PAGES = 30;
+          const collectedUsers: Usuario[] = [];
+          let scanPage = 1;
+
+          while (scanPage <= MAX_SCAN_PAGES) {
+            const scanQueryString = buildQueryString({
+              pageValue: scanPage,
+              limitValue: SCAN_PAGE_SIZE
+            });
+            const scanResponse = await axiosInstance.get<UsuariosApiResponse>(`/users?${scanQueryString}`);
+            const pageUsers = scanResponse.data?.data?.data ?? [];
+            collectedUsers.push(...pageUsers);
+
+            const hasNextPage = scanResponse.data?.data?.pagination?.hasNextPage ?? false;
+            if (!hasNextPage) {
+              break;
+            }
+
+            scanPage += 1;
+          }
+
+          const filteredUsers = collectedUsers.filter((user) => userHasRole(user.rol, role));
+          const pageStart = (page - 1) * limit;
+          const paginatedUsers = filteredUsers.slice(pageStart, pageStart + limit);
+          const totalItems = filteredUsers.length;
+          const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+
+          return {
+            ...finalResponse.data,
+            data: {
+              ...finalResponse.data.data,
+              data: paginatedUsers,
+              pagination: {
+                ...finalResponse.data.data.pagination,
+                currentPage: page,
+                itemsPerPage: limit,
+                totalItems,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPreviousPage: page > 1
+              }
+            },
+            meta: {
+              ...finalResponse.data.meta,
+              appliedFilters: {
+                ...finalResponse.data.meta.appliedFilters,
+                role
+              }
+            }
+          };
+        }
       }
 
-      if (deviceConfigured !== undefined) {
-        queryParams.append('deviceConfigured', deviceConfigured.toString());
-      }
-
-      const response = await axiosInstance.get<UsuariosApiResponse>(`/users?${queryParams.toString()}`);
-      return response.data;
+      return finalResponse.data;
     } catch (error) {
       throw error;
     }

@@ -30,6 +30,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import logoImage from '@/assets/images/logo.png';
 
+const SIDEBAR_WIDTH_KEY = 'sidebar:desktopWidth';
+const SIDEBAR_DEFAULT_WIDTH = 288; // Matches xl:w-72 from current layout
+const SIDEBAR_MAX_WIDTH = 288;
+const SIDEBAR_MIN_WIDTH = 84;
+const SIDEBAR_COLLAPSE_THRESHOLD = 150;
+
 const menuItems = [
   {
     title: "Dashboard",
@@ -97,6 +103,15 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 1024);
+  const [desktopWidth, setDesktopWidth] = useState<number>(() => {
+    const stored = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    const parsed = stored ? Number(stored) : SIDEBAR_DEFAULT_WIDTH;
+
+    if (Number.isNaN(parsed)) return SIDEBAR_DEFAULT_WIDTH;
+    return Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, parsed));
+  });
+  const [isResizing, setIsResizing] = useState(false);
   
   // Estado para las secciones expandidas, persistente en localStorage
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>(() => {
@@ -127,6 +142,49 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
     localStorage.setItem(EXPANDED_SECTIONS_KEY, JSON.stringify(expandedSections));
   }, [expandedSections]);
 
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, String(desktopWidth));
+  }, [desktopWidth]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (event: MouseEvent) => {
+      const nextWidth = Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, event.clientX));
+      setDesktopWidth(nextWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+  }, [isResizing]);
+
+  const isIconOnly = isDesktop && desktopWidth <= SIDEBAR_COLLAPSE_THRESHOLD;
+
   // Función para encontrar qué sección contiene la ruta actual
   const findParentSection = (pathname: string) => {
     for (const item of menuItems) {
@@ -154,6 +212,8 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
 
   // Función para manejar el toggle de secciones
   const toggleSection = (sectionTitle: string) => {
+    if (isIconOnly) return;
+
     setExpandedSections(prev => ({
       ...prev,
       [sectionTitle]: !prev[sectionTitle]
@@ -196,12 +256,14 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
       <div className={cn(
         // Fixed on mobile/tablet, sticky on desktop so it never scrolls away
         "fixed left-0 top-0 z-50 bg-background border-r border-border transform transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:left-0",
-        // Responsive widths
-        "w-80 sm:w-80 md:w-80 lg:w-64 xl:w-72",
+        // Width behavior: fixed on mobile, dynamic on desktop
+        "w-80 sm:w-80 md:w-80 lg:w-auto",
         // Altura completa siempre con flex para estructura
         "h-screen min-h-screen lg:h-screen lg:min-h-screen flex flex-col",
         isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-      )}>
+      )}
+      style={isDesktop ? { width: `${desktopWidth}px` } : undefined}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -212,7 +274,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                 className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
               />
             </div>
-            <div className="min-w-0">
+            <div className={cn("min-w-0", isIconOnly && "hidden")}>
               <h2 className="font-bold text-foreground text-lg sm:text-xl tracking-tight truncate">FISCAMOTO</h2>
               <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate">Sistema de Control</p>
             </div>
@@ -229,7 +291,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
         
         {/* Contenido del menú */}
         <div className="flex-1 overflow-y-auto py-4">
-          <nav className="px-3 sm:px-4 space-y-1">
+          <nav className={cn("space-y-1", isIconOnly ? "px-2" : "px-3 sm:px-4")}>
             {menuItems.map((item) => {
               if (!item.items) {
                 const isActive = location.pathname === item.url;
@@ -238,20 +300,45 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     key={item.title}
                     variant="ghost"
                     className={cn(
-                      "w-full justify-start h-12 px-3 sm:px-4 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base",
+                      "w-full h-12 rounded-xl font-medium transition-all duration-200 text-sm sm:text-base",
+                      isIconOnly ? "justify-center px-0" : "justify-start px-3 sm:px-4",
                       isActive 
                         ? "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60" 
                         : "hover:bg-accent text-foreground dark:hover:bg-accent/40"
                     )}
                     onClick={() => handleNavigation(item.url!)}
+                    title={item.title}
                   >
-                    <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                    <span className="truncate">{item.title}</span>
+                    <item.icon className={cn("w-5 h-5 flex-shrink-0", !isIconOnly && "mr-3")} />
+                    {!isIconOnly && <span className="truncate">{item.title}</span>}
                   </Button>
                 );
               }
 
               const isExpanded = expandedSections[item.title];
+
+              if (isIconOnly) {
+                const firstSubItem = item.items[0];
+                const hasActiveChild = item.items.some((subItem) => subItem.url === location.pathname);
+
+                return (
+                  <Button
+                    key={item.title}
+                    variant="ghost"
+                    className={cn(
+                      "w-full h-12 justify-center px-0 rounded-xl font-medium transition-all duration-200",
+                      hasActiveChild
+                        ? "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60"
+                        : "hover:bg-accent text-foreground dark:hover:bg-accent/40"
+                    )}
+                    onClick={() => firstSubItem && handleNavigation(firstSubItem.url)}
+                    title={item.title}
+                  >
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                  </Button>
+                );
+              }
+
               return (
                 <div key={item.title} className="space-y-1">
                   <Button
@@ -305,11 +392,19 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
             variant="ghost"
             className="w-full justify-start h-12 px-3 sm:px-4 rounded-xl font-medium text-muted-foreground hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/40 dark:hover:text-red-200 transition-all duration-200 text-sm sm:text-base"
             onClick={handleLogout}
+            title="Cerrar Sesión"
           >
-            <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
-            <span className="truncate">Cerrar Sesión</span>
+            <LogOut className={cn("w-5 h-5 flex-shrink-0", !isIconOnly && "mr-3")} />
+            {!isIconOnly && <span className="truncate">Cerrar Sesión</span>}
           </Button>
         </div>
+
+        {/* Desktop resize handle */}
+        <div
+          className="hidden lg:block absolute top-0 right-0 h-full w-1 cursor-col-resize hover:bg-red-300/60 dark:hover:bg-red-700/60"
+          onMouseDown={() => setIsResizing(true)}
+          title="Arrastra para ajustar el ancho"
+        />
       </div>
     </>
   );

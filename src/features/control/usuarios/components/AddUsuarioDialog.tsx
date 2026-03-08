@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, User, Mail, Lock, Shield, Eye, EyeOff, UserPlus, X } from "lucide-react";
+import { Plus, User, Mail, Lock, Shield, Eye, EyeOff, UserPlus, Smartphone } from "lucide-react";
 import { useState, memo } from "react";
 import { AddUserFormData } from "../types";
 
@@ -57,6 +57,26 @@ export const AddUsuarioDialog = memo(({ open, onOpenChange, onAdd, submitting }:
       platform: 'web'
     }
   });
+
+  const getRoleBadgeClass = (role: string) => {
+    if (role === 'admin') {
+      return 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800';
+    }
+    if (role === 'fiscalizador') {
+      return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800';
+    }
+    if (role === 'dispositivoGPS') {
+      return 'bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border-cyan-800';
+    }
+    return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
+  };
+
+  const getRoleLabel = (role: string) => {
+    if (role === 'admin') return 'Administrador';
+    if (role === 'fiscalizador') return 'Fiscalizador';
+    if (role === 'dispositivoGPS') return 'Dispositivo GPS';
+    return role;
+  };
 
   const handleSubmit = async (values: AddUserFormData) => {
     try {
@@ -197,6 +217,26 @@ export const AddUsuarioDialog = memo(({ open, onOpenChange, onAdd, submitting }:
                                 Fiscalizador
                               </label>
                             </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id="role-dispositivo-gps"
+                                checked={selectedRoles.includes('dispositivoGPS')}
+                                onCheckedChange={(checked) => {
+                                  const newRoles = checked
+                                    ? [...selectedRoles, 'dispositivoGPS']
+                                    : selectedRoles.filter(role => role !== 'dispositivoGPS');
+                                  setSelectedRoles(newRoles);
+                                  field.onChange(newRoles);
+                                }}
+                              />
+                              <label
+                                htmlFor="role-dispositivo-gps"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 cursor-pointer"
+                              >
+                                <Smartphone className="w-4 h-4 text-cyan-600" />
+                                Dispositivo GPS
+                              </label>
+                            </div>
                           </div>
 
                           {selectedRoles.length > 0 && (
@@ -205,13 +245,9 @@ export const AddUsuarioDialog = memo(({ open, onOpenChange, onAdd, submitting }:
                                 <Badge
                                   key={role}
                                   variant="secondary"
-                                  className={`${
-                                    role === 'admin'
-                                      ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-800'
-                                      : 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800'
-                                  }`}
+                                  className={getRoleBadgeClass(role)}
                                 >
-                                  {role === 'admin' ? 'Administrador' : 'Fiscalizador'}
+                                  {getRoleLabel(role)}
                                 </Badge>
                               ))}
                             </div>

@@ -26,6 +26,8 @@ export const UsuariosTable = ({ usuarios, loading, onView, onEdit, onChangePassw
         return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800';
       case 'web_operator':
         return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800';
+      case 'dispositivoGPS':
+        return 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/50 dark:text-cyan-300 dark:border-cyan-800';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700';
     }
@@ -36,7 +38,8 @@ export const UsuariosTable = ({ usuarios, loading, onView, onEdit, onChangePassw
       'admin': 'Administrador',
       'web_admin': 'Admin Web',
       'fiscalizador': 'Fiscalizador',
-      'web_operator': 'Operador Web'
+      'web_operator': 'Operador Web',
+      'dispositivoGPS': 'Dispositivo GPS'
     };
     return roleNames[role as keyof typeof roleNames] || 'Sin Rol';
   };
@@ -102,7 +105,6 @@ export const UsuariosTable = ({ usuarios, loading, onView, onEdit, onChangePassw
       <Table>
         <TableHeader className="bg-purple-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <TableRow>
-            <TableHead className="font-bold text-purple-900 dark:text-white py-4">ID</TableHead>
             <TableHead className="font-bold text-purple-900 dark:text-white py-4">Usuario</TableHead>
             <TableHead className="font-bold text-purple-900 dark:text-white py-4">Email</TableHead>
             <TableHead className="font-bold text-purple-900 dark:text-white py-4">Rol</TableHead>
@@ -115,7 +117,7 @@ export const UsuariosTable = ({ usuarios, loading, onView, onEdit, onChangePassw
         <TableBody>
           {filteredUsuarios.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="h-32 text-center border-b border-gray-200 dark:border-gray-700">
+              <TableCell colSpan={7} className="h-32 text-center border-b border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-8">
                   <Search className="w-8 h-8 mb-2 text-gray-400 dark:text-gray-500" />
                   <p className="text-gray-600 dark:text-gray-400">No hay usuarios registrados o que coincidan con el filtro.</p>
@@ -125,7 +127,6 @@ export const UsuariosTable = ({ usuarios, loading, onView, onEdit, onChangePassw
           ) : (
             filteredUsuarios.map((usuario) => (
               <TableRow key={usuario.id} className="hover:bg-purple-50/50 dark:hover:bg-gray-800 transition-colors border-b border-gray-200 dark:border-gray-700">
-                <TableCell className="font-mono font-bold text-purple-800 dark:text-purple-400 py-4">{usuario.id}</TableCell>
                 <TableCell className="font-semibold text-gray-900 dark:text-gray-300 py-4">{usuario.usuario}</TableCell>
                 <TableCell className="text-gray-700 dark:text-gray-300 py-4">{usuario.email}</TableCell>
                 <TableCell className="py-4">

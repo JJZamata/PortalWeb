@@ -704,14 +704,6 @@ export const ActaDetailDialog = React.memo(({ open, onOpenChange, recordDetailed
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cerrar
               </Button>
-              <Button variant="outline" onClick={handlePrint}>
-                <Printer className="w-4 h-4 mr-2" />
-                Imprimir
-              </Button>
-              <Button onClick={handleExportPdf}>
-                <Download className="w-4 h-4 mr-2" />
-                Exportar PDF
-              </Button>
             </div>
           </div>
         </DialogFooter>

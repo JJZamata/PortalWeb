@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, RefreshCw, Camera, AlertTriangle, CheckCircle, FileBarChart } from "lucide-react";
+import { Eye, RefreshCw, Camera, AlertTriangle, CheckCircle, FileBarChart } from "lucide-react";
 
 interface Record {
   id: number;
@@ -148,9 +148,6 @@ export const ActasTable = ({ records, loading, fetchRecordDetail, searchTerm = '
                         onClick={() => fetchRecordDetail(record.id, record.recordType)}
                       >
                         <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg text-gray-600 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-300">
-                        <Edit className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>

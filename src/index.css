@@ -49,6 +49,10 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --scrollbar-thumb: 203 10% 65%;
+    --scrollbar-thumb-hover: 203 10% 55%;
+    --scrollbar-track: 210 20% 94%;
   }
 
   .dark {
@@ -87,6 +91,10 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --scrollbar-thumb: 215 14% 34%;
+    --scrollbar-thumb-hover: 215 14% 44%;
+    --scrollbar-track: 222 18% 14%;
   }
 }
 
@@ -98,6 +106,31 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Global scrollbar styling (native scrollbars) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--scrollbar-thumb)) hsl(var(--scrollbar-track));
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: hsl(var(--scrollbar-track));
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--scrollbar-thumb));
+  border-radius: 9999px;
+  border: 2px solid hsl(var(--scrollbar-track));
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--scrollbar-thumb-hover));
 }
 
 /* Fire Animation Styles */

@@ -35,13 +35,27 @@ const isSessionRenewalLog = (log: AuditLog): boolean => {
   );
 };
 
+const isLoginLog = (log: AuditLog): boolean => {
+  const normalizedUrl = String(log.url || '').toLowerCase().split('?')[0];
+  const normalizedOperation = String(log.operation || '').toUpperCase();
+
+  return (
+    normalizedUrl.includes('/auth/login') ||
+    normalizedUrl.endsWith('/login') ||
+    normalizedUrl.includes('/auth/signin') ||
+    normalizedUrl.includes('/auth/sign-in') ||
+    normalizedOperation.includes('LOGIN') ||
+    normalizedOperation.includes('SIGNIN')
+  );
+};
+
 const normalizeMethodFilter = (actionFilter?: string): string => {
   const value = String(actionFilter || '').toUpperCase();
   return value && value !== 'ALL' ? value : 'all';
 };
 
 const shouldIncludeLog = (log: AuditLog, methodFilter: string): boolean => {
-  if (isSessionRenewalLog(log)) {
+  if (isSessionRenewalLog(log) || isLoginLog(log)) {
     return false;
   }
 

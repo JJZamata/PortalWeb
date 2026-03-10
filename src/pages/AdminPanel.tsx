@@ -24,9 +24,36 @@ import { auditoriaService } from '@/features/control/auditoria/services/auditori
 import { translateAuditAction } from '../features/control/auditoria/utils/auditActionTranslator';
 
 // Funciones de utilidad (fuera del componente para evitar recreaciones)
-const formatTimeAgo = (timestamp: string): string => {
-  const now = new Date().getTime();
-  const time = new Date(timestamp).getTime();
+const resolveAuditLogTimeMs = (log: any): number | null => {
+  const candidates = [
+    log?.timestamp,
+    log?.createdAt,
+    log?.created_at,
+    log?.date,
+    log?.eventTime,
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate === undefined || candidate === null || candidate === '') {
+      continue;
+    }
+
+    if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+      return candidate < 1e12 ? candidate * 1000 : candidate;
+    }
+
+    const parsed = new Date(String(candidate)).getTime();
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const formatTimeAgoFromMs = (timeMs: number): string => {
+  const now = Date.now();
+  const time = timeMs;
   const diffMs = now - time;
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
@@ -72,6 +99,15 @@ const getActivityActorName = (log: any): string => {
   }
 
   return 'Sistema';
+};
+
+const RECENT_ACTIVITY_MAX_DAYS = 7;
+
+const isRecentActivity = (timeMs: number | null): boolean => {
+  if (timeMs === null) return false;
+
+  const maxAgeMs = RECENT_ACTIVITY_MAX_DAYS * 24 * 60 * 60 * 1000;
+  return Date.now() - timeMs <= maxAgeMs;
 };
 
 // Estilos compartidos para tooltips de gráficos
@@ -146,9 +182,11 @@ const AdminPanel = () => {
         const pagination = (response.data.pagination || {}) as { has_next?: boolean };
 
         // Filtrar y agregar solo los necesarios
-        const filtered = logs.filter((log: any) => 
-          allowedMethods.has(String(log.method || '').toUpperCase())
-        );
+        const filtered = logs.filter((log: any) => {
+          const method = String(log.method || '').toUpperCase();
+          const eventTimeMs = resolveAuditLogTimeMs(log);
+          return allowedMethods.has(method) && isRecentActivity(eventTimeMs);
+        });
         
         const remaining = targetCount - filteredLogs.length;
         filteredLogs.push(...filtered.slice(0, remaining));
@@ -165,6 +203,7 @@ const AdminPanel = () => {
         .slice(0, targetCount)
         .map((log: any) => {
           const method = String(log.method || '').toUpperCase();
+          const eventTimeMs = resolveAuditLogTimeMs(log);
           const action = translateAuditAction(method, log.url || '', log);
 
           let tipo: 'success' | 'warning' | 'error' | 'info' = 'info';
@@ -185,7 +224,7 @@ const AdminPanel = () => {
             id: log.id,
             accion: action.title,
             usuario: getActivityActorName(log),
-            tiempo: formatTimeAgo(log.timestamp),
+            tiempo: eventTimeMs ? formatTimeAgoFromMs(eventTimeMs) : 'Fecha no disponible',
             tipo,
             icono,
           };

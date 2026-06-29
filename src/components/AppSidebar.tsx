@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import logoImage from '@/assets/images/logo.png';
+import mtcImage from '@/assets/images/ImageMTC.png';
 
 const SIDEBAR_WIDTH_KEY = 'sidebar:desktopWidth';
 const SIDEBAR_DEFAULT_WIDTH = 288; // Matches xl:w-72 from current layout
@@ -51,18 +52,18 @@ const menuItems = [
     ],
   },
   {
-    title: "Personal",
-    icon: Users,
-    items: [
-      { title: "Conductores", url: "/conductores", icon: User },
-    ],
-  },
-  {
     title: "Vehículos",
     icon: Car,
     items: [
       { title: "Mototaxis", url: "/vehiculos", icon: Car },
       { title: "Empresas", url: "/empresas", icon: Building2 },
+    ],
+  },
+  {
+    title: "Personal",
+    icon: Users,
+    items: [
+      { title: "Conductores", url: "/conductores", icon: User },
     ],
   },
   {
@@ -89,6 +90,11 @@ const menuItems = [
       { title: "Usuarios", url: "/usuarios", icon: FileText },
       { title: "Auditoria", url: "/auditoria", icon: Wrench },
     ],
+  },
+  {
+    title: "MTC",
+    image: mtcImage,
+    url: "https://www.transparencia.gob.pe/reportes_directos/pep_transparencia_acceso_informacion.aspx?id_entidad=144&id_tema=49&cod_rueep=0&ver=D",
   },
 ];
 
@@ -235,6 +241,12 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
 
   // Función para navegar y cerrar sidebar en móvil
   const handleNavigation = (url: string) => {
+    // Enlaces externos deben abrirse fuera del router de la app.
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     navigate(url);
     // Cerrar sidebar en dispositivos móviles después de navegar
     if (window.innerWidth < 1024) {
@@ -309,7 +321,15 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     onClick={() => handleNavigation(item.url!)}
                     title={item.title}
                   >
-                    <item.icon className={cn("w-5 h-5 flex-shrink-0", !isIconOnly && "mr-3")} />
+                    {item.image ? (
+                      <img 
+                        src={item.image}
+                        alt={item.title}
+                        className={cn("w-5 h-5 flex-shrink-0 object-contain", !isIconOnly && "mr-3")}
+                      />
+                    ) : (
+                      <item.icon className={cn("w-5 h-5 flex-shrink-0", !isIconOnly && "mr-3")} />
+                    )}
                     {!isIconOnly && <span className="truncate">{item.title}</span>}
                   </Button>
                 );

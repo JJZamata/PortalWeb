@@ -349,7 +349,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     onClick={() => firstSubItem && handleNavigation(firstSubItem.url)}
                     title={item.title}
                   >
-                    <item.icon className="w-5 h-5 flex-shrink-0" />  
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
                   </Button>
                 );
               }

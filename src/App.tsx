@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import AdminPanel from "./pages/AdminPanel";
 import FiscalizadoresPage from "./pages/personal/FiscalizadoresPage";
 import VehiculosPage from "./pages/vehiculos/VehiculosPage";
+import PropietariosPage from "./pages/vehiculos/PropietariosPage";
 import AfocatPage from "./pages/documentacion/AfocatPage";
 import RevisionPage from "./pages/documentacion/RevisionPage";
 import TUCsPage from "./pages/documentacion/TUCsPage";
@@ -50,6 +51,7 @@ const App: React.FC = () => {
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/fiscalizadores" element={<FiscalizadoresPage />} />
             <Route path="/vehiculos" element={<VehiculosPage />} />
+            <Route path="/propietarios" element={<PropietariosPage />} />
             <Route path="/afocat" element={<AfocatPage />} />
             <Route path="/revision" element={<RevisionPage />} />
             <Route path="/tucs" element={<TUCsPage />} />

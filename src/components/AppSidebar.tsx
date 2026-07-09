@@ -57,12 +57,7 @@ const menuItems = [
     items: [
       { title: "Mototaxis", url: "/vehiculos", icon: Car },
       { title: "Empresas", url: "/empresas", icon: Building2 },
-    ],
-  },
-  {
-    title: "Personal",
-    icon: Users,
-    items: [
+      { title: "Propietarios", url: "/propietarios", icon: User },
       { title: "Conductores", url: "/conductores", icon: User },
     ],
   },
@@ -354,7 +349,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
                     onClick={() => firstSubItem && handleNavigation(firstSubItem.url)}
                     title={item.title}
                   >
-                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <item.icon className="w-5 h-5 flex-shrink-0" />  
                   </Button>
                 );
               }

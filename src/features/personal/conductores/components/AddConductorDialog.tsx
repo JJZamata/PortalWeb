@@ -11,6 +11,7 @@ import { conductoresService } from '../services/conductoresService';
 import { licensesService } from '../services/licensesService';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
+import { usePersonAutocomplete, type PersonSuggestion } from '@/hooks/usePersonAutocomplete';
 
 interface Props {
   onSuccess: () => void;
@@ -42,6 +43,35 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
   });
 
   const issueDateValue = form.watch('issueDate');
+  const dniValue = form.watch('dni');
+  const firstNameValue = form.watch('firstName');
+  const lastNameValue = form.watch('lastName');
+  const phoneNumberValue = form.watch('phoneNumber');
+
+  const { suggestions, isLoading: isLoadingSuggestions } = usePersonAutocomplete({
+    open,
+    dni: dniValue,
+    firstName: firstNameValue,
+    lastName: lastNameValue,
+    phoneNumber: phoneNumberValue,
+  });
+
+  const applySuggestion = (suggestion: PersonSuggestion) => {
+    const currentValues = form.getValues();
+    form.reset({
+      ...currentValues,
+      dni: suggestion.dni || currentValues.dni,
+      firstName: suggestion.firstName || currentValues.firstName,
+      lastName: suggestion.lastName || currentValues.lastName,
+      phoneNumber: suggestion.phoneNumber || currentValues.phoneNumber,
+      address: suggestion.address || currentValues.address,
+      photoUrl: suggestion.photoUrl || currentValues.photoUrl,
+    });
+    toast({
+      title: 'Datos sugeridos aplicados',
+      description: `Se completaron los campos con un ${suggestion.label.toLowerCase()} existente.`,
+    });
+  };
 
   // Auto-calcular expirationDate a 5 años desde issueDate
   useEffect(() => {
@@ -320,6 +350,39 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
                   />
                 </div>
 
+                {suggestions.length > 0 && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <p className="font-semibold text-emerald-900 dark:text-emerald-100">
+                        Coincidencias encontradas
+                      </p>
+                      {isLoadingSuggestions && <span className="text-xs text-emerald-700 dark:text-emerald-300">Buscando...</span>}
+                    </div>
+                    <div className="space-y-2">
+                      {suggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.id}
+                          type="button"
+                          onClick={() => applySuggestion(suggestion)}
+                          className="w-full rounded-md border border-emerald-200 bg-white/80 px-3 py-2 text-left hover:bg-emerald-100 dark:border-emerald-800 dark:bg-gray-900/60 dark:hover:bg-emerald-900/30"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-white">{suggestion.fullName}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                DNI {suggestion.dni || 'N/A'} · {suggestion.label}
+                              </p>
+                            </div>
+                            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                              Usar datos
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <FormField 
                   name="address" 
                   control={form.control} 
@@ -428,6 +491,9 @@ export const AddConductorDialog = ({ onSuccess }: Props) => {
                                 onBlur={(e) => field.onChange(e.target.value.replace(/\s+/g, ''))}
                               />
                             </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Ejemplos: B-I, B-IIa. Usa la letra I mayúscula, no el número 1 ni la l minúscula.
+                            </p>
                             <FormMessage className="text-red-500 text-sm" />
                           </FormItem>
                         )}

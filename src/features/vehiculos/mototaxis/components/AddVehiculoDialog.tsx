@@ -231,6 +231,9 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
                             className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg h-11 focus:border-blue-500 focus:ring-blue-500" 
                           />
                         </FormControl>
+                        <p className="text-xs text-muted-foreground">
+                          Usa letras mayúsculas, por ejemplo ABC-123. No escribas I ni l minúscula en la placa.
+                        </p>
                         <FormMessage className="text-red-500 text-sm" />
                       </FormItem>
                     )}
@@ -505,7 +508,8 @@ export const AddVehiculoDialog = memo(({ open, onOpenChange, onSuccess }: Props)
                 <div className="bg-blue-50 dark:bg-blue-950/50 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                   <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Información importante:</h4>
                   <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-                    <li>• La placa debe seguir el formato estándar (ABC-123)</li>
+                    <li>• La placa debe seguir el formato estándar (ABC-123) y escribirse en mayúsculas</li>
+                    <li>• No uses I ni l minúscula en la placa</li>
                     <li>• Selecciona un propietario registrado de la lista</li>
                     <li>• Selecciona una empresa registrada de la lista</li>
                     <li>• Puedes crear un nuevo propietario usando el botón "Nuevo"</li>

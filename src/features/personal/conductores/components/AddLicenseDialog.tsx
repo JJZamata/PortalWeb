@@ -90,7 +90,9 @@ export const AddLicenseDialog = ({ open, onOpenChange, conductorDni, onSuccess }
         <div className="mb-4 rounded-lg border border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 p-4 text-sm text-blue-900 dark:text-blue-200">
           <p className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Información importante:</p>
           <ul className="list-disc pl-5 space-y-1 text-blue-800 dark:text-blue-200">
+            <li>El número de licencia debe registrarse en mayúsculas.</li>
             <li>La categoría usa letra I (ej. B-IIa), no el número 1.</li>
+            <li>No uses l minúscula ni I distinta a la del formato indicado.</li>
             <li>El vencimiento se calcula automáticamente a 5 años desde emisión.</li>
             <li>La Entidad Emisora viene prellenada como "SUTRAN".</li>
           </ul>
@@ -133,7 +135,7 @@ export const AddLicenseDialog = ({ open, onOpenChange, conductorDni, onSuccess }
                       onChange={(e) => field.onChange(e.target.value.replace(/\s+/g, '').toUpperCase())}
                     />
                   </FormControl>
-                  <p className="text-xs text-muted-foreground">Máximo 15 caracteres.</p>
+                  <p className="text-xs text-muted-foreground">Máximo 15 caracteres. Se convertirá a mayúsculas automáticamente.</p>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -144,7 +146,7 @@ export const AddLicenseDialog = ({ open, onOpenChange, conductorDni, onSuccess }
                 validate: (value) => {
                   const trimmed = String(value ?? '').trim();
                   if (!trimmed) return 'La categoría es obligatoria';
-                  if (/1/.test(trimmed)) return 'Usa letra I, no número 1';
+                  if (/1/.test(trimmed)) return 'Usa la letra I mayúscula, no el número 1';
                   if (!/^[A-Z]-[A-Z]{1,4}[a-z]?$/.test(trimmed)) {
                     return 'Formato inválido. Ejemplos: B-I, B-IIa';
                   }
@@ -164,7 +166,9 @@ export const AddLicenseDialog = ({ open, onOpenChange, conductorDni, onSuccess }
                       onBlur={(e) => field.onChange(e.target.value.replace(/\s+/g, ''))}
                     />
                   </FormControl>
-                  <p className="text-xs text-muted-foreground">Usa letra I, no número 1.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Ejemplos: B-I, B-IIa. La categoría usa la letra I mayúscula, no el número 1 ni la l minúscula.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )} />

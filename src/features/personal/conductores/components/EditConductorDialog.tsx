@@ -333,6 +333,9 @@ export const EditConductorDialog = ({ open, onOpenChange, conductor, onSuccess, 
                                     onChange={(e) => setLicenseForm((prev) => ({ ...prev, category: e.target.value.replace(/\s+/g, '') }))}
                                     onBlur={(e) => setLicenseForm((prev) => ({ ...prev, category: e.target.value.replace(/\s+/g, '') }))}
                                   />
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    Ejemplos: B-I, B-IIa. Usa la letra I mayúscula, no el número 1 ni la l minúscula.
+                                  </p>
                                 </div>
 
                                 <div>
